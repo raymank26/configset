@@ -21,7 +21,10 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'org.nanohttpd:nanohttpd-webserver:2.3.1'
+    compile group: 'org.jdbi', name: 'jdbi', version: '2.78'
+    compile group: 'postgresql', name: 'postgresql', version: '9.4.1208-jdbc42-atlassian-hosted'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.1'
+    compile "com.sparkjava:spark-core:2.5.5"
     compile 'org.slf4j:slf4j-api:1.7.21'
     testCompile 'junit:junit:4.12'
 }
