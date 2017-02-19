@@ -1,6 +1,8 @@
 package com.letsconfig
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
@@ -11,9 +13,17 @@ import spark.Service
 
 class Server(val tokensService: TokensService, val propertiesService: PropertiesDAO) {
 
+    companion object {
+        private val NO_TOKEN_FOUND = "1000"
+        private val NO_SUCH_ELEMENT = "1001"
+        private val NO_VALUE_FOUND = "1002"
+    }
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val tokenKey = "Token"
     private val objectMapper = ObjectMapper()
+            .setDefaultPrettyPrinter(DefaultPrettyPrinter())
+            .enable(SerializationFeature.INDENT_OUTPUT)
 
     fun start(port: Int) {
         val server = Service.ignite()
@@ -26,12 +36,12 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val tokenFromHeader = request.headers(tokenKey)
             if (tokenFromHeader.isNullOrEmpty()) {
                 response.status(400)
-                response.body("Token is empty")
+                response.body(toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
             } else {
                 val activeToken = tokensService.getActiveToken(tokenFromHeader)
                 if (activeToken == null) {
                     response.status(400)
-                    response.body("No active token found")
+                    response.body(toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
                 } else {
                     request.attribute(this.tokenKey, activeToken)
                 }
@@ -45,7 +55,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                 val value = propertiesService.getValue(token, key)
                 if (value == null) {
                     res.status(400)
-                    "No value found for received key"
+                    toJson(mapOf(Pair("error", NO_SUCH_ELEMENT)))
                 } else {
                     value
                 }
@@ -63,7 +73,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val value = req.queryMap().get("value").value()
             if (value == null) {
                 res.status(400)
-                "No 'value' specified"
+                toJson(mapOf(Pair("error", NO_VALUE_FOUND)))
             } else {
                 // TODO: move to SQL locking
                 synchronized(this) {

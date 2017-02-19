@@ -34,17 +34,21 @@ class PropertiesDAO(private val dbi: DBI) {
         dbi.open().use {
             it.createStatement("insert into properties (key, value, token_id) values (:key, :value, :token_id)")
                     .bind("key", key)
-                    .bind("value", value)
+                    .bind("value", prepareValue(value))
                     .bind("token_id", token.id)
                     .execute()
         }
+    }
+
+    private fun prepareValue(value: String): String {
+        return value.trim { it.isWhitespace() || "\n\r".contains(it) }
     }
 
     fun updateValue(token: Token, key: String, value: String) {
         dbi.open().use {
             it.createStatement("update properties set value=:value where key = :key and token_id = :token_id")
                     .bind("key", key)
-                    .bind("value", value)
+                    .bind("value", prepareValue(value))
                     .bind("token_id", token.id)
                     .execute()
         }
