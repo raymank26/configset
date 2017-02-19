@@ -1,76 +1,87 @@
 package com.letsconfig
 
-import com.letsconfig.config.PropertiesService
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
 import org.slf4j.LoggerFactory
 import spark.Request
+import spark.Response
 import spark.Service
 
-class Server(val tokensService: TokensService, val propertiesService: PropertiesService) {
+class Server(val tokensService: TokensService, val propertiesService: PropertiesDAO) {
 
-    val log = LoggerFactory.getLogger(javaClass)
-    val tokenKey = "Token"
+    private val log = LoggerFactory.getLogger(javaClass)
+    private val tokenKey = "Token"
+    private val objectMapper = ObjectMapper()
 
     fun start(port: Int) {
         val server = Service.ignite()
         server.port(port)
+
         server.before({ request, response ->
-            val tokenKey = request.headers(tokenKey)
-            if (tokenKey.isNullOrEmpty()) {
+            if (log.isDebugEnabled) {
+                log.debug("Request is: params=${request.params()}, queryMap=${request.queryMap().toMap()}")
+            }
+            val tokenFromHeader = request.headers(tokenKey)
+            if (tokenFromHeader.isNullOrEmpty()) {
                 response.status(400)
-                response.body("Token is empty");
+                response.body("Token is empty")
             } else {
-                val activeToken = tokensService.getActiveToken(tokenKey)
+                val activeToken = tokensService.getActiveToken(tokenFromHeader)
                 if (activeToken == null) {
                     response.status(400)
                     response.body("No active token found")
                 } else {
-                    request.attribute(tokenKey, activeToken)
+                    request.attribute(this.tokenKey, activeToken)
                 }
             }
-            request.attribute(this.tokenKey, tokenKey)
         })
 
-        server.get("/api/v1/conf/:key") { req, res ->
-            {
+        server.get("/api/v1/conf/:key", { req, res ->
                 val key = req.params("key")
                 val token = getActiveToken(req)
 
                 val value = propertiesService.getValue(token, key)
                 if (value == null) {
                     res.status(400)
-                    res.body("No value found for received key")
+                    "No value found for received key"
                 } else {
-                    res.body(value)
+                    value
                 }
+        })
+
+        server.get("/api/v1/conf", { req: Request, res: Response ->
+            val token = getActiveToken(req)
+            val mapping = propertiesService.getAll(token)
+            toJson(mapping)
+        })
+
+        server.post("/api/v1/conf/:key", { req, res ->
+            val key = req.params("key")
+            val token = getActiveToken(req)
+            val value = req.queryMap().get("value").value()
+            if (value == null) {
+                res.status(400)
+                "No 'value' specified"
+            } else {
+                // TODO: move to SQL locking
+                synchronized(this) {
+                    when (propertiesService.getValue(token, key)) {
+                        null -> propertiesService.insertValue(token, key, value)
+                        value -> Unit
+                        else -> propertiesService.updateValue(token, key, value)
+                    }
+                }
+                ""
             }
-        }
+        })
 
-        server.get("/api/v1/conf") { req, res ->
-            {
-                val token = getActiveToken(req)
-                val mapping = propertiesService.getAll(token)
-                res.body(toJson(mapping))
-            }
-        }
-
-        server.post("/api/v1/:key") { req, res ->
-            {
-                val key = req.params("key")
-                val token = getActiveToken(req)
-                val value = req.body()
-
-                propertiesService.setValue(token, key, value)
-            }
-        }
-
-        server.delete("api/v1/:key", { req, res ->
-            {
-                val key = req.params("key")
+        server.delete("api/v1/conf/:key", { req, res ->
+            val key = req.params("key")
                 val token = getActiveToken(req)
                 propertiesService.delete(token, key)
-            }
+                ""
         })
         log.info("Server started on port $port ...")
     }
@@ -85,7 +96,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
     }
 
     private fun toJson(mapping: Map<String, String>): String {
-        TODO()
+        return objectMapper.writeValueAsString(mapping)
     }
 }
 

@@ -1,8 +1,9 @@
 package com.letsconfig
 
-import com.letsconfig.config.PropertiesService
+import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.TokensDAO
 import com.letsconfig.config.TokensService
+import org.skife.jdbi.v2.DBI
 
 /**
  * @author anton.ermak
@@ -11,9 +12,10 @@ import com.letsconfig.config.TokensService
 
 object Main {
     @JvmStatic fun main(args: Array<String>) {
-        val tokensDao = TokensDAO()
+        val dbi = DBI("jdbc:postgresql://10.9.0.1:5432/letsconfig?connectTimeout=5", "postgres", "")
+        val tokensDao = TokensDAO(dbi)
         val tokenService = TokensService(tokensDao)
-        val propertiesService = PropertiesService()
+        val propertiesService = PropertiesDAO(dbi)
 
         val server = Server(tokenService, propertiesService)
         server.start(8080)

@@ -24,7 +24,13 @@ dependencies {
     compile group: 'org.jdbi', name: 'jdbi', version: '2.78'
     compile group: 'postgresql', name: 'postgresql', version: '9.4.1208-jdbc42-atlassian-hosted'
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.6'
     compile "com.sparkjava:spark-core:2.5.5"
     compile 'org.slf4j:slf4j-api:1.7.21'
+
     testCompile 'junit:junit:4.12'
+}
+
+run {
+    jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5004"]
 }

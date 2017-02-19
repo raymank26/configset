@@ -6,6 +6,6 @@ package com.letsconfig.config
  */
 class TokensService(val tokensDAO : TokensDAO) {
     fun getActiveToken(tokenKey: String): Token? {
-        TODO()
+        return tokensDAO.getActiveToken(tokenKey)
     }
 }
