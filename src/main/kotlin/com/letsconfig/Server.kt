@@ -21,7 +21,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val tokenKey = "Token"
+    private val tokenKey = "X-Token"
     private val objectMapper = ObjectMapper()
             .setDefaultPrettyPrinter(DefaultPrettyPrinter())
             .enable(SerializationFeature.INDENT_OUTPUT)
@@ -34,17 +34,17 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             if (log.isDebugEnabled) {
                 log.debug("Request is: params=${request.params()}," +
                         "queryMap=${request.queryMap().toMap()}," +
+                        "url=${request.url()}," +
+                        "method=${request.requestMethod()}," +
                         "header=[${request.headers().map { "$it=${request.headers(it)}" }.joinToString(",")}]")
             }
             val tokenFromHeader = request.headers(tokenKey)
             if (tokenFromHeader.isNullOrEmpty()) {
-                response.status(400)
-                response.body(toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
+                server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
             } else {
                 val activeToken = tokensService.getActiveToken(tokenFromHeader)
                 if (activeToken == null) {
-                    response.status(400)
-                    response.body(toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
+                    server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
                 } else {
                     request.attribute(this.tokenKey, activeToken)
                 }
@@ -52,18 +52,18 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         })
 
         server.get("/api/v1/conf", { req, res ->
-            (fun(): String {
-                val keys = req.queryParamsValues("keys") ?: return "{}"
-                val token = getActiveToken(req)
+            val keys = req.queryParamsValues("keys")
+            if (keys == null) {
+                server.halt(200, "{}")
+            }
+            val token = getActiveToken(req)
 
             val value = propertiesService.getValues(token, keys.toList())
-                return if (value.isEmpty()) {
-                    res.status(400)
-                    toJson(mapOf(Pair("error", NO_SUCH_ELEMENT)))
-                } else {
+            if (value.isEmpty()) {
+                server.halt(400, toJson(mapOf(Pair("error", NO_SUCH_ELEMENT))))
+            } else {
                 toJson(value)
-                }
-            }())
+            }
         })
 
         server.get("/api/v1/conf/all", { req: Request, res: Response ->
@@ -77,8 +77,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val token = getActiveToken(req)
             val value = req.raw().getParameter("value")
             if (value == null) {
-                res.status(400)
-                toJson(mapOf(Pair("error", NO_VALUE_FOUND)))
+                server.halt(400, toJson(mapOf(Pair("error", NO_VALUE_FOUND))))
             } else {
                 // TODO: move to SQL locking
                 synchronized(this) {
