@@ -26,9 +26,9 @@ class PropertiesDAO(private val dbi: DBI) {
             }
         } else {
             dbi.open().use {
-                return it.createQuery("select p.key, p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key in :key")
+                return it.createQuery("select p.key, p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key = ANY(:key)")
                         .bind("token", activeToken.token)
-                        .bind("key", keys)
+                        .bind("key", it.connection.createArrayOf("varchar", keys.toTypedArray()))
                         .map({ row, resultSet, statementContext ->
                             Pair(resultSet.getString(1), resultSet.getString(2))
                         })

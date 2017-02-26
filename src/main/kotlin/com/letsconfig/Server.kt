@@ -32,7 +32,9 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
 
         server.before({ request, response ->
             if (log.isDebugEnabled) {
-                log.debug("Request is: params=${request.params()}, queryMap=${request.queryMap().toMap()}")
+                log.debug("Request is: params=${request.params()}," +
+                        "queryMap=${request.queryMap().toMap()}," +
+                        "header=[${request.headers().map { "$it=${request.headers(it)}" }.joinToString(",")}]")
             }
             val tokenFromHeader = request.headers(tokenKey)
             if (tokenFromHeader.isNullOrEmpty()) {
@@ -50,16 +52,18 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         })
 
         server.get("/api/v1/conf", { req, res ->
-            val keys = req.queryParamsValues("keys")
+            (fun(): String {
+                val keys = req.queryParamsValues("keys") ?: return "{}"
                 val token = getActiveToken(req)
 
             val value = propertiesService.getValues(token, keys.toList())
-            if (value.isEmpty()) {
+                return if (value.isEmpty()) {
                     res.status(400)
                     toJson(mapOf(Pair("error", NO_SUCH_ELEMENT)))
                 } else {
                 toJson(value)
                 }
+            }())
         })
 
         server.get("/api/v1/conf/all", { req: Request, res: Response ->
