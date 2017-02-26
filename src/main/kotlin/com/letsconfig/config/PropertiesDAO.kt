@@ -1,21 +1,39 @@
 package com.letsconfig.config
 
 import org.skife.jdbi.v2.DBI
+import java.util.*
 
 /**
  * @author anton.ermak
  *         Date: 15.02.17.
  */
 class PropertiesDAO(private val dbi: DBI) {
-    fun getValue(activeToken: Token, key: String): String? {
-        dbi.open().use {
-            return it.createQuery("select p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key = :key")
-                    .bind("token", activeToken.token)
-                    .bind("key", key)
-                    .map({ row, resultSet, statementContext ->
-                        resultSet.getString(1)
-                    })
-                    .firstOrNull()
+    fun getValues(activeToken: Token, keys: List<String>): Map<String, String> {
+        if (keys.size == 1) {
+            dbi.open().use {
+                val value = it.createQuery("select p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key = :key")
+                        .bind("token", activeToken.token)
+                        .bind("key", keys[0])
+                        .map({ row, resultSet, statementContext ->
+                            resultSet.getString(1)
+                        })
+                        .firstOrNull()
+                return if (value == null) {
+                    hashMapOf()
+                } else {
+                    Collections.singletonMap(keys[0], value)
+                }
+            }
+        } else {
+            dbi.open().use {
+                return it.createQuery("select p.key, p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key in :key")
+                        .bind("token", activeToken.token)
+                        .bind("key", keys)
+                        .map({ row, resultSet, statementContext ->
+                            Pair(resultSet.getString(1), resultSet.getString(2))
+                        })
+                        .toMap()
+            }
         }
     }
 

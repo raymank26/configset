@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import spark.Request
 import spark.Response
 import spark.Service
+import java.util.*
 
 class Server(val tokensService: TokensService, val propertiesService: PropertiesDAO) {
 
@@ -48,39 +49,38 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             }
         })
 
-        server.get("/api/v1/conf/:key", { req, res ->
-                val key = req.params("key")
+        server.get("/api/v1/conf", { req, res ->
+            val keys = req.queryParamsValues("keys")
                 val token = getActiveToken(req)
 
-                val value = propertiesService.getValue(token, key)
-                if (value == null) {
+            val value = propertiesService.getValues(token, keys.toList())
+            if (value.isEmpty()) {
                     res.status(400)
                     toJson(mapOf(Pair("error", NO_SUCH_ELEMENT)))
                 } else {
-                    value
+                toJson(value)
                 }
         })
 
-        server.get("/api/v1/conf", { req: Request, res: Response ->
+        server.get("/api/v1/conf/all", { req: Request, res: Response ->
             val token = getActiveToken(req)
             val mapping = propertiesService.getAll(token)
             toJson(mapping)
         })
 
-        server.post("/api/v1/conf/:key", { req, res ->
-            val key = req.params("key")
+        server.post("/api/v1/conf", { req, res ->
+            val keys = req.raw().getParameter("key")
             val token = getActiveToken(req)
-            val value = req.queryMap().get("value").value()
+            val value = req.raw().getParameter("value")
             if (value == null) {
                 res.status(400)
                 toJson(mapOf(Pair("error", NO_VALUE_FOUND)))
             } else {
                 // TODO: move to SQL locking
                 synchronized(this) {
-                    when (propertiesService.getValue(token, key)) {
-                        null -> propertiesService.insertValue(token, key, value)
-                        value -> Unit
-                        else -> propertiesService.updateValue(token, key, value)
+                    when (propertiesService.getValues(token, Collections.singletonList(keys)).isEmpty()) {
+                        true -> propertiesService.insertValue(token, keys, value)
+                        false -> propertiesService.updateValue(token, keys, value)
                     }
                 }
                 ""
