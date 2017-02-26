@@ -61,6 +61,29 @@ class PropertiesDAO(private val dbi: DBI) {
                     .bind("token_id", token.id)
                     .execute()
         }
+    }
 
+    fun findKeys(token: Token, key: String): List<String> {
+        dbi.open().use {
+            return it.createQuery("select key from properties where key like :key and token_id = :token_id")
+                    .bind("key", "%$key%")
+                    .bind("token_id", token.id)
+                    .map({ row, resultSet, statementContext ->
+                        resultSet.getString(1)
+                    })
+                    .list()
+        }
+    }
+
+    fun findValues(token: Token, value: String?): Map<String, String> {
+        dbi.open().use {
+            return it.createQuery("select key, value from properties where value like :value and token_id = :token_id")
+                    .bind("value", "%$value%")
+                    .bind("token_id", token.id)
+                    .map({ row, resultSet, statementContext ->
+                        Pair(resultSet.getString(1), resultSet.getString(2))
+                    })
+                    .toMap()
+        }
     }
 }

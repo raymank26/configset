@@ -89,9 +89,20 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
 
         server.delete("api/v1/conf/:key", { req, res ->
             val key = req.params("key")
-                val token = getActiveToken(req)
-                propertiesService.delete(token, key)
-                ""
+            val token = getActiveToken(req)
+            propertiesService.delete(token, key)
+            ""
+        })
+
+        server.get("/api/v1/find/key", { req, res ->
+            val key = req.queryParams("key")
+            val token = getActiveToken(req)
+            toJson(hashMapOf(Pair("keys", propertiesService.findKeys(token, key))))
+        })
+        server.get("/api/v1/find/value", { req, res ->
+            val value = req.queryParams("value")
+            val token = getActiveToken(req)
+            toJson(hashMapOf(Pair("properties", propertiesService.findValues(token, value))))
         })
         log.info("Server started on port $port ...")
     }
@@ -105,8 +116,8 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         }
     }
 
-    private fun toJson(mapping: Map<String, String>): String {
-        return objectMapper.writeValueAsString(mapping)
+    private fun toJson(value: Any): String {
+        return objectMapper.writeValueAsString(value)
     }
 }
 
