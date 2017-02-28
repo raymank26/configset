@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
+import io.prometheus.client.Counter
+import org.eclipse.jetty.server.Server
 import org.slf4j.LoggerFactory
 import spark.Request
 import spark.Response
@@ -26,6 +28,12 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             .setDefaultPrettyPrinter(DefaultPrettyPrinter())
             .enable(SerializationFeature.INDENT_OUTPUT)
 
+    private val requestCounter: Counter = Counter.build()
+            .name("total_requests")
+            .help("total_requests")
+            .labelNames("requestUrl")
+            .register()
+
     fun start(port: Int) {
         val server = Service.ignite()
         server.port(port)
@@ -38,6 +46,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                         "method=${request.requestMethod()}," +
                         "header=[${request.headers().map { "$it=${request.headers(it)}" }.joinToString(",")}]")
             }
+            requestCounter.labels(request.url()).inc()
             val tokenFromHeader = request.headers(tokenKey)
             if (tokenFromHeader.isNullOrEmpty()) {
                 server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
@@ -107,6 +116,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val token = getActiveToken(req)
             toJson(hashMapOf(Pair("properties", propertiesService.findValues(token, value))))
         })
+
         log.info("Server started on port $port ...")
     }
 
