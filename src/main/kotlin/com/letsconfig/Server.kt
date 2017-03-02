@@ -83,7 +83,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         })
 
         server.post("/api/v1/conf", { req, res ->
-            val keys = req.raw().getParameter("key")
+            val key = req.raw().getParameter("key")
             val token = getActiveToken(req)
             val value = req.raw().getParameter("value")
             if (value == null) {
@@ -91,9 +91,9 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             } else {
                 // TODO: move to SQL locking
                 synchronized(this) {
-                    when (propertiesService.getValues(token, Collections.singletonList(keys)).isEmpty()) {
-                        true -> propertiesService.insertValue(token, keys, value)
-                        false -> propertiesService.updateValue(token, keys, value)
+                    when (propertiesService.getValues(token, Collections.singletonList(key))[key] == null) {
+                        true -> propertiesService.insertValue(token, key, value)
+                        false -> propertiesService.updateValue(token, key, value)
                     }
                 }
                 ""
