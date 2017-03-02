@@ -18,9 +18,11 @@ object Main {
         val dbi = DBI("jdbc:postgresql://10.8.0.2:5432/letsconfig?connectTimeout=5", "postgres", "")
         val tokensDao = TokensDAO(dbi)
         val tokenService = TokensService(tokensDao)
-        val propertiesService = PropertiesDAO(dbi)
+        val propertiesDAO = PropertiesDAO(dbi)
 
-        val server = Server(tokenService, propertiesService)
+        val settingsApiWebSocket = SettingsApiWebSocket(propertiesDAO, tokenService)
+        settingsApiWebSocket.start()
+        val server = Server(tokenService, propertiesDAO, settingsApiWebSocket)
         server.start(8080)
         startMetricServer()
     }

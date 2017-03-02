@@ -1,0 +1,89 @@
+package com.letsconfig
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.letsconfig.config.PropertiesDAO
+import com.letsconfig.config.Token
+import com.letsconfig.config.TokensService
+import org.eclipse.jetty.websocket.api.Session
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage
+import org.eclipse.jetty.websocket.api.annotations.WebSocket
+import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectOutputStream
+import java.nio.ByteBuffer
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+
+/**
+ * @author anton.ermak
+ *         Date: 01.03.17.
+ */
+@WebSocket
+class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val tokensService: TokensService) {
+
+    private val log = LoggerFactory.getLogger(this.javaClass)
+    private val protocolOutputVersion = 1
+
+    private val sessions: ConcurrentHashMap<Session, Settings> = ConcurrentHashMap()
+    private val executor = Executors.newSingleThreadScheduledExecutor()
+
+    fun start() {
+        executor.scheduleWithFixedDelay(update(), 0, 10, TimeUnit.SECONDS)
+    }
+
+    private fun update(): Runnable = Runnable {
+        log.debug("Update started..")
+        sessions.forEach { session, settings ->
+            try {
+                sendSettings(session, settings)
+            } catch (e: Exception) {
+                log.warn("Unable to send response to " + session.remoteAddress)
+            }
+        }
+    }
+
+    private fun sendSettings(session: Session, settings: Settings) {
+        val values = propertiesDAO.getValues(settings.token, settings.keys)
+        session.remote.sendBytes(ByteBuffer.wrap(Server.objectMapper.writeValueAsBytes(values)))
+    }
+
+    @OnWebSocketClose
+    fun onSocketClose(session: Session, closeCode: Int, closeReason: String) {
+        log.debug("Session {} closed with code = {} and reason = {}", session, closeCode, closeReason)
+        sessions.remove(session)
+    }
+
+    @OnWebSocketMessage
+    fun onMessage(session: Session, buf: ByteArray, offset: Int, length: Int) {
+        val activeToken = session.upgradeRequest.headers.get(Server.tokenKey)?.let {
+            tokensService.getActiveToken(it[0])
+        }
+        log.debug("Session {} send messages with offset = {}, length = {}, activeToken = {}", session, offset, length,
+                activeToken)
+
+        if (activeToken == null) {
+            log.warn("Protocol input version is not 1. Skipping...")
+        } else {
+            val typeRef = object : TypeReference<Set<String>>() {}
+            val propertiesKeys: Set<String> = Server.objectMapper.readValue(ByteArrayInputStream(buf, offset, length), typeRef)
+            log.debug("Property keys received = {}", propertiesKeys)
+            val value = Settings(activeToken, propertiesKeys)
+            sessions.put(session, value)
+            sendSettings(session, value)
+        }
+    }
+
+    private fun prepareMessage(properties: Map<String, String>): ByteArray {
+        val bos = ByteArrayOutputStream()
+        val os = ObjectOutputStream(bos)
+        os.writeObject(protocolOutputVersion)
+        os.writeObject(properties)
+        os.close()
+        return bos.toByteArray()
+    }
+}
+
+private data class Settings(val token: Token, val keys: Set<String>)

@@ -8,12 +8,22 @@ import java.util.*
  *         Date: 15.02.17.
  */
 class PropertiesDAO(private val dbi: DBI) {
-    fun getValues(activeToken: Token, keys: List<String>): Map<String, String> {
+    fun getValues(activeToken: Token, keys: Collection<String>): Map<String, String?> {
+        val dbValues: MutableMap<String, String?> = getValuesInner(activeToken, keys)
+        keys.forEach {
+            if (dbValues.get(it) == null) {
+                dbValues.put(it, null)
+            }
+        }
+        return dbValues
+    }
+
+    private fun getValuesInner(activeToken: Token, keys: Collection<String>): MutableMap<String, String?> {
         if (keys.size == 1) {
             dbi.open().use {
                 val value = it.createQuery("select p.value from properties p join tokens t on p.token_id = t.id where t.token = :token and p.key = :key")
                         .bind("token", activeToken.token)
-                        .bind("key", keys[0])
+                        .bind("key", keys.iterator().next())
                         .map({ row, resultSet, statementContext ->
                             resultSet.getString(1)
                         })
@@ -21,7 +31,7 @@ class PropertiesDAO(private val dbi: DBI) {
                 return if (value == null) {
                     hashMapOf()
                 } else {
-                    Collections.singletonMap(keys[0], value)
+                    Collections.singletonMap(keys.iterator().next(), value)
                 }
             }
         } else {
@@ -33,6 +43,7 @@ class PropertiesDAO(private val dbi: DBI) {
                             Pair(resultSet.getString(1), resultSet.getString(2))
                         })
                         .toMap()
+                        .toMutableMap()
             }
         }
     }
@@ -103,5 +114,9 @@ class PropertiesDAO(private val dbi: DBI) {
                     })
                     .toMap()
         }
+    }
+
+    fun <K, V> Map<K, V>.toMutableMap(): MutableMap<K, V> {
+        return HashMap(this)
     }
 }

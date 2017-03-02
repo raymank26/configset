@@ -7,26 +7,26 @@ import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
 import io.prometheus.client.Counter
-import org.eclipse.jetty.server.Server
 import org.slf4j.LoggerFactory
 import spark.Request
 import spark.Response
 import spark.Service
 import java.util.*
 
-class Server(val tokensService: TokensService, val propertiesService: PropertiesDAO) {
+class Server(val tokensService: TokensService, val propertiesService: PropertiesDAO, val settingsApiWebSocket: SettingsApiWebSocket) {
 
     companion object {
+        val objectMapper: ObjectMapper = ObjectMapper()
+                .setDefaultPrettyPrinter(DefaultPrettyPrinter())
+                .enable(SerializationFeature.INDENT_OUTPUT)
+        val tokenKey = "X-Token"
+
         private val NO_TOKEN_FOUND = "1000"
         private val NO_SUCH_ELEMENT = "1001"
         private val NO_VALUE_FOUND = "1002"
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val tokenKey = "X-Token"
-    private val objectMapper = ObjectMapper()
-            .setDefaultPrettyPrinter(DefaultPrettyPrinter())
-            .enable(SerializationFeature.INDENT_OUTPUT)
 
     private val requestCounter: Counter = Counter.build()
             .name("total_requests")
@@ -37,6 +37,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
     fun start(port: Int) {
         val server = Service.ignite()
         server.port(port)
+        server.webSocket("/api/v1/websocket/properties", settingsApiWebSocket)
 
         server.before({ request, response ->
             if (log.isDebugEnabled) {
@@ -55,7 +56,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                 if (activeToken == null) {
                     server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
                 } else {
-                    request.attribute(this.tokenKey, activeToken)
+                    request.attribute(tokenKey, activeToken)
                 }
             }
         })
