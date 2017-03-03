@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
-import com.letsconfig.sdk.json.PropertyJson
+import com.letsconfig.sdk.PropertyData
 import org.eclipse.jetty.websocket.api.Session
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage
@@ -47,9 +47,9 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
     }
 
     private fun sendProperties(session: Session, propertiesContext: PropertiesContext) {
-        val values: Map<String, PropertyJson?> = propertiesDAO.getValues(propertiesContext.token, propertiesContext.keys).mapValues {
+        val values: Map<String, PropertyData?> = propertiesDAO.getValues(propertiesContext.token, propertiesContext.keys).mapValues {
             it.value?.let {
-                PropertyJson(it.value, it.update_time)
+                PropertyData(it.value, it.update_time)
             }
         }
         session.remote.sendBytes(ByteBuffer.wrap(Server.objectMapper.writeValueAsBytes(values)))

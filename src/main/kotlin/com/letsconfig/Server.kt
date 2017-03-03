@@ -7,7 +7,7 @@ import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Property
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
-import com.letsconfig.sdk.json.PropertyJson
+import com.letsconfig.sdk.PropertyData
 import io.prometheus.client.Counter
 import org.slf4j.LoggerFactory
 import spark.Request
@@ -74,7 +74,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             if (value.isEmpty()) {
                 server.halt(400, toJson(mapOf(Pair("error", NO_SUCH_ELEMENT))))
             } else {
-                toJson(value.mapValues { it.value?.let { PropertyJson(it.value, it.update_time) } })
+                toJson(value.mapValues { it.value?.let { PropertyData(it.value, it.update_time) } })
             }
         })
 
