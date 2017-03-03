@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
+import com.letsconfig.sdk.json.PropertyJson
 import org.eclipse.jetty.websocket.api.Session
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage
@@ -27,7 +28,7 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
     private val log = LoggerFactory.getLogger(this.javaClass)
     private val protocolOutputVersion = 1
 
-    private val sessions: ConcurrentHashMap<Session, Settings> = ConcurrentHashMap()
+    private val sessions: ConcurrentHashMap<Session, PropertiesContext> = ConcurrentHashMap()
     private val executor = Executors.newSingleThreadScheduledExecutor()
 
     fun start() {
@@ -38,15 +39,19 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
         log.debug("Update started..")
         sessions.forEach { session, settings ->
             try {
-                sendSettings(session, settings)
+                sendProperties(session, settings)
             } catch (e: Exception) {
                 log.warn("Unable to send response to " + session.remoteAddress)
             }
         }
     }
 
-    private fun sendSettings(session: Session, settings: Settings) {
-        val values = propertiesDAO.getValues(settings.token, settings.keys)
+    private fun sendProperties(session: Session, propertiesContext: PropertiesContext) {
+        val values: Map<String, PropertyJson?> = propertiesDAO.getValues(propertiesContext.token, propertiesContext.keys).mapValues {
+            it.value?.let {
+                PropertyJson(it.value, it.update_time)
+            }
+        }
         session.remote.sendBytes(ByteBuffer.wrap(Server.objectMapper.writeValueAsBytes(values)))
     }
 
@@ -70,9 +75,9 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
             val typeRef = object : TypeReference<Set<String>>() {}
             val propertiesKeys: Set<String> = Server.objectMapper.readValue(ByteArrayInputStream(buf, offset, length), typeRef)
             log.debug("Property keys received = {}", propertiesKeys)
-            val value = Settings(activeToken, propertiesKeys)
+            val value = PropertiesContext(activeToken, propertiesKeys)
             sessions.put(session, value)
-            sendSettings(session, value)
+            sendProperties(session, value)
         }
     }
 
@@ -86,4 +91,4 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
     }
 }
 
-private data class Settings(val token: Token, val keys: Set<String>)
+private data class PropertiesContext(val token: Token, val keys: Set<String>)
