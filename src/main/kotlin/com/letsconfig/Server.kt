@@ -33,8 +33,15 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
     private val requestCounter: Counter = Counter.build()
             .name("total_requests")
             .help("total_requests")
-            .labelNames("requestUrl")
+            .labelNames("requestUrl", "method")
             .register()
+
+    private val exceptionCounter: Counter = Counter.build()
+            .name("exceptions")
+            .help("Total exception counter")
+            .labelNames("name")
+            .register()
+
 
     fun start(port: Int) {
         val server = Service.ignite()
@@ -49,7 +56,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                         "method=${request.requestMethod()}," +
                         "header=[${request.headers().map { "$it=${request.headers(it)}" }.joinToString(",")}]")
             }
-            requestCounter.labels(request.url()).inc()
+            requestCounter.labels(request.url(), request.requestMethod()).inc()
             val tokenFromHeader = request.headers(tokenKey)
             if (tokenFromHeader.isNullOrEmpty()) {
                 server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
@@ -118,6 +125,13 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val value = req.queryParams("value")
             val token = getActiveToken(req)
             toJson(hashMapOf(Pair("properties", propertiesService.findValues(token, value))))
+        })
+
+        server.exception(Exception::class.java, { exception, request, response ->
+            log.error("Exception catched while request processing", exception);
+            exceptionCounter.labels(exception.javaClass.simpleName).inc()
+            response.status(500)
+            response.body(objectMapper.writeValueAsString(Collections.singletonMap("error", "error.internal")))
         })
 
         log.info("Server started on port $port ...")
