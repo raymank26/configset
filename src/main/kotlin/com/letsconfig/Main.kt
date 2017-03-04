@@ -4,6 +4,7 @@ import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.TokensDAO
 import com.letsconfig.config.TokensService
 import io.prometheus.client.exporter.MetricsServlet
+import io.prometheus.client.hotspot.DefaultExports
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.servlet.ServletHolder
 import org.skife.jdbi.v2.DBI
@@ -33,6 +34,7 @@ object Main {
         servletContextHandler.contextPath = "/"
         server.handler = servletContextHandler
         servletContextHandler.addServlet(ServletHolder(MetricsServlet()), "/metrics")
+        DefaultExports.initialize()
         server.start()
     }
 }
