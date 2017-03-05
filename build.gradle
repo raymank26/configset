@@ -19,6 +19,7 @@ apply plugin: 'maven-publish'
 mainClassName = "com.letsconfig.Main"
 
 repositories {
+    mavenLocal()
     jcenter()
     mavenCentral()
 }
