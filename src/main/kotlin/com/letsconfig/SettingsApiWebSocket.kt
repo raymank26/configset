@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
+import com.letsconfig.sdk.HttpExecutor
 import com.letsconfig.sdk.PropertyData
 import org.eclipse.jetty.websocket.api.Session
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
@@ -63,7 +64,7 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
 
     @OnWebSocketMessage
     fun onMessage(session: Session, buf: ByteArray, offset: Int, length: Int) {
-        val activeToken = session.upgradeRequest.headers.get(Server.tokenKey)?.let {
+        val activeToken = session.upgradeRequest.headers.get(HttpExecutor.TOKEN_HEADER)?.let {
             tokensService.getActiveToken(it[0])
         }
         log.debug("Session {} send messages with offset = {}, length = {}, activeToken = {}", session, offset, length,

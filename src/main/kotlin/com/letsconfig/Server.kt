@@ -7,6 +7,9 @@ import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Property
 import com.letsconfig.config.Token
 import com.letsconfig.config.TokensService
+import com.letsconfig.sdk.ExceptionCode
+import com.letsconfig.sdk.ExceptionCode.*
+import com.letsconfig.sdk.HttpExecutor
 import com.letsconfig.sdk.PropertyData
 import io.prometheus.client.Counter
 import org.slf4j.LoggerFactory
@@ -21,11 +24,6 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         val objectMapper: ObjectMapper = ObjectMapper()
                 .setDefaultPrettyPrinter(DefaultPrettyPrinter())
                 .enable(SerializationFeature.INDENT_OUTPUT)
-        val tokenKey = "X-Token"
-
-        private val NO_TOKEN_FOUND = "1000"
-        private val NO_SUCH_ELEMENT = "1001"
-        private val NO_VALUE_FOUND = "1002"
     }
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -33,7 +31,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
     private val requestCounter: Counter = Counter.build()
             .name("total_requests")
             .help("total_requests")
-            .labelNames("requestUrl", "method")
+            .labelNames("requestUrl", "method", "clientVersion")
             .register()
 
     private val exceptionCounter: Counter = Counter.build()
@@ -56,16 +54,26 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                         "method=${request.requestMethod()}," +
                         "header=[${request.headers().map { "$it=${request.headers(it)}" }.joinToString(",")}]")
             }
-            requestCounter.labels(request.url(), request.requestMethod()).inc()
-            val tokenFromHeader = request.headers(tokenKey)
-            if (tokenFromHeader.isNullOrEmpty()) {
-                server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
-            } else {
-                val activeToken = tokensService.getActiveToken(tokenFromHeader)
-                if (activeToken == null) {
-                    server.halt(400, toJson(mapOf(Pair("error", NO_TOKEN_FOUND))))
+            val clientVersion = request.headers(HttpExecutor.VERSION_HEADER)
+
+            if (clientVersion == null) {
+                log.warn("Unable to get version");
+                server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, ExceptionCode.UNKNOWN.code))))
+            }
+            requestCounter.labels(request.url(), request.requestMethod(), clientVersion).inc()
+            if (!request.url().contains("websocket")) {
+                val tokenFromHeader = request.headers(HttpExecutor.TOKEN_HEADER)
+                if (tokenFromHeader.isNullOrEmpty()) {
+                    log.debug("Token not found")
+                    server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, ExceptionCode.NO_ACTIVE_TOKEN_FOUND.code))))
                 } else {
-                    request.attribute(tokenKey, activeToken)
+                    val activeToken = tokensService.getActiveToken(tokenFromHeader)
+                    if (activeToken == null) {
+                        log.debug("No active token found")
+                        server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, NO_ACTIVE_TOKEN_FOUND.code))))
+                    } else {
+                        request.attribute(HttpExecutor.TOKEN_HEADER, activeToken)
+                    }
                 }
             }
         })
@@ -79,7 +87,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
 
             val value: Map<String, Property?> = propertiesService.getValues(token, keys.toList())
             if (value.isEmpty()) {
-                server.halt(400, toJson(mapOf(Pair("error", NO_SUCH_ELEMENT))))
+                server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, NO_SUCH_ELEMENT.code))))
             } else {
                 toJson(value.mapValues { it.value?.let { PropertyData(it.value, it.update_time) } })
             }
@@ -96,7 +104,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val token = getActiveToken(req)
             val value = req.raw().getParameter("value")
             if (value == null) {
-                server.halt(400, toJson(mapOf(Pair("error", NO_VALUE_FOUND))))
+                server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, NO_VALUE_FOUND.code))))
             } else {
                 // TODO: move to SQL locking
                 synchronized(this) {
@@ -128,17 +136,17 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         })
 
         server.exception(Exception::class.java, { exception, request, response ->
-            log.error("Exception catched while request processing", exception);
+            log.error("Exception catched while request processing", exception)
             exceptionCounter.labels(exception.javaClass.simpleName).inc()
             response.status(500)
-            response.body(objectMapper.writeValueAsString(Collections.singletonMap("error", "error.internal")))
+            response.body(objectMapper.writeValueAsString(Collections.singletonMap(HttpExecutor.ERROR_FIELD, UNKNOWN.code)))
         })
 
         log.info("Server started on port $port ...")
     }
 
     private fun getActiveToken(req: Request): Token {
-        val token = req.attribute<Token>(tokenKey)
+        val token = req.attribute<Token>(HttpExecutor.TOKEN_HEADER)
         if (token == null) {
             throw IllegalStateException("No token found")
         } else {
