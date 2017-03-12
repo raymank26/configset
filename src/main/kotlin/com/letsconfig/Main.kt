@@ -1,8 +1,8 @@
 package com.letsconfig
 
 import com.letsconfig.config.PropertiesDAO
-import com.letsconfig.config.TokensDAO
-import com.letsconfig.config.TokensService
+import com.letsconfig.sdk.server.tokens.TokensDAO
+import com.letsconfig.sdk.server.tokens.TokensService
 import io.prometheus.client.exporter.MetricsServlet
 import io.prometheus.client.hotspot.DefaultExports
 import org.eclipse.jetty.servlet.ServletContextHandler

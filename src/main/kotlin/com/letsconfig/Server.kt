@@ -5,12 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.letsconfig.config.PropertiesDAO
 import com.letsconfig.config.Property
-import com.letsconfig.config.Token
-import com.letsconfig.config.TokensService
 import com.letsconfig.sdk.ExceptionCode
 import com.letsconfig.sdk.ExceptionCode.*
 import com.letsconfig.sdk.HttpExecutor
 import com.letsconfig.sdk.PropertyData
+import com.letsconfig.sdk.server.tokens.Token
+import com.letsconfig.sdk.server.tokens.TokensService
 import io.prometheus.client.Counter
 import org.slf4j.LoggerFactory
 import spark.Request

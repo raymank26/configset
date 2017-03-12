@@ -1,5 +1,6 @@
 package com.letsconfig.config
 
+import com.letsconfig.sdk.server.tokens.Token
 import org.skife.jdbi.v2.DBI
 import org.skife.jdbi.v2.StatementContext
 import java.sql.ResultSet

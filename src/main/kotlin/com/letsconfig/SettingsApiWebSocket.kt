@@ -2,10 +2,10 @@ package com.letsconfig
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.letsconfig.config.PropertiesDAO
-import com.letsconfig.config.Token
-import com.letsconfig.config.TokensService
 import com.letsconfig.sdk.HttpExecutor
 import com.letsconfig.sdk.PropertyData
+import com.letsconfig.sdk.server.tokens.Token
+import com.letsconfig.sdk.server.tokens.TokensService
 import org.eclipse.jetty.websocket.api.Session
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect
