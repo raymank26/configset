@@ -57,43 +57,73 @@ distributions {
     }
 }
 
-remotes {
-    prod {
-        host = '188.166.22.200'
-        user = 'ermak'
-        identity = file('/Users/anton.ermak/.ssh/id_rsa')
+apply plugin: DeployPlugin
+import org.hidetake.groovy.ssh.core.Remote
+
+deploy {
+    Prod {
+        remote = new Remote([host: '188.166.22.200', user: "ermak", identity: file('/Users/anton.ermak/.ssh/id_rsa')])
+        javaOpts = "-Xdebug -Xrunjdwp:transport=dt_socket,address=5004,server=y,suspend=n -Dlogback.configurationFile=$deploy.Prod.absoluteRemoteDeployPath/$name/conf/logback.xml"
+        absoluteRemoteDeployPath = "/home/ermak/apps/letsconfig-prod"
     }
 }
 
+class DeployPlugin implements Plugin<Project> {
+    void apply(Project project) {
+        def remoteDestinationContainer = project.container(RemoteDestination)
+        project.extensions.add("deploy", remoteDestinationContainer)
 
-task deployProd(dependsOn: build) {
-    doLast {
-        ssh.run {
-            session(remotes.prod) {
-                def name = project.name
-                def appName = "$name-${version}"
-                def zipName = "${appName}.zip"
-                def remoteDir = "/home/ermak/apps/letsconfig-prod"
-                def pidPath = "$remoteDir/${name}.pid"
-                def javaOpts = "-Xdebug -Xrunjdwp:transport=dt_socket,address=5004,server=y,suspend=n -Dlogback.configurationFile=$remoteDir/$name/conf/logback.xml"
+        project.deploy.all {
+            def deployProdClojure = {
+                doLast {
+                    project.ssh.run {
+                        session(remote) {
+                            def name = project.name
+                            def appName = "$name-${project.version}"
+                            def zipName = "${appName}.zip"
+                            def remoteDir = absoluteRemoteDeployPath
+                            def pidPath = "$remoteDir/${name}.pid"
+                            def javaOpts = javaOpts
+                            def appArgs = appArgs
 
-                put from: file("$buildDir/distributions/$zipName"), into: remoteDir
+                            put from: project.file("$project.buildDir/distributions/$zipName"), into: remoteDir
 
-                def pidExists = execute "test -f $pidPath && echo 1", ignoreError: true
-                if (pidExists == "1") {
-                    execute "kill `cat $pidPath`"
-                    println "Application killed"
-                    execute "rm -r $remoteDir/$name"
+                            def pidExists = execute "test -f $pidPath && echo 1", ignoreError: true
+                            if (pidExists == "1") {
+                                execute "kill `cat $pidPath`"
+                                println "Application killed"
+                                execute "rm -r $remoteDir/$name"
+                            }
+
+                            execute "cd $remoteDir && unzip -o $zipName && mv $appName $name"
+                            println "Application deployed"
+
+                            def startCmd = "JAVA_OPTS=\"$javaOpts\" $remoteDir/$name/bin/$name $appArgs > /dev/null & echo \$! > $pidPath"
+                            println "Command to start = $startCmd"
+                            execute startCmd
+                        }
+                    }
                 }
-
-                execute "cd $remoteDir && unzip -o $zipName && mv $appName $name"
-                println "Application deployed"
-
-                def startCmd = "JAVA_OPTS=\"$javaOpts\" $remoteDir/$name/bin/$name > /dev/null & echo \$! > $pidPath"
-                println "Command to start = $startCmd"
-                execute startCmd
             }
+            def task = project.task("deploy${name}", deployProdClojure)
+            task.group = "Deploying"
+            task.description = "Deploy using $name configuration"
+            task
         }
+    }
+}
+
+class RemoteDestination {
+
+    String name
+
+    Remote remote
+    String absoluteRemoteDeployPath
+    String javaOpts = ""
+    String appArgs = ""
+
+    RemoteDestination(String name) {
+        this.name = name
     }
 }
 
