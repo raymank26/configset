@@ -77,7 +77,7 @@ class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val
                 activeToken)
 
         if (activeToken == null) {
-            log.warn("Protocol input version is not 1. Skipping...")
+            log.warn("Active token doesn't exist. Skipping...")
         } else {
             val typeRef = object : TypeReference<Set<String>>() {}
             val propertiesKeys: Set<String> = Server.objectMapper.readValue(ByteArrayInputStream(buf, offset, length), typeRef)
