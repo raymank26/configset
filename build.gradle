@@ -68,8 +68,8 @@ deploy {
     prod {
         remote = new Remote([host: '188.166.22.200', user: "ermak", identity: file('/Users/anton.ermak/.ssh/id_rsa')])
         absoluteRemoteDeployPath = "/home/ermak/apps/letsconfig-prod"
-        javaOpts = "-Xdebug -Xrunjdwp:transport=dt_socket,address=5004,server=y,suspend=n -Dlogback.configurationFile=${project.deploy.prod.absoluteRemoteDeployPath}/${project.name}/conf/logback.xml"
         zipTaskName = 'prodDistZip'
+        cmdAfterStart = "sudo systemctl restart letsconfig-app"
     }
 }
 
