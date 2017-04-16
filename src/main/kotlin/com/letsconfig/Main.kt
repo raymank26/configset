@@ -10,8 +10,7 @@ import org.eclipse.jetty.servlet.ServletHolder
 import org.skife.jdbi.v2.DBI
 
 /**
- * @author anton.ermak
- *         Date: 15.02.17.
+ * Date: 15.02.17.
  */
 
 object Main {

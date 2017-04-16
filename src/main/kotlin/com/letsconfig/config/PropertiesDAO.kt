@@ -7,8 +7,7 @@ import java.sql.ResultSet
 import java.util.*
 
 /**
- * @author anton.ermak
- *         Date: 15.02.17.
+ * Date: 15.02.17.
  */
 class PropertiesDAO(private val dbi: DBI) {
     fun getValues(activeToken: Token, keys: Collection<String>): Map<String, Property?> {

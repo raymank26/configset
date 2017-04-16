@@ -21,8 +21,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * @author anton.ermak
- *         Date: 01.03.17.
+ * Date: 01.03.17.
  */
 @WebSocket
 class SettingsApiWebSocket(private val propertiesDAO: PropertiesDAO, private val tokensService: TokensService) {
