@@ -15,7 +15,7 @@ import org.skife.jdbi.v2.DBI
 
 object Main {
     @JvmStatic fun main(args: Array<String>) {
-        val dbi = DBI("jdbc:postgresql://10.8.0.2:5432/letsconfig?connectTimeout=5", "postgres", "")
+        val dbi = DBI("jdbc:postgresql://10.8.0.1:5432/letsconfig?connectTimeout=5", "letsconfig", "tahA5qajrQEu4S2e")
         val tokensDao = TokensDAO(dbi)
         val tokenService = TokensService(tokensDao)
         val propertiesDAO = PropertiesDAO(dbi)
