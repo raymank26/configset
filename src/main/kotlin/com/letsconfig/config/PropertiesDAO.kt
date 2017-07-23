@@ -48,7 +48,7 @@ class PropertiesDAO(private val dbi: DBI) {
     }
 
     private fun propertyMapper(): (Int, ResultSet, StatementContext) -> Pair<String, Property> {
-        return { row, resultSet, statementContext ->
+        return { _, resultSet, _ ->
             val key = resultSet.getString(2)
             Pair(key, Property(resultSet.getLong(1), key, resultSet.getString(3), resultSet.getLong(4)))
         }
@@ -58,7 +58,7 @@ class PropertiesDAO(private val dbi: DBI) {
         dbi.open().use {
             return it.createQuery("select p.key, p.value from properties p join tokens t on p.token_id = t.id where t.token = :token")
                     .bind("token", activeToken.token)
-                    .map({ row, resultSet, statementContext ->
+                    .map({ _, resultSet, _ ->
                         Pair(resultSet.getString(1), resultSet.getString(2))
                     })
                     .toMap()
@@ -66,7 +66,7 @@ class PropertiesDAO(private val dbi: DBI) {
     }
 
     fun insertValue(token: Token, key: String, value: String) {
-        val ct = System.currentTimeMillis();
+        val ct = System.currentTimeMillis()
         dbi.open().use {
             it.createStatement("insert into properties (key, value, token_id, created_datetime, updated_datetime) values (:key, :value, :token_id, :created_datetime, :updated_datetime)")
                     .bind("key", key)
@@ -83,7 +83,7 @@ class PropertiesDAO(private val dbi: DBI) {
     }
 
     fun updateValue(token: Token, key: String, value: String) {
-        val ct = System.currentTimeMillis();
+        val ct = System.currentTimeMillis()
         dbi.open().use {
             it.createStatement("update properties set value=:value, updated_datetime=:ct where key = :key and token_id = :token_id")
                     .bind("key", key)
@@ -108,7 +108,7 @@ class PropertiesDAO(private val dbi: DBI) {
             return it.createQuery("select key from properties where key like :key and token_id = :token_id")
                     .bind("key", "%$key%")
                     .bind("token_id", token.id)
-                    .map({ row, resultSet, statementContext ->
+                    .map({ _, resultSet, _ ->
                         resultSet.getString(1)
                     })
                     .list()
@@ -120,7 +120,7 @@ class PropertiesDAO(private val dbi: DBI) {
             return it.createQuery("select key, value from properties where value like :value and token_id = :token_id")
                     .bind("value", "%$value%")
                     .bind("token_id", token.id)
-                    .map({ row, resultSet, statementContext ->
+                    .map({ _, resultSet, _ ->
                         Pair(resultSet.getString(1), resultSet.getString(2))
                     })
                     .toMap()

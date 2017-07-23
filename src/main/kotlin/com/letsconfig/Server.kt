@@ -46,7 +46,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         server.port(port)
         server.webSocket("/api/v1/websocket/properties", settingsApiWebSocket)
 
-        server.before({ request, response ->
+        server.before({ request, _ ->
             if (log.isDebugEnabled) {
                 log.debug("Request is: params=${request.params()}," +
                         "queryMap=${request.queryMap().toMap()}," +
@@ -57,7 +57,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             val clientVersion = request.headers(HttpExecutor.VERSION_HEADER)
 
             if (clientVersion == null) {
-                log.warn("Unable to get version");
+                log.warn("Unable to get version")
                 server.halt(400, toJson(mapOf(Pair(HttpExecutor.ERROR_FIELD, ExceptionCode.UNKNOWN.code))))
             }
             requestCounter.labels(request.url(), request.requestMethod(), clientVersion).inc()
@@ -78,7 +78,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             }
         })
 
-        server.get("/api/v1/conf", { req, res ->
+        server.get("/api/v1/conf", { req, _ ->
             val keys = req.queryParamsValues("keys")
             if (keys == null) {
                 server.halt(200, "{}")
@@ -93,13 +93,13 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             }
         })
 
-        server.get("/api/v1/conf/all", { req: Request, res: Response ->
+        server.get("/api/v1/conf/all", { req: Request, _: Response ->
             val token = getActiveToken(req)
             val mapping = propertiesService.getAll(token)
             toJson(mapping)
         })
 
-        server.post("/api/v1/conf", { req, res ->
+        server.post("/api/v1/conf", { req, _ ->
             val key = req.raw().getParameter("key")
             val token = getActiveToken(req)
             val value = req.raw().getParameter("value")
@@ -117,25 +117,25 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
             }
         })
 
-        server.delete("api/v1/conf/:key", { req, res ->
+        server.delete("api/v1/conf/:key", { req, _ ->
             val key = req.params("key")
             val token = getActiveToken(req)
             propertiesService.delete(token, key)
             ""
         })
 
-        server.get("/api/v1/find/key", { req, res ->
+        server.get("/api/v1/find/key", { req, _ ->
             val key = req.queryParams("key")
             val token = getActiveToken(req)
             toJson(hashMapOf(Pair("keys", propertiesService.findKeys(token, key))))
         })
-        server.get("/api/v1/find/value", { req, res ->
+        server.get("/api/v1/find/value", { req, _ ->
             val value = req.queryParams("value")
             val token = getActiveToken(req)
             toJson(hashMapOf(Pair("properties", propertiesService.findValues(token, value))))
         })
 
-        server.exception(Exception::class.java, { exception, request, response ->
+        server.exception(Exception::class.java, { exception, _, response ->
             log.error("Exception catched while request processing", exception)
             exceptionCounter.labels(exception.javaClass.simpleName).inc()
             response.status(500)
