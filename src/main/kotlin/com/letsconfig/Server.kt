@@ -46,7 +46,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
         server.port(port)
         server.webSocket("/api/v1/websocket/properties", settingsApiWebSocket)
 
-        server.before({ request, _ ->
+        server.before { request, _ ->
             if (log.isDebugEnabled) {
                 log.debug("Request is: params=${request.params()}," +
                         "queryMap=${request.queryMap().toMap()}," +
@@ -76,7 +76,7 @@ class Server(val tokensService: TokensService, val propertiesService: Properties
                     }
                 }
             }
-        })
+        }
 
         server.get("/api/v1/conf", { req, _ ->
             val keys = req.queryParamsValues("keys")
