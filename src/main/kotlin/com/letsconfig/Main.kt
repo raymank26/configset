@@ -1,8 +1,5 @@
 package com.letsconfig
 
-import com.letsconfig.config.PropertiesDAO
-import com.letsconfig.sdk.server.tokens.TokensDAO
-import com.letsconfig.sdk.server.tokens.TokensService
 import io.prometheus.client.exporter.MetricsServlet
 import io.prometheus.client.hotspot.DefaultExports
 import org.eclipse.jetty.servlet.ServletContextHandler
@@ -14,17 +11,18 @@ import org.skife.jdbi.v2.DBI
  */
 
 object Main {
-    @JvmStatic fun main(args: Array<String>) {
+    @JvmStatic
+    fun main(args: Array<String>) {
         val dbi = DBI("jdbc:postgresql://10.8.0.1:5432/letsconfig?connectTimeout=5", "letsconfig", "tahA5qajrQEu4S2e")
-        val tokensDao = TokensDAO(dbi)
-        val tokenService = TokensService(tokensDao)
-        val propertiesDAO = PropertiesDAO(dbi)
-
-        val settingsApiWebSocket = SettingsApiWebSocket(propertiesDAO, tokenService)
-        settingsApiWebSocket.start()
-        val server = Server(tokenService, propertiesDAO, settingsApiWebSocket)
-        server.start(8080)
-        startMetricServer()
+//        val tokensDao = TokensDAO(dbi)
+//        val tokenService = TokensService(tokensDao)
+//        val propertiesDAO = PropertiesDAO(dbi)
+//
+//        val settingsApiWebSocket = SettingsApiWebSocket(propertiesDAO, tokenService)
+//        settingsApiWebSocket.start()
+//        val server = Server(tokenService, propertiesDAO, settingsApiWebSocket)
+//        server.start(8080)
+//        startMetricServer()
     }
 
     private fun startMetricServer() {
