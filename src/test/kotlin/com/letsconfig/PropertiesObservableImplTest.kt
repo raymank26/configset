@@ -25,7 +25,7 @@ class PropertiesObservableImplTest {
                 PropertyItem.Deleted("app", "key"),
                 PropertyItem.Updated("app2", "key2", "value2")
         ))
-        controller.updateProperties(updateProperties)
+        controller.updateProperties(1, updateProperties)
 
         assertEquals(updateProperties, propertiesObserver.propertiesChanges)
     }
@@ -37,7 +37,7 @@ class PropertiesObservableImplTest {
 
         controller.removeObserver(propertiesObserver)
 
-        controller.updateProperties(PropertiesChanges(2, listOf(
+        controller.updateProperties(1, PropertiesChanges(2, listOf(
                 PropertyItem.Updated("app", "key", "value"),
                 PropertyItem.Updated("app2", "key2", "value2")
         )))
@@ -55,13 +55,9 @@ class PropertiesObservableController(startProperties: PropertiesChanges) {
         propertiesObservable.start()
     }
 
-    fun updateProperties(propertiesChanges: PropertiesChanges) {
-        propertiesRepository.propertiesChanges = propertiesChanges
+    fun updateProperties(fromVersion: Long?, propertiesChanges: PropertiesChanges) {
+        propertiesRepository.putPropertiesChanges(fromVersion, propertiesChanges)
         scheduler.fire()
-    }
-
-    fun updateProperties(fromVersion: Long?, toVersion: Long, propertiesChanges: PropertiesChanges) {
-        propertiesRepository.putPropertiesChanges(fromVersion, toVersion, propertiesChanges)
     }
 
     fun addObserver(propertiesObserver: PropertiesObserver) {

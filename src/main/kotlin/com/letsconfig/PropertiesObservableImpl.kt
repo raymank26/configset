@@ -1,7 +1,7 @@
 package com.letsconfig
 
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class PropertiesObservableImpl(
         private val propertiesRepository: PropertiesRepository,
@@ -10,7 +10,10 @@ class PropertiesObservableImpl(
 
 ) : PropertiesObservable {
 
-    private val observers: MutableSet<PropertiesObserver> = Collections.newSetFromMap(ConcurrentHashMap())
+    private val observers: MutableSet<PropertiesObserver> = mutableSetOf()
+    private val observersLock = ReentrantLock()
+
+    @Volatile
     private var lastKnownVersion: Long? = null
 
     fun start() {
@@ -21,19 +24,29 @@ class PropertiesObservableImpl(
     }
 
     override fun addObserver(observer: PropertiesObserver) {
-        observers.add(observer)
-        observer.handleChanges(propertiesRepository.getUpdatedProperties(observer.lastKnownVersion(), lastKnownVersion!!))
+        observer.handleChanges(propertiesRepository.getUpdatedProperties(observer.lastKnownVersion()))
+        observersLock.withLock {
+            observers.add(observer)
+        }
     }
 
     private fun updateProperties() {
-        val updatedProperties = propertiesRepository.getUpdatedProperties()
-        for (observer in observers) {
-            observer.handleChanges(updatedProperties)
+        val updatedProperties = propertiesRepository.getUpdatedProperties(lastKnownVersion)
+        if (updatedProperties.items.isEmpty()) {
+            require(lastKnownVersion == updatedProperties.lastVersion)
+            return;
+        }
+        observersLock.withLock {
+            for (observer in observers) {
+                observer.handleChanges(updatedProperties)
+            }
         }
         lastKnownVersion = updatedProperties.lastVersion
     }
 
     override fun removeObserver(observer: PropertiesObserver) {
-        observers.remove(observer)
+        observersLock.withLock {
+            observers.remove(observer)
+        }
     }
 }

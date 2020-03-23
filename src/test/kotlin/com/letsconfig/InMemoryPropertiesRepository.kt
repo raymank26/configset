@@ -1,24 +1,20 @@
 package com.letsconfig
 
-class InMemoryPropertiesRepository(var propertiesChanges: PropertiesChanges) : PropertiesRepository {
+class InMemoryPropertiesRepository(propertiesChanges: PropertiesChanges) : PropertiesRepository {
 
-    private val diffPropertiesChanges: MutableMap<DiffPair, PropertiesChanges> = mutableMapOf()
+    private val diffPropertiesChanges: MutableMap<Version, PropertiesChanges> = mutableMapOf()
 
     init {
-        diffPropertiesChanges[DiffPair(null, propertiesChanges.lastVersion)] = propertiesChanges
+        diffPropertiesChanges[Version(null)] = propertiesChanges
     }
 
-    override fun getUpdatedProperties(fromVersion: Long?, toVersion: Long): PropertiesChanges {
-        return diffPropertiesChanges[DiffPair(fromVersion, toVersion)]!!
+    override fun getUpdatedProperties(fromVersion: Long?): PropertiesChanges {
+        return diffPropertiesChanges[Version(fromVersion)]!!
     }
 
-    override fun getUpdatedProperties(): PropertiesChanges {
-        return propertiesChanges
-    }
-
-    fun putPropertiesChanges(fromVersion: Long?, toVersion: Long, propertiesChanges: PropertiesChanges) {
-        diffPropertiesChanges[DiffPair(fromVersion, toVersion)] = propertiesChanges
+    fun putPropertiesChanges(fromVersion: Long?, propertiesChanges: PropertiesChanges) {
+        diffPropertiesChanges[Version(fromVersion)] = propertiesChanges
     }
 }
 
-private data class DiffPair(val fromVersion: Long?, val toVersion: Long)
+private data class Version(val version: Long?)
