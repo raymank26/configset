@@ -18,7 +18,7 @@ class PropertiesObservableImpl(
 
     fun start() {
         updateProperties()
-        scheduler.scheduleAt(updateDelayMs) {
+        scheduler.scheduleWithDelay(updateDelayMs) {
             updateProperties()
         }
     }

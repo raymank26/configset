@@ -3,7 +3,7 @@ package com.letsconfig
 class FakeScheduler : Scheduler {
     private val functions: MutableList<() -> Unit> = mutableListOf()
 
-    override fun scheduleAt(delayMs: Long, func: () -> Unit) {
+    override fun scheduleWithDelay(delayMs: Long, func: () -> Unit) {
         functions.add(func)
     }
 

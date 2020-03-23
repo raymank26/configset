@@ -7,7 +7,7 @@ class ExecutorServiceScheduler : Scheduler {
 
     private val executor = Executors.newScheduledThreadPool(1)
 
-    override fun scheduleAt(delayMs: Long, func: () -> Unit) {
+    override fun scheduleWithDelay(delayMs: Long, func: () -> Unit) {
         executor.scheduleWithFixedDelay({ func.invoke() }, 0, delayMs, TimeUnit.MILLISECONDS)
     }
 }
