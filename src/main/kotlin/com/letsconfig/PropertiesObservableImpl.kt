@@ -5,9 +5,7 @@ import kotlin.concurrent.withLock
 
 class PropertiesObservableImpl(
         private val propertiesRepository: PropertiesRepository,
-        private val scheduler: Scheduler,
-        private val updateDelayMs: Long
-
+        private val observableQueue: ObservableQueue<PropertiesChanges>
 ) : PropertiesObservable {
 
     private val observers: MutableSet<PropertiesObserver> = mutableSetOf()
@@ -17,9 +15,12 @@ class PropertiesObservableImpl(
     private var lastKnownVersion: Long? = null
 
     fun start() {
-        updateProperties()
-        scheduler.scheduleWithDelay(updateDelayMs) {
-            updateProperties()
+        propertiesRepository.subscribe {
+            observableQueue.put(it)
+        }
+        updateProperties(propertiesRepository.getUpdatedProperties(null))
+        observableQueue.subscribe {
+            updateProperties(it)
         }
     }
 
@@ -30,11 +31,10 @@ class PropertiesObservableImpl(
         }
     }
 
-    private fun updateProperties() {
-        val updatedProperties = propertiesRepository.getUpdatedProperties(lastKnownVersion)
+    private fun updateProperties(updatedProperties: PropertiesChanges) {
         if (updatedProperties.items.isEmpty()) {
             require(lastKnownVersion == updatedProperties.lastVersion)
-            return;
+            return
         }
         observersLock.withLock {
             for (observer in observers) {

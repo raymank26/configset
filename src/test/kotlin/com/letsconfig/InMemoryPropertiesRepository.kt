@@ -3,6 +3,7 @@ package com.letsconfig
 class InMemoryPropertiesRepository(propertiesChanges: PropertiesChanges) : PropertiesRepository {
 
     private val diffPropertiesChanges: MutableMap<Version, PropertiesChanges> = mutableMapOf()
+    private val singleObservable = SingleObservable<PropertiesChanges>(null)
 
     init {
         diffPropertiesChanges[Version(null)] = propertiesChanges
@@ -12,8 +13,12 @@ class InMemoryPropertiesRepository(propertiesChanges: PropertiesChanges) : Prope
         return diffPropertiesChanges[Version(fromVersion)]!!
     }
 
-    fun putPropertiesChanges(fromVersion: Long?, propertiesChanges: PropertiesChanges) {
-        diffPropertiesChanges[Version(fromVersion)] = propertiesChanges
+    override fun subscribe(onChanges: (PropertiesChanges) -> Unit) {
+        singleObservable.subscribe(onChanges)
+    }
+
+    fun pushChanges(propertiesChanges: PropertiesChanges) {
+        singleObservable.handle(propertiesChanges)
     }
 }
 

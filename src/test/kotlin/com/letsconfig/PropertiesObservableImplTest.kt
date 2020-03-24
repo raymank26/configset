@@ -1,5 +1,6 @@
 package com.letsconfig
 
+import org.awaitility.Awaitility
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -25,9 +26,11 @@ class PropertiesObservableImplTest {
                 PropertyItem.Deleted("app", "key"),
                 PropertyItem.Updated("app2", "key2", "value2")
         ))
-        controller.updateProperties(1, updateProperties)
+        controller.updateProperties(updateProperties)
 
-        assertEquals(updateProperties, propertiesObserver.propertiesChanges)
+        Awaitility.await().untilAsserted {
+            assertEquals(updateProperties, propertiesObserver.propertiesChanges)
+        }
     }
 
     @Test
@@ -37,7 +40,7 @@ class PropertiesObservableImplTest {
 
         controller.removeObserver(propertiesObserver)
 
-        controller.updateProperties(1, PropertiesChanges(2, listOf(
+        controller.updateProperties(PropertiesChanges(2, listOf(
                 PropertyItem.Updated("app", "key", "value"),
                 PropertyItem.Updated("app2", "key2", "value2")
         )))
@@ -48,16 +51,14 @@ class PropertiesObservableImplTest {
 
 class PropertiesObservableController(startProperties: PropertiesChanges) {
     private val propertiesRepository: InMemoryPropertiesRepository = InMemoryPropertiesRepository(startProperties)
-    private val scheduler: FakeScheduler = FakeScheduler()
-    private val propertiesObservable = PropertiesObservableImpl(propertiesRepository, scheduler, 5)
+    private val propertiesObservable = PropertiesObservableImpl(propertiesRepository, BlockingObservableQueue())
 
     init {
         propertiesObservable.start()
     }
 
-    fun updateProperties(fromVersion: Long?, propertiesChanges: PropertiesChanges) {
-        propertiesRepository.putPropertiesChanges(fromVersion, propertiesChanges)
-        scheduler.fire()
+    fun updateProperties(propertiesChanges: PropertiesChanges) {
+        propertiesRepository.pushChanges(propertiesChanges)
     }
 
     fun addObserver(propertiesObserver: PropertiesObserver) {

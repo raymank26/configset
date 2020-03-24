@@ -40,6 +40,7 @@ dependencies {
     compile group: 'io.prometheus', name: 'simpleclient_servlet', version: '0.0.21'
     compile group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.0.21'
 
+    testCompile 'org.awaitility:awaitility:4.0.2'
     testCompile 'junit:junit:4.12'
 }
 
