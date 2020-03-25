@@ -7,12 +7,14 @@ class BlockingObservableQueue<T> : ObservableQueue<T> {
     private val blockingQueue = ArrayBlockingQueue<T>(100_000)
 
     private fun startConsumer() {
-        Thread {
+        val thread = Thread {
             while (true) {
                 val event = blockingQueue.take()
                 singleObservable.handle(event)
             }
-        }.start()
+        }
+        thread.isDaemon = true
+        thread.start()
     }
 
     override fun put(event: T) {
