@@ -1,4 +1,4 @@
-package com.letsconfig
+package com.letsconfig.model
 
 interface PropertiesObserver {
     fun handleChanges(propertiesChanges: PropertiesChanges)

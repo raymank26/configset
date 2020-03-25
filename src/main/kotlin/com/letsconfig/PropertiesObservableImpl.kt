@@ -1,5 +1,7 @@
 package com.letsconfig
 
+import com.letsconfig.model.PropertiesChanges
+import com.letsconfig.model.PropertiesObserver
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 

@@ -1,5 +1,7 @@
 package com.letsconfig
 
+import com.letsconfig.model.PropertiesChanges
+
 class InMemoryPropertiesRepository(propertiesChanges: PropertiesChanges) : PropertiesRepository {
 
     private val diffPropertiesChanges: MutableMap<Version, PropertiesChanges> = mutableMapOf()

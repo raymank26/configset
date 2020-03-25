@@ -1,5 +1,8 @@
 package com.letsconfig
 
+import com.letsconfig.model.PropertiesChanges
+import com.letsconfig.model.PropertiesObserver
+import com.letsconfig.model.PropertyItem
 import org.awaitility.Awaitility
 import org.junit.Assert.assertEquals
 import org.junit.Test
