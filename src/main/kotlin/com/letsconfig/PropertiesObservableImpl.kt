@@ -32,6 +32,9 @@ class PropertiesObservableImpl(
     }
 
     private fun updateProperties(updatedProperties: PropertiesChanges) {
+        if (lastKnownVersion != null && updatedProperties.lastVersion <= lastKnownVersion!!) {
+            return
+        }
         if (updatedProperties.items.isEmpty()) {
             require(lastKnownVersion == updatedProperties.lastVersion)
             return

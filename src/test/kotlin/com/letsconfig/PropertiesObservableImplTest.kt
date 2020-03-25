@@ -14,7 +14,7 @@ class PropertiesObservableImplTest {
         val propertiesObserver = InMemoryPropertiesObserver(null)
         controller.addObserver(propertiesObserver)
 
-        assertEquals(startProperties, propertiesObserver.propertiesChanges)
+        assertEquals(startProperties.items, propertiesObserver.propertiesChanges)
     }
 
     @Test
@@ -29,7 +29,7 @@ class PropertiesObservableImplTest {
         controller.updateProperties(updateProperties)
 
         Awaitility.await().untilAsserted {
-            assertEquals(updateProperties, propertiesObserver.propertiesChanges)
+            assertEquals(startProperties.items.plus(updateProperties.items), propertiesObserver.propertiesChanges)
         }
     }
 
@@ -45,7 +45,26 @@ class PropertiesObservableImplTest {
                 PropertyItem.Updated("app2", "key2", "value2")
         )))
 
-        assertEquals(startProperties, propertiesObserver.propertiesChanges)
+        assertEquals(startProperties.items, propertiesObserver.propertiesChanges)
+    }
+
+    @Test
+    fun expiredPush() {
+        val propertiesObserver = InMemoryPropertiesObserver(null)
+        controller.addObserver(propertiesObserver)
+
+        val updateProperties4 = PropertiesChanges(4, listOf(
+                PropertyItem.Updated("app", "key", "value"),
+                PropertyItem.Updated("app2", "key2", "value2")
+        ))
+        controller.updateProperties(updateProperties4)
+        controller.updateProperties(PropertiesChanges(3, listOf(
+                PropertyItem.Updated("app3", "key4", "value4")
+        )))
+
+        Awaitility.await().untilAsserted {
+            assertEquals(startProperties.items.plus(updateProperties4.items), propertiesObserver.propertiesChanges)
+        }
     }
 }
 

@@ -2,12 +2,12 @@ package com.letsconfig
 
 class InMemoryPropertiesObserver(private val lastKnownVersion: Long?) : PropertiesObserver {
 
-    var propertiesChanges: PropertiesChanges? = null
-        private set
+    private val _propertiesChanges = mutableListOf<PropertyItem>()
 
+    val propertiesChanges: List<PropertyItem> = _propertiesChanges
 
     override fun handleChanges(propertiesChanges: PropertiesChanges) {
-        this.propertiesChanges = propertiesChanges
+        this._propertiesChanges.addAll(propertiesChanges.items)
     }
 
     override fun lastKnownVersion(): Long? {
