@@ -2,17 +2,17 @@ package com.letsconfig.network
 
 interface NetworkApi {
     fun listApplications(): List<String>
-    fun listProperties(appName: String): List<String>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
     fun updateProperty(appName: String, hostName: String, propertyName: String, value: String): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
-    fun addToWatch(subscriberId: Long, applicationName: String): List<PropertyItem>
-    fun subscribe(subscriber: WatchSubscriber)
+    fun subscribeApplication(subscriberId: String, hostName: String, applicationName: String): List<PropertyItem.Updated>
+    fun watchChanges(subscriber: WatchSubscriber)
+    fun unsubscribe(subscriberId: String)
 }
 
 interface WatchSubscriber {
-    fun getId(): Long
+    fun getId(): String
     fun pushChanges(change: PropertyItem)
 }
 

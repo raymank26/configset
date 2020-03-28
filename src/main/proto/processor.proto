@@ -1,0 +1,106 @@
+syntax = "proto3";
+option java_multiple_files = true;
+
+package com.letsconfig.network.grpc.common;
+
+message ApplicationRequest {
+    string applicationName = 1;
+}
+
+message ApplicationCreatedResponse {
+    Type type = 1;
+    enum Type {
+        OK = 0;
+        ALREADY_EXISTS = 1;
+    }
+}
+
+message SubscriberInfoRequest {
+    string id = 1;
+}
+
+message PropertyItem {
+    UpdateType updateType = 1;
+    string applicationName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+    int64 version = 5;
+
+
+    enum UpdateType {
+        UPDATE = 0;
+        DELETE = 1;
+    }
+}
+
+message SubscribeApplicationRequest {
+    string hostName = 1;
+    string subscriberId = 2;
+    string applicationName = 3;
+}
+
+message ApplicationSnapshotResponse {
+    repeated PropertyItem items = 1;
+}
+
+message EmptyRequest {
+}
+
+message ApplicationsResponse {
+    repeated string application = 1;
+}
+
+message CreateHostRequest {
+    string hostName = 1;
+}
+
+message CreateHostResponse {
+    Type type = 1;
+    enum Type {
+        OK = 0;
+        HOST_ALREADY_EXISTS = 1;
+    }
+}
+
+message UpdatePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+}
+
+message UpdatePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+        OK = 0;
+        HOST_NOT_FOUND = 1;
+        APPLICATION_NOT_FOUND = 2;
+    }
+}
+
+message DeletePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+}
+
+message DeletePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+        OK = 0;
+        HOST_NOT_FOUND = 1;
+        APPLICATION_NOT_FOUND = 2;
+    }
+}
+
+service ConfigurationService {
+    rpc createApplication (ApplicationRequest) returns (ApplicationCreatedResponse);
+    rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
+    rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+    rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
+    rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
+    rpc subscribeApplication (SubscribeApplicationRequest) returns (ApplicationSnapshotResponse);
+    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertyItem);
+}
