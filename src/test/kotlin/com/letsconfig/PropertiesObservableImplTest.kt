@@ -9,7 +9,7 @@ import org.junit.Test
 
 class PropertiesObservableImplTest {
 
-    private val startProperties = PropertiesChanges(1, listOf(PropertyItem.Updated("app", "key", "value")))
+    private val startProperties = PropertiesChanges(1, listOf(PropertyItem.Updated("app", "key", "value", 1)))
     private val controller = PropertiesObservableController(startProperties)
 
     @Test
@@ -25,9 +25,9 @@ class PropertiesObservableImplTest {
         val propertiesObserver = InMemoryPropertiesObserver(null)
         controller.addObserver(propertiesObserver)
 
-        val updateProperties = PropertiesChanges(2, listOf(
-                PropertyItem.Deleted("app", "key"),
-                PropertyItem.Updated("app2", "key2", "value2")
+        val updateProperties = PropertiesChanges(3, listOf(
+                PropertyItem.Deleted("app", "key", 2),
+                PropertyItem.Updated("app2", "key2", "value2", 3)
         ))
         controller.updateProperties(updateProperties)
 
@@ -43,9 +43,9 @@ class PropertiesObservableImplTest {
 
         controller.removeObserver(propertiesObserver)
 
-        controller.updateProperties(PropertiesChanges(2, listOf(
-                PropertyItem.Updated("app", "key", "value"),
-                PropertyItem.Updated("app2", "key2", "value2")
+        controller.updateProperties(PropertiesChanges(3, listOf(
+                PropertyItem.Updated("app", "key", "value", 2),
+                PropertyItem.Updated("app2", "key2", "value2", 3)
         )))
 
         assertEquals(startProperties.items, propertiesObserver.propertiesChanges)
@@ -57,12 +57,12 @@ class PropertiesObservableImplTest {
         controller.addObserver(propertiesObserver)
 
         val updateProperties4 = PropertiesChanges(4, listOf(
-                PropertyItem.Updated("app", "key", "value"),
-                PropertyItem.Updated("app2", "key2", "value2")
+                PropertyItem.Updated("app", "key", "value", 3),
+                PropertyItem.Updated("app2", "key2", "value2", 4)
         ))
         controller.updateProperties(updateProperties4)
         controller.updateProperties(PropertiesChanges(3, listOf(
-                PropertyItem.Updated("app3", "key4", "value4")
+                PropertyItem.Updated("app3", "key4", "value4", 3)
         )))
 
         Awaitility.await().untilAsserted {
@@ -73,7 +73,7 @@ class PropertiesObservableImplTest {
 
 class PropertiesObservableController(startProperties: PropertiesChanges) {
     private val propertiesRepository: InMemoryPropertiesRepository = InMemoryPropertiesRepository(startProperties)
-    private val propertiesObservable = PropertiesObservableImpl(propertiesRepository, BlockingObservableQueue())
+    private val propertiesObservable = PropertiesObservable(propertiesRepository, BlockingObservableQueue())
 
     init {
         propertiesObservable.start()

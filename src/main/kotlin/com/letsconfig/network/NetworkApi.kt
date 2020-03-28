@@ -1,14 +1,26 @@
 package com.letsconfig.network
 
-import com.letsconfig.model.PropertiesObserver
-
 interface NetworkApi {
+    fun listApplications(): List<String>
+    fun listProperties(appName: String): List<String>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
     fun updateProperty(appName: String, hostName: String, propertyName: String, value: String): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
-    fun subscribe(observer: PropertiesObserver)
+    fun addToWatch(subscriberId: Long, applicationName: String): List<PropertyItem>
+    fun subscribe(subscriber: WatchSubscriber)
 }
+
+interface WatchSubscriber {
+    fun getId(): Long
+    fun pushChanges(change: PropertyItem)
+}
+
+sealed class PropertyItem {
+    data class Updated(val applicationName: String, val name: String, val value: String, val version: Long) : PropertyItem()
+    data class Deleted(val applicationName: String, val name: String, val version: Long) : PropertyItem()
+}
+
 
 sealed class CreateApplicationResult {
     object OK : CreateApplicationResult()
