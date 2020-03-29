@@ -1,20 +1,20 @@
 package com.letsconfig
 
+import com.letsconfig.db.ConfigurationApplication
+import com.letsconfig.db.ConfigurationProperty
+
 class ConfigurationResolver {
 
-    fun getProperties(snapshot: Map<String, List<PropertyItem>>, app: String, hostName: String, defaultHostName: String,
-                      lastVersion: Long?): ResolvedConfig {
+    fun getProperties(snapshot: Map<String, ConfigurationApplication>, app: String, hostName: String,
+                      defaultHostName: String, lastVersion: Long?): ResolvedConfig {
 
-        val properties = snapshot[app] ?: return ResolvedConfig(emptyList())
-
-        val byPropertyName: Collection<List<PropertyItem>> = properties.groupBy { it.name }.values
+        val properties: ConfigurationApplication = snapshot[app] ?: return ResolvedConfig(emptyList())
 
         val result = mutableListOf<PropertyItem>()
-        for (props: List<PropertyItem> in byPropertyName) {
-            val byHostsProperties: Map<String, PropertyItem> = props.associateBy { it.hostName }
 
+        for (config: ConfigurationProperty in properties.config.values) {
             for (targetHostName in listOf(hostName, defaultHostName, "host-$app")) {
-                val item: PropertyItem? = byHostsProperties[targetHostName]
+                val item: PropertyItem? = config.hosts[targetHostName]
                 if (item != null && (lastVersion == null || lastVersion < item.version)) {
                     result.add(item)
                     break

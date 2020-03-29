@@ -4,7 +4,7 @@ interface ConfigurationService {
     fun listApplications(): List<String>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: String): PropertyCreateResult
+    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
     fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String, applicationName: String,
                              lastKnownVersion: Long?): List<PropertyItem>

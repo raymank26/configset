@@ -1,5 +1,6 @@
 package com.letsconfig
 
+import com.letsconfig.db.ConfigurationApplication
 import com.letsconfig.db.ConfigurationDao
 
 class PropertiesWatchDispatcher(
@@ -11,7 +12,7 @@ class PropertiesWatchDispatcher(
 
     private val subscriptions: MutableMap<SubscriberId, ObserverState> = mutableMapOf()
 
-    private var configurationSnapshot: Map<String, List<PropertyItem>> = mapOf()
+    private var configurationSnapshot: Map<String, ConfigurationApplication> = mapOf()
 
     fun start() {
         scheduler.scheduleWithFixedDelay(updateDelayMs, updateDelayMs) {

@@ -69,7 +69,7 @@ message UpdatePropertyRequest {
     string hostName = 2;
     string propertyName = 3;
     string propertyValue = 4;
-    string version = 5;
+    int64 version = 5;
 }
 
 message UpdatePropertyResponse {
