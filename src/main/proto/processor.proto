@@ -37,6 +37,8 @@ message SubscribeApplicationRequest {
     string hostName = 1;
     string subscriberId = 2;
     string applicationName = 3;
+    string defaultApplicationName = 4;
+    int64 lastKnownVersion = 5;
 }
 
 message ApplicationSnapshotResponse {
@@ -67,6 +69,7 @@ message UpdatePropertyRequest {
     string hostName = 2;
     string propertyName = 3;
     string propertyValue = 4;
+    string version = 5;
 }
 
 message UpdatePropertyResponse {
@@ -76,6 +79,7 @@ message UpdatePropertyResponse {
         OK = 0;
         HOST_NOT_FOUND = 1;
         APPLICATION_NOT_FOUND = 2;
+        UPDATE_CONFLICT = 3;
     }
 }
 
@@ -95,10 +99,22 @@ message DeletePropertyResponse {
     }
 }
 
+message ReadPropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+}
+
+message ReadPropertyResponse {
+    string applicationName = 1;
+    repeated PropertyItem items = 2;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+    rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
     rpc subscribeApplication (SubscribeApplicationRequest) returns (ApplicationSnapshotResponse);

@@ -1,11 +1,11 @@
 package com.letsconfig.network.grpc
 
-import com.letsconfig.network.CreateApplicationResult
-import com.letsconfig.network.DeletePropertyResult
-import com.letsconfig.network.HostCreateResult
-import com.letsconfig.network.NetworkApi
-import com.letsconfig.network.PropertyCreateResult
-import com.letsconfig.network.WatchSubscriber
+import com.letsconfig.ConfigurationService
+import com.letsconfig.CreateApplicationResult
+import com.letsconfig.DeletePropertyResult
+import com.letsconfig.HostCreateResult
+import com.letsconfig.PropertyCreateResult
+import com.letsconfig.WatchSubscriber
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
 import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
@@ -24,10 +24,10 @@ import com.letsconfig.network.grpc.common.UpdatePropertyResponse
 import io.grpc.Context
 import io.grpc.stub.StreamObserver
 
-class GrpcConfigurationService(private val networkApi: NetworkApi) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
+class GrpcConfigurationService(private val configurationService: ConfigurationService) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
     override fun createApplication(request: ApplicationRequest, responseObserver: StreamObserver<ApplicationCreatedResponse>) {
-        when (networkApi.createApplication(request.applicationName)) {
+        when (configurationService.createApplication(request.applicationName)) {
             CreateApplicationResult.OK -> {
                 responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
                         .setType(ApplicationCreatedResponse.Type.OK)
@@ -43,12 +43,12 @@ class GrpcConfigurationService(private val networkApi: NetworkApi) : Configurati
     }
 
     override fun listApplications(request: EmptyRequest, responseObserver: StreamObserver<ApplicationsResponse>) {
-        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplication(networkApi.listApplications()).build())
+        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplication(configurationService.listApplications()).build())
         responseObserver.onCompleted()
     }
 
     override fun createHost(request: CreateHostRequest, responseObserver: StreamObserver<CreateHostResponse>) {
-        when (networkApi.createHost(request.hostName)) {
+        when (configurationService.createHost(request.hostName)) {
             HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
             HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
         }
@@ -56,16 +56,17 @@ class GrpcConfigurationService(private val networkApi: NetworkApi) : Configurati
     }
 
     override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
-        when (networkApi.updateProperty(request.applicationName, request.hostName, request.propertyName, request.propertyValue)) {
+        when (configurationService.updateProperty(request.applicationName, request.hostName, request.propertyName, request.propertyValue, request.version)) {
             PropertyCreateResult.OK -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.OK).build())
             PropertyCreateResult.HostNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.HOST_NOT_FOUND).build())
             PropertyCreateResult.ApplicationNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND).build())
+            PropertyCreateResult.UpdateConflict -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.UPDATE_CONFLICT).build())
         }
         responseObserver.onCompleted()
     }
 
     override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
-        when (networkApi.deleteProperty(request.applicationName, request.hostName, request.propertyName)) {
+        when (configurationService.deleteProperty(request.applicationName, request.hostName, request.propertyName)) {
             DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
             DeletePropertyResult.HostNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.HOST_NOT_FOUND).build())
             DeletePropertyResult.ApplicationNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.APPLICATION_NOT_FOUND).build())
@@ -74,31 +75,39 @@ class GrpcConfigurationService(private val networkApi: NetworkApi) : Configurati
     }
 
     override fun subscribeApplication(request: SubscribeApplicationRequest, responseObserver: StreamObserver<ApplicationSnapshotResponse>) {
-        val properties: List<com.letsconfig.network.PropertyItem.Updated> = networkApi.subscribeApplication(request.subscriberId, request.hostName, request.applicationName)
+        val properties: List<com.letsconfig.PropertyItem> = configurationService.subscribeApplication(request.subscriberId,
+                request.defaultApplicationName, request.hostName, request.applicationName, request.lastKnownVersion)
         responseObserver.onNext(ApplicationSnapshotResponse.newBuilder().addAllItems(properties.map { prop ->
-            PropertyItem.newBuilder()
-                    .setUpdateType(PropertyItem.UpdateType.UPDATE)
+            val res = PropertyItem.newBuilder()
                     .setApplicationName(prop.applicationName)
                     .setPropertyName(prop.name)
-                    .setPropertyValue(prop.value)
                     .setVersion(prop.version)
-                    .build()
+            when (prop) {
+                is com.letsconfig.PropertyItem.Updated -> {
+                    res.propertyValue = prop.value
+                    res.updateType = PropertyItem.UpdateType.UPDATE
+                }
+                is com.letsconfig.PropertyItem.Deleted -> {
+                    res.updateType = PropertyItem.UpdateType.DELETE
+                }
+            }
+            res.build()
         }).build())
         responseObserver.onCompleted()
     }
 
     override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertyItem>) {
-        networkApi.watchChanges(object : WatchSubscriber {
+        configurationService.watchChanges(object : WatchSubscriber {
             override fun getId(): String {
                 return request.id
             }
 
-            override fun pushChanges(change: com.letsconfig.network.PropertyItem) {
+            override fun pushChanges(change: com.letsconfig.PropertyItem) {
                 if (Context.current().isCancelled) {
-                    networkApi.unsubscribe(request.id)
+                    configurationService.unsubscribe(request.id)
                 }
                 when (change) {
-                    is com.letsconfig.network.PropertyItem.Updated -> {
+                    is com.letsconfig.PropertyItem.Updated -> {
                         responseObserver.onNext(PropertyItem.newBuilder()
                                 .setUpdateType(PropertyItem.UpdateType.UPDATE)
                                 .setApplicationName(change.applicationName)
@@ -108,7 +117,7 @@ class GrpcConfigurationService(private val networkApi: NetworkApi) : Configurati
                                 .build()
                         )
                     }
-                    is com.letsconfig.network.PropertyItem.Deleted -> {
+                    is com.letsconfig.PropertyItem.Deleted -> {
                         responseObserver.onNext(PropertyItem.newBuilder()
                                 .setUpdateType(PropertyItem.UpdateType.DELETE)
                                 .setApplicationName(change.applicationName)

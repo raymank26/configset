@@ -1,12 +1,14 @@
-package com.letsconfig.network
+package com.letsconfig
 
-interface NetworkApi {
+interface ConfigurationService {
     fun listApplications(): List<String>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String): PropertyCreateResult
+    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: String): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
-    fun subscribeApplication(subscriberId: String, hostName: String, applicationName: String): List<PropertyItem.Updated>
+    fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String, applicationName: String,
+                             lastKnownVersion: Long?): List<PropertyItem>
+
     fun watchChanges(subscriber: WatchSubscriber)
     fun unsubscribe(subscriberId: String)
 }
@@ -17,10 +19,27 @@ interface WatchSubscriber {
 }
 
 sealed class PropertyItem {
-    data class Updated(val applicationName: String, val name: String, val value: String, val version: Long) : PropertyItem()
-    data class Deleted(val applicationName: String, val name: String, val version: Long) : PropertyItem()
-}
 
+    abstract val applicationName: String
+    abstract val name: String
+    abstract val version: Long
+    abstract val hostName: String
+
+    data class Updated(
+            override val applicationName: String,
+            override val name: String,
+            override val hostName: String,
+            override val version: Long,
+            val value: String
+    ) : PropertyItem()
+
+    data class Deleted(
+            override val applicationName: String,
+            override val name: String,
+            override val hostName: String,
+            override val version: Long
+    ) : PropertyItem()
+}
 
 sealed class CreateApplicationResult {
     object OK : CreateApplicationResult()
@@ -36,6 +55,7 @@ sealed class PropertyCreateResult {
     object OK : PropertyCreateResult()
     object HostNotFound : PropertyCreateResult()
     object ApplicationNotFound : PropertyCreateResult()
+    object UpdateConflict : PropertyCreateResult()
 }
 
 sealed class DeletePropertyResult {
