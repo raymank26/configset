@@ -66,14 +66,14 @@ class PropertiesWatchDispatcher(
 
     private fun pushToClients() {
         for (observerState: ObserverState in subscriptions.values) {
-            if (observerState.watchSubscriber != null) {
+            if (observerState.watchSubscriber == null) {
                 continue
             }
             for (appState: ApplicationState in observerState.applications) {
                 val changes = configurationResolver.getProperties(configurationSnapshot, appState.appName,
-                        observerState.defaultHostName, observerState.hostName, appState.lastKnownVersion)
+                        observerState.hostName, observerState.defaultHostName, appState.lastKnownVersion)
                 for (propertyItem in changes.propertyItems) {
-                    observerState.watchSubscriber!!.pushChanges(propertyItem)
+                    observerState.watchSubscriber.pushChanges(propertyItem)
                 }
             }
         }

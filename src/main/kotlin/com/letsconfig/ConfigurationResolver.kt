@@ -13,7 +13,7 @@ class ConfigurationResolver {
         val result = mutableListOf<PropertyItem>()
 
         for (config: ConfigurationProperty in properties.config.values) {
-            for (targetHostName in listOf(hostName, defaultHostName, "host-$app")) {
+            for (targetHostName: String in listOf(hostName, "host-$app", defaultHostName)) {
                 val item: PropertyItem? = config.hosts[targetHostName]
                 if (item != null && (lastVersion == null || lastVersion < item.version)) {
                     result.add(item)
@@ -21,7 +21,7 @@ class ConfigurationResolver {
                 }
             }
         }
-        return ResolvedConfig(emptyList())
+        return ResolvedConfig(result)
     }
 }
 

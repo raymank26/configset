@@ -50,10 +50,10 @@ class InMemoryConfigurationDao(snapshot: Map<String, ConfigurationApplication>) 
 
             val confProperty: InConfigurationProperty? = content.config[propertyName]
             if (confProperty == null) {
-                InConfigurationProperty(propertyName, mutableMapOf(hostName to propertyItem))
-            } else {
-                confProperty.hosts[hostName] = propertyItem
+                content.config[propertyName] = InConfigurationProperty(propertyName, mutableMapOf(hostName to propertyItem))
             }
+
+            content.config[propertyName]!!.hosts[hostName] = propertyItem
             content
         }
         return res

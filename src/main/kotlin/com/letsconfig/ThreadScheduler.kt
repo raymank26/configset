@@ -11,7 +11,6 @@ class ThreadScheduler : Scheduler {
     private val scheduler = Executors.newScheduledThreadPool(16, ThreadFactoryBuilder().setDaemon(true).build())
 
     override fun scheduleWithFixedDelay(initialDelayMs: Long, delayMs: Long, action: () -> Unit) {
-        this.javaClass
         scheduler.scheduleWithFixedDelay({
             try {
                 action.invoke()
