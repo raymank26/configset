@@ -49,7 +49,8 @@ class PropertiesWatchDispatcher(
     fun watchChanges(subscriber: WatchSubscriber) {
         subscriptions.compute(subscriber.getId()) { _, value ->
             require(value != null)
-            value.copy(watchSubscriber = subscriber)
+            value.watchSubscriber = subscriber
+            value
         }
     }
 
@@ -66,15 +67,15 @@ class PropertiesWatchDispatcher(
 
     private fun pushToClients() {
         for (observerState: ObserverState in subscriptions.values) {
-            if (observerState.watchSubscriber == null) {
-                continue
-            }
+            val watchSubscriber = observerState.watchSubscriber ?: continue
+
             for (appState: ApplicationState in observerState.applications) {
                 val changes = configurationResolver.getProperties(configurationSnapshot, appState.appName,
-                        observerState.hostName, observerState.defaultHostName, appState.lastKnownVersion)
+                        observerState.hostName, observerState.defaultHostName, appState.lastVersion)
                 for (propertyItem in changes.propertyItems) {
-                    observerState.watchSubscriber.pushChanges(propertyItem)
+                    watchSubscriber.pushChanges(propertyItem)
                 }
+                appState.lastVersion = changes.lastVersion
             }
         }
     }
@@ -90,8 +91,8 @@ private data class ObserverState(
         val hostName: String,
         val defaultHostName: String,
         val applications: Set<ApplicationState>,
-        val watchSubscriber: WatchSubscriber?
+        var watchSubscriber: WatchSubscriber?
 )
 
-private data class ApplicationState(val appName: String, val lastKnownVersion: Long?)
+private data class ApplicationState(val appName: String, var lastVersion: Long?)
 

@@ -45,7 +45,7 @@ class ServiceRule : ExternalResource() {
 
     fun createApplication(app: String) {
         val res = blockingClient.createApplication(ApplicationRequest.newBuilder()
-                .setApplicationName("test-app")
+                .setApplicationName(app)
                 .build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, res.type)
     }
