@@ -94,8 +94,7 @@ message DeletePropertyResponse {
 
     enum Type {
         OK = 0;
-        HOST_NOT_FOUND = 1;
-        APPLICATION_NOT_FOUND = 2;
+        PROPERTY_NOT_FOUND = 1;
     }
 }
 

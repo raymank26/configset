@@ -2,6 +2,8 @@ package com.letsconfig
 
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
 import com.letsconfig.network.grpc.common.ApplicationRequest
+import com.letsconfig.network.grpc.common.DeletePropertyRequest
+import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.EmptyRequest
 import com.letsconfig.network.grpc.common.UpdatePropertyRequest
 import com.letsconfig.network.grpc.common.UpdatePropertyResponse
@@ -36,5 +38,21 @@ class GrpcCrudTest {
                 .build())
 
         Assert.assertEquals(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND, result.type)
+    }
+
+    @Test
+    fun testDeletePropertyNotFoundWithApp() {
+        serviceRule.createApplication("test-app")
+        testDeletePropertyNotFoundWithoutApp()
+    }
+
+    @Test
+    fun testDeletePropertyNotFoundWithoutApp() {
+        val res = serviceRule.blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+                .setApplicationName("test-app")
+                .setPropertyName("Prop")
+                .setHostName("host")
+                .build())
+        Assert.assertEquals(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND, res.type)
     }
 }

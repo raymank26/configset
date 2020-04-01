@@ -40,27 +40,42 @@ class InMemoryConfigurationDao(snapshot: Map<String, ConfigurationApplication>) 
     }
 
     override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long): PropertyCreateResult {
+        return internalSet(PropertyItem.Updated(appName, propertyName, hostName, version, value))
+    }
+
+    override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+        val hostsMap = inMemorySnapshot[appName]?.config?.get(propertyName)?.hosts
+        if (hostsMap == null || !hostsMap.contains(hostName)) {
+            return DeletePropertyResult.PropertyNotFound
+        }
+        val lastVersionInApp = getLastVersionInApp(appName) ?: return DeletePropertyResult.PropertyNotFound
+        internalSet(PropertyItem.Deleted(appName, propertyName, hostName, lastVersionInApp + 1))
+        return DeletePropertyResult.OK
+    }
+
+    private fun internalSet(propertyItem: PropertyItem): PropertyCreateResult {
         var res: PropertyCreateResult = PropertyCreateResult.OK
-        inMemorySnapshot.compute(appName) { _, content ->
+        inMemorySnapshot.compute(propertyItem.applicationName) { _, content ->
             if (content == null) {
                 res = PropertyCreateResult.ApplicationNotFound
                 return@compute null
             }
-            val propertyItem = PropertyItem.Updated(appName, propertyName, hostName, version, value)
 
-            val confProperty: InConfigurationProperty? = content.config[propertyName]
-            if (confProperty == null) {
-                content.config[propertyName] = InConfigurationProperty(propertyName, mutableMapOf(hostName to propertyItem))
+            content.config.compute(propertyItem.name) { _, confProperty: InConfigurationProperty? ->
+                if (confProperty == null) {
+                    InConfigurationProperty(propertyItem.name, mutableMapOf(propertyItem.hostName to propertyItem))
+                } else {
+                    confProperty.hosts[propertyItem.hostName] = propertyItem
+                    confProperty
+                }
             }
-
-            content.config[propertyName]!!.hosts[hostName] = propertyItem
             content
         }
         return res
     }
 
-    override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
-        TODO()
+    private fun getLastVersionInApp(appName: String): Long? {
+        return inMemorySnapshot[appName]?.config?.values?.flatMap { it.hosts.values.map { it.version } }?.max()
     }
 
     override fun getConfigurationSnapshot(): Map<String, ConfigurationApplication> {

@@ -60,6 +60,5 @@ sealed class PropertyCreateResult {
 
 sealed class DeletePropertyResult {
     object OK : DeletePropertyResult()
-    object HostNotFound : DeletePropertyResult()
-    object ApplicationNotFound : DeletePropertyResult()
+    object PropertyNotFound : DeletePropertyResult()
 }

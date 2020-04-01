@@ -68,8 +68,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
         when (configurationService.deleteProperty(request.applicationName, request.hostName, request.propertyName)) {
             DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
-            DeletePropertyResult.HostNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.HOST_NOT_FOUND).build())
-            DeletePropertyResult.ApplicationNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.APPLICATION_NOT_FOUND).build())
+            DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND).build())
         }
         responseObserver.onCompleted()
     }

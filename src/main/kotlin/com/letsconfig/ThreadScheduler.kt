@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 
 class ThreadScheduler : Scheduler {
-    private val log = log()
+    private val log = createLogger()
 
     private val scheduler = Executors.newScheduledThreadPool(16, ThreadFactoryBuilder().setDaemon(true).build())
 

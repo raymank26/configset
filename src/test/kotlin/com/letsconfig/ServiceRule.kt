@@ -5,6 +5,8 @@ import com.letsconfig.network.grpc.GrpcConfigurationService
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
 import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
+import com.letsconfig.network.grpc.common.DeletePropertyRequest
+import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.UpdatePropertyRequest
 import com.letsconfig.network.grpc.common.UpdatePropertyResponse
 import io.grpc.ManagedChannel
@@ -59,5 +61,15 @@ class ServiceRule : ExternalResource() {
                 .setVersion(version)
                 .build())
         Assert.assertEquals(UpdatePropertyResponse.Type.OK, res.type)
+    }
+
+    fun deleteProperty(appName: String, hostName: String, propertyName: String) {
+        val res: DeletePropertyResponse = blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .build()
+        )
+        Assert.assertEquals(res.type, DeletePropertyResponse.Type.OK)
     }
 }
