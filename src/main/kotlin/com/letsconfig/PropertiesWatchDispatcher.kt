@@ -2,6 +2,7 @@ package com.letsconfig
 
 import com.letsconfig.db.ConfigurationApplication
 import com.letsconfig.db.ConfigurationDao
+import com.letsconfig.db.ConfigurationProperty
 
 class PropertiesWatchDispatcher(
         private val configurationDao: ConfigurationDao,
@@ -45,6 +46,7 @@ class PropertiesWatchDispatcher(
         return config.propertyItems
     }
 
+
     @Synchronized
     fun watchChanges(subscriber: WatchSubscriber) {
         subscriptions.compute(subscriber.getId()) { _, value ->
@@ -61,8 +63,21 @@ class PropertiesWatchDispatcher(
 
     @Synchronized
     private fun update() {
-        configurationSnapshot = configurationDao.getConfigurationSnapshot()
+        configurationSnapshot = listToMapping(configurationDao.getConfigurationSnapshotList())
         pushToClients()
+    }
+
+    private fun listToMapping(properties: List<PropertyItem>): Map<String, ConfigurationApplication> {
+        return properties
+                .groupBy { it.applicationName }
+                .mapValues { entry ->
+                    val nameToByHost: Map<String, ConfigurationProperty> = entry.value
+                            .groupBy { it.name }
+                            .mapValues { prop ->
+                                ConfigurationProperty(prop.key, prop.value.associateBy { it.hostName })
+                            }
+                    ConfigurationApplication(entry.key, nameToByHost)
+                }
     }
 
     private fun pushToClients() {
