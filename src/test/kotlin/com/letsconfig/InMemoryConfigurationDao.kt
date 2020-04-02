@@ -1,97 +1,82 @@
 package com.letsconfig
 
-import com.letsconfig.db.ConfigurationApplication
 import com.letsconfig.db.ConfigurationDao
-import com.letsconfig.db.ConfigurationProperty
 
-class InMemoryConfigurationDao(snapshot: Map<String, ConfigurationApplication>) : ConfigurationDao {
+class InMemoryConfigurationDao(snapshot: List<PropertyItem>) : ConfigurationDao {
 
-    private val inMemorySnapshot: MutableMap<String, InConfigurationApplication> = mutableMapOf()
+    private val properties: MutableList<PropertyItem> = snapshot.toMutableList()
+    private val applications: MutableMap<String, Long>
+    private val hosts: MutableList<String>
 
     init {
-        for ((appName, confApp) in snapshot) {
-            val propConfig = mutableMapOf<String, InConfigurationProperty>()
-            for ((propName, hostToPropItem) in confApp.config) {
-                propConfig[propName] = InConfigurationProperty(propName, hostToPropItem.hosts.toMutableMap())
-            }
-            inMemorySnapshot[appName] = InConfigurationApplication(appName, propConfig)
-        }
+        applications = snapshot.groupBy { it.applicationName }
+                .mapValues { properties.maxBy { it.version }!!.version }
+                .toMutableMap()
+        hosts = snapshot.map { it.hostName }.toMutableList()
     }
 
     override fun listApplications(): List<String> {
-        return inMemorySnapshot.keys.toList()
+        return applications.keys.toList()
     }
 
     override fun createApplication(appName: String): CreateApplicationResult {
-        var res: CreateApplicationResult = CreateApplicationResult.OK
-        inMemorySnapshot.compute(appName) { _, value ->
-            return@compute if (value == null) {
-                InConfigurationApplication(appName, mutableMapOf())
-            } else {
-                res = CreateApplicationResult.ApplicationAlreadyExists
-                value
-            }
+        if (applications.contains(appName)) {
+            return CreateApplicationResult.ApplicationAlreadyExists
+        } else {
+            applications[appName] = 0
+            return CreateApplicationResult.OK
         }
-        return res
     }
 
     override fun createHost(hostName: String): HostCreateResult {
-        return HostCreateResult.OK
+        if (hosts.contains(hostName)) {
+            return HostCreateResult.HostAlreadyExists
+        } else {
+            hosts.add(hostName)
+            return HostCreateResult.OK
+        }
     }
 
     override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
-        val newVersion = version
-                ?: getLastVersionInApp(appName)?.let { it + 1 }
-                ?: return PropertyCreateResult.ApplicationNotFound
-        return internalSet(PropertyItem.Updated(appName, propertyName, hostName, newVersion, value))
+        val lastVersion = getLastVersionInApp(appName) ?: return PropertyCreateResult.ApplicationNotFound
+        if (!hosts.contains(hostName)) {
+            return PropertyCreateResult.HostNotFound
+        }
+
+        val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
+        if (foundProperty != null) {
+            if (foundProperty.version != version) {
+                return PropertyCreateResult.UpdateConflict
+            } else {
+                properties.remove(foundProperty)
+            }
+        }
+        val newVersion = lastVersion + 1
+        properties.add(PropertyItem.Updated(appName, propertyName, hostName, newVersion, value))
+        applications[appName] = newVersion
+        return PropertyCreateResult.OK
     }
 
     override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
-        val hostsMap = inMemorySnapshot[appName]?.config?.get(propertyName)?.hosts
-        if (hostsMap == null || !hostsMap.contains(hostName)) {
+        val lastVersion = getLastVersionInApp(appName) ?: return DeletePropertyResult.PropertyNotFound
+        if (!hosts.contains(hostName)) {
             return DeletePropertyResult.PropertyNotFound
         }
-        val lastVersionInApp = getLastVersionInApp(appName) ?: return DeletePropertyResult.PropertyNotFound
-        internalSet(PropertyItem.Deleted(appName, propertyName, hostName, lastVersionInApp + 1))
+        val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
+                ?: return DeletePropertyResult.PropertyNotFound
+
+        properties.remove(foundProperty)
+        val newVersion = lastVersion + 1
+        properties.add(PropertyItem.Deleted(appName, propertyName, hostName, lastVersion + 1))
+        applications[appName] = newVersion
         return DeletePropertyResult.OK
     }
 
-    private fun internalSet(propertyItem: PropertyItem): PropertyCreateResult {
-        var res: PropertyCreateResult = PropertyCreateResult.OK
-        inMemorySnapshot.compute(propertyItem.applicationName) { _, content ->
-            if (content == null) {
-                res = PropertyCreateResult.ApplicationNotFound
-                return@compute null
-            }
-
-            content.config.compute(propertyItem.name) { _, confProperty: InConfigurationProperty? ->
-                if (confProperty == null) {
-                    InConfigurationProperty(propertyItem.name, mutableMapOf(propertyItem.hostName to propertyItem))
-                } else {
-                    confProperty.hosts[propertyItem.hostName] = propertyItem
-                    confProperty
-                }
-            }
-            content
-        }
-        return res
-    }
-
     private fun getLastVersionInApp(appName: String): Long? {
-        return inMemorySnapshot[appName]?.config?.values?.flatMap { it.hosts.values.map { it.version } }?.max()
+        return applications[appName]
     }
 
-    override fun getConfigurationSnapshot(): Map<String, ConfigurationApplication> {
-        return inMemorySnapshot
+    override fun getConfigurationSnapshotList(): List<PropertyItem> {
+        return properties
     }
 }
-
-private data class InConfigurationApplication(
-        override val appName: String,
-        override val config: MutableMap<String, InConfigurationProperty>
-) : ConfigurationApplication
-
-private data class InConfigurationProperty(
-        override val propertyName: String,
-        override val hosts: MutableMap<String, PropertyItem>
-) : ConfigurationProperty

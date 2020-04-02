@@ -6,6 +6,8 @@ import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
 import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
+import com.letsconfig.network.grpc.common.CreateHostRequest
+import com.letsconfig.network.grpc.common.CreateHostResponse
 import com.letsconfig.network.grpc.common.DeletePropertyRequest
 import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.PropertyItem
@@ -24,7 +26,7 @@ const val TEST_HOST = "srvd1"
 
 class ServiceRule : ExternalResource() {
 
-    private val configurationDao = InMemoryConfigurationDao(emptyMap())
+    private val configurationDao = InMemoryConfigurationDao(emptyList())
     val updateDelayMs: Long = 1000
     private val propertiesWatchDispatcher = PropertiesWatchDispatcher(
             configurationDao, ConfigurationResolver(), ThreadScheduler(), updateDelayMs)
@@ -52,6 +54,8 @@ class ServiceRule : ExternalResource() {
 
     private fun startServer() {
         grpcConfServer.start()
+        val res = blockingClient.createHost(CreateHostRequest.newBuilder().setHostName(TEST_HOST).build())
+        Assert.assertEquals(CreateHostResponse.Type.OK, res.type)
     }
 
     override fun after() {
