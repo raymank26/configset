@@ -1,4 +1,4 @@
-package com.letsconfig
+package com.letsconfig.extension
 
 import org.slf4j.LoggerFactory
 
