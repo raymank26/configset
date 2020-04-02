@@ -30,7 +30,7 @@ class ServiceRule : ExternalResource() {
             configurationDao, ConfigurationResolver(), ThreadScheduler(), updateDelayMs)
     private val grpcConfServer = GrpcConfigurationServer(
             GrpcConfigurationService(
-                    PersistentConfigurationService(configurationDao, propertiesWatchDispatcher)
+                    ConfigurationService(configurationDao, propertiesWatchDispatcher)
             )
     )
 

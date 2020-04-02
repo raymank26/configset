@@ -1,18 +1,45 @@
 package com.letsconfig
 
-interface ConfigurationService {
-    fun listApplications(): List<String>
-    fun createApplication(appName: String): CreateApplicationResult
-    fun createHost(hostName: String): HostCreateResult
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
-    fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
-    fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String, applicationName: String,
-                             lastKnownVersion: Long?): List<PropertyItem>
+import com.letsconfig.db.ConfigurationDao
 
-    fun watchChanges(subscriber: WatchSubscriber)
-    fun unsubscribe(subscriberId: String)
+class ConfigurationService(
+        private val configurationDao: ConfigurationDao,
+        private val propertiesWatchDispatcher: PropertiesWatchDispatcher
+) {
+
+    fun listApplications(): List<String> {
+        return configurationDao.listApplications()
+    }
+
+    fun createApplication(appName: String): CreateApplicationResult {
+        return configurationDao.createApplication(appName)
+    }
+
+    fun createHost(hostName: String): HostCreateResult {
+        return configurationDao.createHost(hostName)
+    }
+
+    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+        return configurationDao.updateProperty(appName, hostName, propertyName, value, version)
+    }
+
+    fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+        return configurationDao.deleteProperty(appName, hostName, propertyName)
+    }
+
+    fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
+                             applicationName: String, lastKnownVersion: Long?): List<PropertyItem> {
+        return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
+    }
+
+    fun watchChanges(subscriber: WatchSubscriber) {
+        propertiesWatchDispatcher.watchChanges(subscriber)
+    }
+
+    fun unsubscribe(subscriberId: String) {
+        propertiesWatchDispatcher.unsubscribe(subscriberId)
+    }
 }
-
 interface WatchSubscriber {
     fun getId(): String
     fun pushChanges(change: PropertyItem)
