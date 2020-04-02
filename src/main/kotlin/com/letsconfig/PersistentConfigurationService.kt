@@ -19,7 +19,7 @@ class PersistentConfigurationService(
         return configurationDao.createHost(hostName)
     }
 
-    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long): PropertyCreateResult {
+    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
         return configurationDao.updateProperty(appName, hostName, propertyName, value, version)
     }
 

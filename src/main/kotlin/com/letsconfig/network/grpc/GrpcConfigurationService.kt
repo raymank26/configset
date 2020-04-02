@@ -56,7 +56,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
-        when (configurationService.updateProperty(request.applicationName, request.hostName, request.propertyName, request.propertyValue, request.version)) {
+        val version = if (request.version == 0L) null else request.version
+        when (configurationService.updateProperty(request.applicationName, request.hostName, request.propertyName, request.propertyValue, version)) {
             PropertyCreateResult.OK -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.OK).build())
             PropertyCreateResult.HostNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.HOST_NOT_FOUND).build())
             PropertyCreateResult.ApplicationNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND).build())

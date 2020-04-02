@@ -10,7 +10,7 @@ interface ConfigurationDao {
     fun listApplications(): List<String>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long): PropertyCreateResult
+    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
     fun getConfigurationSnapshot(): Map<String, ConfigurationApplication>
 }

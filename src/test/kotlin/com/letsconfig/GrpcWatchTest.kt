@@ -1,9 +1,6 @@
 package com.letsconfig
 
-import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.PropertyItem
-import com.letsconfig.network.grpc.common.SubscribeApplicationRequest
-import com.letsconfig.network.grpc.common.SubscriberInfoRequest
 import org.awaitility.Awaitility
 import org.junit.Assert
 import org.junit.Rule
@@ -21,31 +18,26 @@ class GrpcWatchTest {
     @Rule
     var globalTimeout: Timeout = Timeout.seconds(10)
 
-    val log = createLogger()
-
     @Test
     fun testWatch() {
         val subscriberId = "123"
         val itemsQueue = ConcurrentLinkedQueue<PropertyItem>()
 
-        val subscribeResponse: ApplicationSnapshotResponse = serviceRule.blockingClient.subscribeApplication(SubscribeApplicationRequest.newBuilder()
-                .setApplicationName("test-app")
-                .setDefaultApplicationName("my-app")
-                .setHostName("srvd1")
-                .setSubscriberId(subscriberId)
-                .build())
+        val subscribeResponse = serviceRule.subscribeTestApplication(subscriberId, null)
         Assert.assertEquals(0, subscribeResponse.itemsList.size)
-        serviceRule.asyncClient.watchChanges(SubscriberInfoRequest.newBuilder().setId(subscriberId).build(), QueueStreamObserver(itemsQueue))
+        Assert.assertEquals(0, itemsQueue.size)
+
+        serviceRule.watchChanges(subscriberId, itemsQueue)
 
         serviceRule.createApplication("test-app")
 
-        serviceRule.updateProperty("test-app", "srvd1", 1, "name", "value")
-        serviceRule.updateProperty("test-app", "srvd1", 2, "name2", "value2")
+        serviceRule.updateProperty(TEST_APP_NAME, "srvd1", 1, "name", "value")
+        serviceRule.updateProperty(TEST_APP_NAME, "srvd1", 2, "name2", "value2")
 
         Awaitility.await().untilAsserted {
             Assert.assertEquals(2, itemsQueue.size)
         }
-        Thread.sleep(2000)
+        Thread.sleep(serviceRule.updateDelayMs * 2)
 
         Assert.assertEquals(setOf(PropertyItem.newBuilder().setApplicationName("test-app").setPropertyName("name")
                 .setPropertyValue("value").setVersion(1).build(),

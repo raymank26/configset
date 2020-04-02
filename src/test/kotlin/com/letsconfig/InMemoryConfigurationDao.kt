@@ -39,8 +39,11 @@ class InMemoryConfigurationDao(snapshot: Map<String, ConfigurationApplication>) 
         return HostCreateResult.OK
     }
 
-    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long): PropertyCreateResult {
-        return internalSet(PropertyItem.Updated(appName, propertyName, hostName, version, value))
+    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+        val newVersion = version
+                ?: getLastVersionInApp(appName)?.let { it + 1 }
+                ?: return PropertyCreateResult.ApplicationNotFound
+        return internalSet(PropertyItem.Updated(appName, propertyName, hostName, newVersion, value))
     }
 
     override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
