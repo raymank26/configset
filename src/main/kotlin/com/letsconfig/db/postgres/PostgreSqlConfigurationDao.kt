@@ -1,25 +1,37 @@
 package com.letsconfig.db.postgres
 
+import com.letsconfig.ApplicationED
 import com.letsconfig.CreateApplicationResult
 import com.letsconfig.DeletePropertyResult
 import com.letsconfig.HostCreateResult
+import com.letsconfig.HostED
 import com.letsconfig.PropertyCreateResult
 import com.letsconfig.PropertyItem
 import com.letsconfig.db.ConfigurationDao
 import com.letsconfig.extension.createLogger
 import org.jdbi.v3.core.Jdbi
+import org.jdbi.v3.core.mapper.RowMapper
+import org.jdbi.v3.core.statement.StatementContext
 import org.jdbi.v3.core.transaction.TransactionIsolationLevel
+import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
+import java.sql.ResultSet
 
 
 class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
-    val logger = createLogger()
+    private val logger = createLogger()
 
-    override fun listApplications(): List<String> {
-        return dbi.withExtension<List<String>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
-            access.listApplications().map { it.name }
+    init {
+        dbi.registerRowMapper(ApplicationEDRowMapper())
+        dbi.registerRowMapper(HostEDRowMapper())
+        dbi.registerRowMapper(PropertyItemEDMapper())
+    }
+
+    override fun listApplications(): List<ApplicationED> {
+        return dbi.withExtension<List<ApplicationED>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+            access.listApplications()
         }
     }
 
@@ -30,7 +42,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             if (createdApp != null) {
                 CreateApplicationResult.ApplicationAlreadyExists
             } else {
-                access.insertApplication(ApplicationED(null, appName, 0))
+                access.insertApplication(appName, System.currentTimeMillis())
                 CreateApplicationResult.OK
             }
         }
@@ -43,9 +55,15 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             if (host != null) {
                 HostCreateResult.HostAlreadyExists
             } else {
-                access.insertHost(HostED(null, hostName))
+                access.insertHost(hostName, System.currentTimeMillis())
                 HostCreateResult.OK
             }
+        }
+    }
+
+    override fun listHosts(): List<HostED> {
+        return dbi.withExtension<List<HostED>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+            access.listHosts()
         }
     }
 
@@ -57,14 +75,15 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             val host = access.getHostByName(hostName) ?: return@inTransaction PropertyCreateResult.HostNotFound
             val property = access.getProperty(appName, host.id!!, app.id!!)
 
+            val ct = System.currentTimeMillis()
             if (property == null && version == null) {
-                access.insertProperty(PropertyItemED(null, propertyName, value, host.id, app.id, app.lastVersion + 1, false))
+                access.insertProperty(propertyName, value, host.id, app.id, app.lastVersion + 1, ct)
                 PropertyCreateResult.OK
             } else if (property != null) {
                 if (property.version != version) {
                     PropertyCreateResult.UpdateConflict
                 } else {
-                    access.updateProperty(PropertyItemED(property.id, propertyName, value, host.id, app.id, app.lastVersion + 1, false))
+                    access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct)
                     PropertyCreateResult.OK
                 }
             } else {
@@ -90,10 +109,8 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         return dbi.inTransaction<List<PropertyItem>, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val properties = access.selectAllProperties()
-            val hostIds = properties.map { it.hostId }
-            val appIds = properties.map { it.appId }
-            val hosts: Map<Long, HostED> = access.getHostByIds(hostIds).associateBy { it.id!! }
-            val apps: Map<Long, ApplicationED> = access.getApplicationsByIds(appIds).associateBy { it.id!! }
+            val hosts: Map<Long, HostED> = access.listHosts().associateBy { it.id!! }
+            val apps: Map<Long, ApplicationED> = access.listApplications().associateBy { it.id!! }
             val res = mutableListOf<PropertyItem>()
 
             for (property in properties) {
@@ -120,47 +137,65 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 }
 
 private interface JdbiAccess {
+
     @SqlQuery("select * from ConfigurationApplication")
     fun listApplications(): List<ApplicationED>
 
-    @SqlQuery
-    fun getApplicationsByIds(ids: List<Long>): List<ApplicationED>
-
     @SqlQuery("select * from ConfigurationApplication where name = :name")
-    fun getApplicationByName(name: String): ApplicationED?
+    fun getApplicationByName(@Bind("name") name: String): ApplicationED?
 
-    @SqlUpdate("insert into ConfigurationApplication (name) values (:name)")
-    fun insertApplication(app: ApplicationED)
+    @SqlUpdate("insert into ConfigurationApplication (name, version, createdMs, modifiedMs) values (:name, 0, :createdMs, :createdMs)")
+    fun insertApplication(@Bind("name") name: String, @Bind("createdMs") createdMs: Long)
 
-    @SqlUpdate("insert into ConfigurationHost (name) values (:host)")
-    fun insertHost(host: HostED)
+    @SqlUpdate("insert into ConfigurationHost (name, createdMs, modifiedMs) values (:name, :createdMs, :createdMs)")
+    fun insertHost(@Bind("name") name: String, @Bind("createdMs") createdMs: Long)
 
     @SqlQuery("select * from ConfigurationHost where name = :name")
-    fun getHostByName(name: String): HostED?
+    fun getHostByName(@Bind("name") name: String): HostED?
 
-    @SqlQuery
-    fun getHostByIds(ids: List<Long>): List<HostED>
+    @SqlQuery("select * from ConfigurationHost")
+    fun listHosts(): List<HostED>
 
     @SqlQuery("select * from ConfigurationProperty where name = :name AND hostId = :hostId AND appId = :appId")
-    fun getProperty(name: String, hostId: Long, appId: Long): PropertyItemED?
+    fun getProperty(@Bind("name") name: String, @Bind("hostId") hostId: Long, @Bind("appId") appId: Long): PropertyItemED?
 
-    @SqlUpdate("insert into ConfigurationProperty (appId, hostId, name, value) values (:appId, :hostId, :name, :value)")
-    fun insertProperty(property: PropertyItemED)
+    @SqlUpdate("insert into ConfigurationProperty (name, value, version, appId, hostId, deleted, createdMs, modifiedMs)" +
+            " values (:name, :value, :version, :appId, :hostId, false, :createdMs, :createdMs)")
+    fun insertProperty(@Bind("name") name: String, @Bind("value") value: String, @Bind("version") version: Long,
+                       @Bind("appId") appId: Long, @Bind("hostId") hostId: Long, @Bind("createdMs") modifiedMs: Long)
 
-    @SqlUpdate("insert into ConfigurationProperty (appId, hostId, name, value) values (:appId, :hostId, :name, :value)")
-    fun updateProperty(property: PropertyItemED)
+    @SqlUpdate("update ConfigurationProperty set value = :value, version = :version, deleted = :deleted, modifiedMs = :modifiedMs")
+    fun updateProperty(@Bind("id") id: Long, @Bind("value") value: String, @Bind("version") version: Long,
+                       @Bind("deleted") deleted: Boolean, @Bind("modifiedMs") modifiedMs: Long)
 
     @SqlUpdate("update ConfigurationProperty SET deleted = true where id = :id")
-    fun markPropertyAsDeleted(id: Long)
+    fun markPropertyAsDeleted(@Bind("id") id: Long)
 
     @SqlQuery("select * from ConfigurationProperty")
     fun selectAllProperties(): List<PropertyItemED>
 }
 
-private data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long)
-
-private data class HostED(val id: Long?, val name: String)
-
 private data class PropertyItemED(val id: Long?, val name: String, val value: String, val hostId: Long,
-                                  val appId: Long, val version: Long, val deleted: Boolean)
+                                  val appId: Long, val version: Long, val deleted: Boolean, val createdMs: Long, val modifiedMs: Long)
 
+
+private class ApplicationEDRowMapper : RowMapper<ApplicationED> {
+    override fun map(rs: ResultSet, ctx: StatementContext): ApplicationED {
+        return ApplicationED(rs.getLong("id"), rs.getString("name"), rs.getLong("version"),
+                rs.getLong("createdMs"), rs.getLong("modifiedMs"))
+    }
+}
+
+private class HostEDRowMapper : RowMapper<HostED> {
+    override fun map(rs: ResultSet, ctx: StatementContext?): HostED {
+        return HostED(rs.getLong("id"), rs.getString("name"), rs.getLong("createdMs"), rs.getLong("modifiedMs"))
+    }
+}
+
+private class PropertyItemEDMapper : RowMapper<PropertyItemED> {
+    override fun map(rs: ResultSet, ctx: StatementContext): PropertyItemED {
+        return PropertyItemED(rs.getLong("id"), rs.getString("name"), rs.getString("value"), rs.getLong("hostId"),
+                rs.getLong("appId"), rs.getLong("version"), rs.getBoolean("deleted"), rs.getLong("createdMs"),
+                rs.getLong("modifiedMs"))
+    }
+}

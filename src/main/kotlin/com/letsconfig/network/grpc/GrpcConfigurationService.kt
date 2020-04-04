@@ -43,7 +43,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun listApplications(request: EmptyRequest, responseObserver: StreamObserver<ApplicationsResponse>) {
-        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplication(configurationService.listApplications()).build())
+        val listApplications = configurationService.listApplications().map { it.name }
+        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplication(listApplications).build())
         responseObserver.onCompleted()
     }
 

@@ -7,7 +7,7 @@ class ConfigurationService(
         private val propertiesWatchDispatcher: PropertiesWatchDispatcher
 ) {
 
-    fun listApplications(): List<String> {
+    fun listApplications(): List<ApplicationED> {
         return configurationDao.listApplications()
     }
 
@@ -17,6 +17,10 @@ class ConfigurationService(
 
     fun createHost(hostName: String): HostCreateResult {
         return configurationDao.createHost(hostName)
+    }
+
+    fun listHosts(): List<HostED> {
+        return configurationDao.listHosts()
     }
 
     fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
@@ -89,3 +93,7 @@ sealed class DeletePropertyResult {
     object OK : DeletePropertyResult()
     object PropertyNotFound : DeletePropertyResult()
 }
+
+data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long, val createdMs: Long, val modifiedMs: Long)
+
+data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)

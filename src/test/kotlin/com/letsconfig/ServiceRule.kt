@@ -26,7 +26,7 @@ const val TEST_HOST = "srvd1"
 
 class ServiceRule : ExternalResource() {
 
-    private val configurationDao = InMemoryConfigurationDao(emptyList())
+    private val configurationDao = InMemoryConfigurationDao()
     val updateDelayMs: Long = 1000
     private val propertiesWatchDispatcher = PropertiesWatchDispatcher(
             configurationDao, ConfigurationResolver(), ThreadScheduler(), updateDelayMs)

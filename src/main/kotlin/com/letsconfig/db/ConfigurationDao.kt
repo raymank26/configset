@@ -1,15 +1,18 @@
 package com.letsconfig.db
 
+import com.letsconfig.ApplicationED
 import com.letsconfig.CreateApplicationResult
 import com.letsconfig.DeletePropertyResult
 import com.letsconfig.HostCreateResult
+import com.letsconfig.HostED
 import com.letsconfig.PropertyCreateResult
 import com.letsconfig.PropertyItem
 
 interface ConfigurationDao {
-    fun listApplications(): List<String>
+    fun listApplications(): List<ApplicationED>
     fun createApplication(appName: String): CreateApplicationResult
     fun createHost(hostName: String): HostCreateResult
+    fun listHosts(): List<HostED>
     fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
     fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
     fun getConfigurationSnapshotList(): List<PropertyItem>
