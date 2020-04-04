@@ -39,5 +39,7 @@ class PostgreSqlConfigurationDaoTest {
         dao.createApplication(TEST_APP_NAME)
         dao.createHost(TEST_HOST)
         dao.updateProperty(TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(TEST_APP_NAME, TEST_HOST, "name", "value1", 1) shouldBeEqualTo PropertyCreateResult.OK
+        dao.listApplications().first().lastVersion shouldBeEqualTo 2
     }
 }

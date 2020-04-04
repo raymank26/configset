@@ -73,17 +73,19 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             val app = access.getApplicationByName(appName)
                     ?: return@inTransaction PropertyCreateResult.ApplicationNotFound
             val host = access.getHostByName(hostName) ?: return@inTransaction PropertyCreateResult.HostNotFound
-            val property = access.getProperty(appName, host.id!!, app.id!!)
+            val property = access.getProperty(propertyName, host.id!!, app.id!!)
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
                 access.insertProperty(propertyName, value, host.id, app.id, app.lastVersion + 1, ct)
+                access.incrementAppVersion(app.id)
                 PropertyCreateResult.OK
             } else if (property != null) {
                 if (property.version != version) {
                     PropertyCreateResult.UpdateConflict
                 } else {
                     access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct)
+                    access.incrementAppVersion(app.id)
                     PropertyCreateResult.OK
                 }
             } else {
@@ -101,6 +103,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             val property = access.getProperty(appName, host.id!!, app.id!!)
                     ?: return@inTransaction DeletePropertyResult.PropertyNotFound
             access.markPropertyAsDeleted(property.id!!)
+            access.incrementAppVersion(app.id)
             DeletePropertyResult.OK
         }
     }
@@ -146,6 +149,9 @@ private interface JdbiAccess {
 
     @SqlUpdate("insert into ConfigurationApplication (name, version, createdMs, modifiedMs) values (:name, 0, :createdMs, :createdMs)")
     fun insertApplication(@Bind("name") name: String, @Bind("createdMs") createdMs: Long)
+
+    @SqlUpdate("update ConfigurationApplication set version = version + 1 WHERE id = :id")
+    fun incrementAppVersion(@Bind("id") id: Long)
 
     @SqlUpdate("insert into ConfigurationHost (name, createdMs, modifiedMs) values (:name, :createdMs, :createdMs)")
     fun insertHost(@Bind("name") name: String, @Bind("createdMs") createdMs: Long)
