@@ -24,3 +24,8 @@ create table ConfigurationProperty (
     createdms bigint NOT NULL,
     modifiedms bigint NOT NULL
 );
+
+create table RequestId (
+    requestId varchar(50) PRIMARY KEY NOT NULL,
+    createdMs bigint NOT NULL
+);

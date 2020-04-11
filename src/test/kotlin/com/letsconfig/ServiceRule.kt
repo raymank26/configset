@@ -90,6 +90,7 @@ class ServiceRule : ExternalResource() {
 
     fun deleteProperty(appName: String, hostName: String, propertyName: String) {
         val res: DeletePropertyResponse = blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+                .setRequestId(createRequestId())
                 .setApplicationName(appName)
                 .setHostName(hostName)
                 .setPropertyName(propertyName)

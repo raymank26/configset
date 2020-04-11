@@ -9,6 +9,7 @@ import com.letsconfig.PropertyCreateResult
 import com.letsconfig.PropertyItem
 import com.letsconfig.db.ConfigurationDao
 import com.letsconfig.extension.createLogger
+import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
 import org.jdbi.v3.core.statement.StatementContext
@@ -36,8 +37,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun createApplication(requestId: String, appName: String): CreateApplicationResult {
-        return dbi.inTransaction<CreateApplicationResult, Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
-            val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
+        return processMutable<CreateApplicationResult>(requestId, CreateApplicationResult.OK) { _, access ->
             val createdApp = access.getApplicationByName(appName)
             if (createdApp != null) {
                 CreateApplicationResult.ApplicationAlreadyExists
@@ -49,8 +49,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun createHost(requestId: String, hostName: String): HostCreateResult {
-        return dbi.inTransaction<HostCreateResult, Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
-            val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
+        return processMutable<HostCreateResult>(requestId, HostCreateResult.OK) { _, access ->
             val host = access.getHostByName(hostName)
             if (host != null) {
                 HostCreateResult.HostAlreadyExists
@@ -68,11 +67,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
-        return dbi.inTransaction<PropertyCreateResult, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
-            val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
+        return processMutable<PropertyCreateResult>(requestId, PropertyCreateResult.OK) { _, access ->
             val app = access.getApplicationByName(appName)
-                    ?: return@inTransaction PropertyCreateResult.ApplicationNotFound
-            val host = access.getHostByName(hostName) ?: return@inTransaction PropertyCreateResult.HostNotFound
+                    ?: return@processMutable PropertyCreateResult.ApplicationNotFound
+            val host = access.getHostByName(hostName) ?: return@processMutable PropertyCreateResult.HostNotFound
             val property = access.getProperty(propertyName, host.id!!, app.id!!)
 
             val ct = System.currentTimeMillis()
@@ -95,13 +93,12 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
-        return dbi.inTransaction<DeletePropertyResult, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
-            val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
+        return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) { handle, access ->
             val app = access.getApplicationByName(appName)
-                    ?: return@inTransaction DeletePropertyResult.PropertyNotFound
-            val host = access.getHostByName(hostName) ?: return@inTransaction DeletePropertyResult.PropertyNotFound
-            val property = access.getProperty(appName, host.id!!, app.id!!)
-                    ?: return@inTransaction DeletePropertyResult.PropertyNotFound
+                    ?: return@processMutable DeletePropertyResult.PropertyNotFound
+            val host = access.getHostByName(hostName) ?: return@processMutable DeletePropertyResult.PropertyNotFound
+            val property = access.getProperty(propertyName, host.id!!, app.id!!)
+                    ?: return@processMutable DeletePropertyResult.PropertyNotFound
             access.markPropertyAsDeleted(property.id!!)
             access.incrementAppVersion(app.id)
             DeletePropertyResult.OK
@@ -134,6 +131,19 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 }
                 res.add(propertyItem)
             }
+            res
+        }
+    }
+
+    private fun <T> processMutable(requestId: String, default: T, callback: (handle: Handle, access: JdbiAccess) -> T): T {
+        return dbi.inTransaction<T, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle: Handle ->
+            val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
+            val alreadyProcessed = access.getRequestIdCount(requestId) > 0
+            if (alreadyProcessed) {
+                return@inTransaction default
+            }
+            val res = callback.invoke(handle, access)
+            access.insertRequestId(requestId, System.currentTimeMillis())
             res
         }
     }
@@ -179,6 +189,12 @@ private interface JdbiAccess {
 
     @SqlQuery("select * from ConfigurationProperty")
     fun selectAllProperties(): List<PropertyItemED>
+
+    @SqlUpdate("insert into RequestId (requestId, createdMs) values (:requestId, :createdMs)")
+    fun insertRequestId(@Bind("requestId") requestId: String, @Bind("createdMs") createdMs: Long)
+
+    @SqlQuery("select count(*) from RequestId where requestId = :requestId")
+    fun getRequestIdCount(@Bind("requestId") requestId: String): Int
 }
 
 private data class PropertyItemED(val id: Long?, val name: String, val value: String, val hostId: Long,
