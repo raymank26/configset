@@ -53,7 +53,7 @@ class GrpcCrudTest {
     @Test
     fun testDeletePropertyNotFoundWithoutApp() {
         val res = serviceRule.blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
-//                .setRequestId(serviceRule.createRequestId())
+                .setRequestId(serviceRule.createRequestId())
                 .setApplicationName("test-app")
                 .setPropertyName("Prop")
                 .setHostName("host")
