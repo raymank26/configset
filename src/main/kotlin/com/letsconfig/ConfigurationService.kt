@@ -57,7 +57,7 @@ class ConfigurationService(
 
 interface WatchSubscriber {
     fun getId(): String
-    fun pushChanges(change: PropertyItem)
+    fun pushChanges(items: List<PropertyItem>)
 }
 
 sealed class PropertyItem {

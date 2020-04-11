@@ -1,6 +1,8 @@
 package com.letsconfig
 
+import com.letsconfig.network.grpc.common.PropertiesChange
 import com.letsconfig.network.grpc.common.PropertyItem
+import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
 import org.junit.Assert
 import org.junit.Rule
@@ -21,7 +23,7 @@ class GrpcWatchTest {
     @Test
     fun testWatch() {
         val subscriberId = "123"
-        val itemsQueue = ConcurrentLinkedQueue<PropertyItem>()
+        val itemsQueue = ConcurrentLinkedQueue<PropertiesChange>()
 
         val subscribeResponse = serviceRule.subscribeTestApplication(subscriberId, null)
         Assert.assertEquals(0, subscribeResponse.itemsList.size)
@@ -35,14 +37,15 @@ class GrpcWatchTest {
         serviceRule.updateProperty(TEST_APP_NAME, "srvd1", 2, "name2", "value2")
 
         Awaitility.await().untilAsserted {
-            Assert.assertEquals(2, itemsQueue.size)
+            itemsQueue.size shouldBeEqualTo 1
+            itemsQueue.element().itemsCount shouldBeEqualTo 2
         }
         Thread.sleep(serviceRule.updateDelayMs * 2)
 
-        Assert.assertEquals(setOf(PropertyItem.newBuilder().setApplicationName("test-app").setPropertyName("name")
+        Assert.assertEquals(listOf(PropertyItem.newBuilder().setApplicationName("test-app").setPropertyName("name")
                 .setPropertyValue("value").setVersion(1).build(),
                 PropertyItem.newBuilder().setApplicationName("test-app").setPropertyName("name2").setPropertyValue("value2").setVersion(2).build()
-        ), itemsQueue.toSet())
+        ), itemsQueue.toList().flatMap { it.itemsList })
 
         itemsQueue.clear()
 

@@ -87,10 +87,10 @@ class PropertiesWatchDispatcher(
             for (appState: ApplicationState in observerState.applications) {
                 val changes = configurationResolver.getProperties(configurationSnapshot, appState.appName,
                         observerState.hostName, observerState.defaultHostName, appState.lastVersion)
-                for (propertyItem in changes.propertyItems) {
-                    watchSubscriber.pushChanges(propertyItem)
+                if (changes.propertyItems.isNotEmpty()) {
+                    watchSubscriber.pushChanges(changes.propertyItems)
+                    appState.lastVersion = changes.lastVersion
                 }
-                appState.lastVersion = changes.lastVersion
             }
         }
     }

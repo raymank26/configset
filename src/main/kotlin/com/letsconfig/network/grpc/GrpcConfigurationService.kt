@@ -16,6 +16,7 @@ import com.letsconfig.network.grpc.common.CreateHostResponse
 import com.letsconfig.network.grpc.common.DeletePropertyRequest
 import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.EmptyRequest
+import com.letsconfig.network.grpc.common.PropertiesChange
 import com.letsconfig.network.grpc.common.PropertyItem
 import com.letsconfig.network.grpc.common.SubscribeApplicationRequest
 import com.letsconfig.network.grpc.common.SubscriberInfoRequest
@@ -97,36 +98,38 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         responseObserver.onCompleted()
     }
 
-    override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertyItem>) {
+    override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertiesChange>) {
         configurationService.watchChanges(object : WatchSubscriber {
             override fun getId(): String {
                 return request.id
             }
 
-            override fun pushChanges(change: com.letsconfig.PropertyItem) {
+            override fun pushChanges(items: List<com.letsconfig.PropertyItem>) {
                 if (Context.current().isCancelled) {
                     configurationService.unsubscribe(request.id)
                 }
-                when (change) {
-                    is com.letsconfig.PropertyItem.Updated -> {
-                        responseObserver.onNext(PropertyItem.newBuilder()
-                                .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                                .setApplicationName(change.applicationName)
-                                .setPropertyName(change.name)
-                                .setPropertyValue(change.value)
-                                .setVersion(change.version)
-                                .build()
-                        )
-                    }
-                    is com.letsconfig.PropertyItem.Deleted -> {
-                        responseObserver.onNext(PropertyItem.newBuilder()
-                                .setUpdateType(PropertyItem.UpdateType.DELETE)
-                                .setApplicationName(change.applicationName)
-                                .setPropertyName(change.name)
-                                .setVersion(change.version)
-                                .build())
+                val preparedItems = items.map { change ->
+                    when (change) {
+                        is com.letsconfig.PropertyItem.Updated -> {
+                            PropertyItem.newBuilder()
+                                    .setUpdateType(PropertyItem.UpdateType.UPDATE)
+                                    .setApplicationName(change.applicationName)
+                                    .setPropertyName(change.name)
+                                    .setPropertyValue(change.value)
+                                    .setVersion(change.version)
+                                    .build()
+                        }
+                        is com.letsconfig.PropertyItem.Deleted -> {
+                            PropertyItem.newBuilder()
+                                    .setUpdateType(PropertyItem.UpdateType.DELETE)
+                                    .setApplicationName(change.applicationName)
+                                    .setPropertyName(change.name)
+                                    .setVersion(change.version)
+                                    .build()
+                        }
                     }
                 }
+                responseObserver.onNext(PropertiesChange.newBuilder().addAllItems(preparedItems).build())
             }
         })
     }

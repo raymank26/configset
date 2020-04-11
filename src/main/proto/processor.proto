@@ -112,6 +112,10 @@ message ReadPropertyResponse {
     repeated PropertyItem items = 2;
 }
 
+message PropertiesChange {
+    repeated PropertyItem items = 1;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
@@ -120,5 +124,5 @@ service ConfigurationService {
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
     rpc subscribeApplication (SubscribeApplicationRequest) returns (ApplicationSnapshotResponse);
-    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertyItem);
+    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChange);
 }
