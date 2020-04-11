@@ -3,8 +3,9 @@ option java_multiple_files = true;
 
 package com.letsconfig.network.grpc.common;
 
-message ApplicationRequest {
+message ApplicationCreateRequest {
     string applicationName = 1;
+    string requestId = 2;
 }
 
 message ApplicationCreatedResponse {
@@ -25,7 +26,6 @@ message PropertyItem {
     string propertyName = 3;
     string propertyValue = 4;
     int64 version = 5;
-
 
     enum UpdateType {
         UPDATE = 0;
@@ -54,6 +54,7 @@ message ApplicationsResponse {
 
 message CreateHostRequest {
     string hostName = 1;
+    string requestId = 2;
 }
 
 message CreateHostResponse {
@@ -70,6 +71,7 @@ message UpdatePropertyRequest {
     string propertyName = 3;
     string propertyValue = 4;
     int64 version = 5;
+    string requestId = 6;
 }
 
 message UpdatePropertyResponse {
@@ -87,6 +89,7 @@ message DeletePropertyRequest {
     string applicationName = 1;
     string hostName = 2;
     string propertyName = 3;
+    string requestId = 4;
 }
 
 message DeletePropertyResponse {
@@ -110,7 +113,7 @@ message ReadPropertyResponse {
 }
 
 service ConfigurationService {
-    rpc createApplication (ApplicationRequest) returns (ApplicationCreatedResponse);
+    rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);

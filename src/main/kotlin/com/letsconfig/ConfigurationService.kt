@@ -11,24 +11,28 @@ class ConfigurationService(
         return configurationDao.listApplications()
     }
 
-    fun createApplication(appName: String): CreateApplicationResult {
-        return configurationDao.createApplication(appName)
+    fun createApplication(requestId: String, appName: String): CreateApplicationResult {
+        checkRequestId(requestId)
+        return configurationDao.createApplication(requestId, appName)
     }
 
-    fun createHost(hostName: String): HostCreateResult {
-        return configurationDao.createHost(hostName)
+    fun createHost(requestId: String, hostName: String): HostCreateResult {
+        checkRequestId(requestId)
+        return configurationDao.createHost(requestId, hostName)
     }
 
     fun listHosts(): List<HostED> {
         return configurationDao.listHosts()
     }
 
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
-        return configurationDao.updateProperty(appName, hostName, propertyName, value, version)
+    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+        checkRequestId(requestId)
+        return configurationDao.updateProperty(requestId, appName, hostName, propertyName, value, version)
     }
 
-    fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
-        return configurationDao.deleteProperty(appName, hostName, propertyName)
+    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+        checkRequestId(requestId)
+        return configurationDao.deleteProperty(requestId, appName, hostName, propertyName)
     }
 
     fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
@@ -43,7 +47,14 @@ class ConfigurationService(
     fun unsubscribe(subscriberId: String) {
         propertiesWatchDispatcher.unsubscribe(subscriberId)
     }
+
+    private fun checkRequestId(requestId: String) {
+        if (requestId.isEmpty()) {
+            throw IllegalArgumentException("RequestId is empty")
+        }
+    }
 }
+
 interface WatchSubscriber {
     fun getId(): String
     fun pushChanges(change: PropertyItem)

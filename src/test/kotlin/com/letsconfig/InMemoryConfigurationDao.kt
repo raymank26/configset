@@ -14,7 +14,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         return applications
     }
 
-    override fun createApplication(appName: String): CreateApplicationResult {
+    override fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         if (applications.find { it.name == appName } != null) {
             return CreateApplicationResult.ApplicationAlreadyExists
         } else {
@@ -28,7 +28,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         return hosts
     }
 
-    override fun createHost(hostName: String): HostCreateResult {
+    override fun createHost(requestId: String, hostName: String): HostCreateResult {
         if (hosts.find { it.name == hostName } != null) {
             return HostCreateResult.HostAlreadyExists
         } else {
@@ -38,7 +38,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
-    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+    override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
         val lastVersion = getLastVersionInApp(appName) ?: return PropertyCreateResult.ApplicationNotFound
         if (hosts.find { it.name == hostName } == null) {
             return PropertyCreateResult.HostNotFound
@@ -61,7 +61,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         return PropertyCreateResult.OK
     }
 
-    override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
         val lastVersion = getLastVersionInApp(appName) ?: return DeletePropertyResult.PropertyNotFound
         if (hosts.find { it.name == hostName } == null) {
             return DeletePropertyResult.PropertyNotFound

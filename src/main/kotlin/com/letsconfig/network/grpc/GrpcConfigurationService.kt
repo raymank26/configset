@@ -6,8 +6,8 @@ import com.letsconfig.DeletePropertyResult
 import com.letsconfig.HostCreateResult
 import com.letsconfig.PropertyCreateResult
 import com.letsconfig.WatchSubscriber
+import com.letsconfig.network.grpc.common.ApplicationCreateRequest
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
-import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.ApplicationsResponse
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
@@ -26,8 +26,8 @@ import io.grpc.stub.StreamObserver
 
 class GrpcConfigurationService(private val configurationService: ConfigurationService) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
-    override fun createApplication(request: ApplicationRequest, responseObserver: StreamObserver<ApplicationCreatedResponse>) {
-        when (configurationService.createApplication(request.applicationName)) {
+    override fun createApplication(request: ApplicationCreateRequest, responseObserver: StreamObserver<ApplicationCreatedResponse>) {
+        when (configurationService.createApplication(request.requestId, request.applicationName)) {
             CreateApplicationResult.OK -> {
                 responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
                         .setType(ApplicationCreatedResponse.Type.OK)
@@ -49,7 +49,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun createHost(request: CreateHostRequest, responseObserver: StreamObserver<CreateHostResponse>) {
-        when (configurationService.createHost(request.hostName)) {
+        when (configurationService.createHost(request.requestId, request.hostName)) {
             HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
             HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
         }
@@ -58,7 +58,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
 
     override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
         val version = if (request.version == 0L) null else request.version
-        when (configurationService.updateProperty(request.applicationName, request.hostName, request.propertyName, request.propertyValue, version)) {
+        when (configurationService.updateProperty(request.requestId, request.applicationName, request.hostName, request.propertyName, request.propertyValue, version)) {
             PropertyCreateResult.OK -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.OK).build())
             PropertyCreateResult.HostNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.HOST_NOT_FOUND).build())
             PropertyCreateResult.ApplicationNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND).build())
@@ -68,7 +68,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
-        when (configurationService.deleteProperty(request.applicationName, request.hostName, request.propertyName)) {
+        when (configurationService.deleteProperty(request.requestId, request.applicationName, request.hostName, request.propertyName)) {
             DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
             DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND).build())
         }

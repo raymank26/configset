@@ -10,11 +10,11 @@ import com.letsconfig.PropertyItem
 
 interface ConfigurationDao {
     fun listApplications(): List<ApplicationED>
-    fun createApplication(appName: String): CreateApplicationResult
-    fun createHost(hostName: String): HostCreateResult
+    fun createApplication(requestId: String, appName: String): CreateApplicationResult
+    fun createHost(requestId: String, hostName: String): HostCreateResult
     fun listHosts(): List<HostED>
-    fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
-    fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult
+    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
+    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult
     fun getConfigurationSnapshotList(): List<PropertyItem>
 }
 

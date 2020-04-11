@@ -1,7 +1,7 @@
 package com.letsconfig
 
+import com.letsconfig.network.grpc.common.ApplicationCreateRequest
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
-import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.DeletePropertyRequest
 import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.EmptyRequest
@@ -20,7 +20,9 @@ class GrpcCrudTest {
     @Test
     fun testCreateApplication() {
         val appName = "Some name"
-        val response = serviceRule.blockingClient.createApplication(ApplicationRequest.newBuilder().setApplicationName(appName).build())
+        val response = serviceRule.blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+                .setRequestId(serviceRule.createRequestId())
+                .setApplicationName(appName).build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
 
         val result: List<String> = serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationList
@@ -30,6 +32,7 @@ class GrpcCrudTest {
     @Test
     fun testAddPropertyNoApplication() {
         val result = serviceRule.blockingClient.updateProperty(UpdatePropertyRequest.newBuilder()
+                .setRequestId(serviceRule.createRequestId())
                 .setApplicationName("Some app")
                 .setHostName("Some host")
                 .setPropertyName("Prop name")
@@ -42,13 +45,15 @@ class GrpcCrudTest {
 
     @Test
     fun testDeletePropertyNotFoundWithApp() {
-        serviceRule.createApplication("test-app")
+        serviceRule
+                .createApplication("test-app")
         testDeletePropertyNotFoundWithoutApp()
     }
 
     @Test
     fun testDeletePropertyNotFoundWithoutApp() {
         val res = serviceRule.blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+                .setRequestId(serviceRule.createRequestId())
                 .setApplicationName("test-app")
                 .setPropertyName("Prop")
                 .setHostName("host")

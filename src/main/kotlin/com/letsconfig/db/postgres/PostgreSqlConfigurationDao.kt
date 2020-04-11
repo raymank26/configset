@@ -35,7 +35,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun createApplication(appName: String): CreateApplicationResult {
+    override fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         return dbi.inTransaction<CreateApplicationResult, Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val createdApp = access.getApplicationByName(appName)
@@ -48,7 +48,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun createHost(hostName: String): HostCreateResult {
+    override fun createHost(requestId: String, hostName: String): HostCreateResult {
         return dbi.inTransaction<HostCreateResult, Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val host = access.getHostByName(hostName)
@@ -67,7 +67,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun updateProperty(appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+    override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
         return dbi.inTransaction<PropertyCreateResult, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val app = access.getApplicationByName(appName)
@@ -94,7 +94,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun deleteProperty(appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
         return dbi.inTransaction<DeletePropertyResult, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val app = access.getApplicationByName(appName)

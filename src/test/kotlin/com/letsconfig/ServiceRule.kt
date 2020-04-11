@@ -2,8 +2,8 @@ package com.letsconfig
 
 import com.letsconfig.network.grpc.GrpcConfigurationServer
 import com.letsconfig.network.grpc.GrpcConfigurationService
+import com.letsconfig.network.grpc.common.ApplicationCreateRequest
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
-import com.letsconfig.network.grpc.common.ApplicationRequest
 import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
 import com.letsconfig.network.grpc.common.CreateHostRequest
@@ -54,7 +54,9 @@ class ServiceRule : ExternalResource() {
 
     private fun startServer() {
         grpcConfServer.start()
-        val res = blockingClient.createHost(CreateHostRequest.newBuilder().setHostName(TEST_HOST).build())
+        val res = blockingClient.createHost(CreateHostRequest.newBuilder()
+                .setRequestId(createRequestId())
+                .setHostName(TEST_HOST).build())
         Assert.assertEquals(CreateHostResponse.Type.OK, res.type)
     }
 
@@ -66,8 +68,9 @@ class ServiceRule : ExternalResource() {
         grpcConfServer.stop()
     }
 
-    fun createApplication(app: String) {
-        val res = blockingClient.createApplication(ApplicationRequest.newBuilder()
+    fun createApplication(app: String, requestId: String = createRequestId()) {
+        val res = blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+                .setRequestId(requestId)
                 .setApplicationName(app)
                 .build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, res.type)
@@ -75,6 +78,7 @@ class ServiceRule : ExternalResource() {
 
     fun updateProperty(appName: String, hostName: String, version: Long?, propertyName: String, propertyValue: String) {
         val res = blockingClient.updateProperty(UpdatePropertyRequest.newBuilder()
+                .setRequestId(createRequestId())
                 .setApplicationName(appName)
                 .setHostName(hostName)
                 .setPropertyName(propertyName)
@@ -106,5 +110,9 @@ class ServiceRule : ExternalResource() {
 
     fun watchChanges(subscriberId: String, queue: Queue<PropertyItem>) {
         asyncClient.watchChanges(SubscriberInfoRequest.newBuilder().setId(subscriberId).build(), QueueStreamObserver(queue))
+    }
+
+    fun createRequestId(): String {
+        return UUID.randomUUID().toString()
     }
 }
