@@ -1,23 +1,89 @@
 package com.letsconfig
-
+import com.letsconfig.db.memory.InMemoryConfigurationDao
+import com.letsconfig.db.postgres.PostgreSqlConfigurationDao
+import com.letsconfig.network.grpc.GrpcConfigurationServer
+import com.letsconfig.network.grpc.GrpcConfigurationService
 import org.jdbi.v3.core.Jdbi
+import org.koin.core.context.startKoin
+import org.koin.core.scope.Scope
+import org.koin.core.scope.ScopeCallback
+import org.koin.dsl.module
+import java.util.concurrent.Semaphore
 
 /**
  * Date: 15.02.17.
  */
 
 object Main {
+
     @JvmStatic
     fun main(args: Array<String>) {
-        val dbi = Jdbi.create("jdbc:postgresql://10.8.0.1:5432/letsconfig?connectTimeout=5", "letsconfig", "tahA5qajrQEu4S2e")
-//        val tokensDao = TokensDAO(dbi)
-//        val tokenService = TokensService(tokensDao)
-//        val propertiesDAO = PropertiesDAO(dbi)
-//
-//        val settingsApiWebSocket = SettingsApiWebSocket(propertiesDAO, tokenService)
-//        settingsApiWebSocket.start()
-//        val server = Server(tokenService, propertiesDAO, settingsApiWebSocket)
-//        server.start(8080)
-//        startMetricServer()
+        val config = getConfig() ?: return
+
+        val koinApp = startKoin {
+            modules(mainModule(config))
+        }
+        koinApp.koin.get<GrpcConfigurationServer>().start()
+        val semaphore = Semaphore(0)
+        semaphore.acquire()
     }
+
+    private fun getConfig(): AppConfiguration? {
+        val config = AppConfiguration()
+        return try {
+            config.validate()
+            config
+        } catch (e: ConfigKeyRequired) {
+            System.err.println("Env key = '${e.configKey}' is required")
+            null
+        }
+    }
+}
+
+fun mainModule(config: AppConfiguration) = module {
+
+    single {
+        when (config.getDaoType()) {
+            DaoType.IN_MEMORY -> InMemoryConfigurationDao()
+            DaoType.POSTGRES -> {
+                PostgreSqlConfigurationDao(Jdbi.create(config.getJdbcUrl()))
+            }
+        }
+    }
+
+    single {
+        ConfigurationService(get(), get())
+    }
+
+    single {
+        ConfigurationResolver()
+    }
+
+    single {
+        PropertiesWatchDispatcher(get(), get(), get(), config.getUpdateDelayMs())
+    }
+
+    single<Scheduler> {
+        ThreadScheduler()
+    }
+
+    single<GrpcConfigurationServer> {
+        val server = GrpcConfigurationServer(get(), config.grpcPort())
+        onClose {
+            server.stop()
+        }
+        server
+    }
+
+    single {
+        GrpcConfigurationService(get())
+    }
+}
+
+private fun Scope.onClose(f: () -> Unit) {
+    this.registerCallback(object : ScopeCallback {
+        override fun onScopeClose(scope: Scope) {
+            f.invoke()
+        }
+    })
 }

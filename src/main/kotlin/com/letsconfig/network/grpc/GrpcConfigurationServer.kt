@@ -4,9 +4,9 @@ import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.grpc.ServerInterceptors
 
-class GrpcConfigurationServer(grpcConfigurationService: GrpcConfigurationService) {
+class GrpcConfigurationServer(grpcConfigurationService: GrpcConfigurationService, port: Int = 8080) {
 
-    private val server: Server = ServerBuilder.forPort(8080)
+    private val server: Server = ServerBuilder.forPort(port)
             .addService(ServerInterceptors.intercept(grpcConfigurationService, LoggingInterceptor()))
             .build()
 
