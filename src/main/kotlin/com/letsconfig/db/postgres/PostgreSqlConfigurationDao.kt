@@ -8,6 +8,7 @@ import com.letsconfig.HostED
 import com.letsconfig.PropertyCreateResult
 import com.letsconfig.PropertyItem
 import com.letsconfig.db.ConfigurationDao
+import com.letsconfig.db.common.PersistResult
 import com.letsconfig.extension.createLogger
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
@@ -40,10 +41,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         return processMutable<CreateApplicationResult>(requestId, CreateApplicationResult.OK) { _, access ->
             val createdApp = access.getApplicationByName(appName)
             if (createdApp != null) {
-                CreateApplicationResult.ApplicationAlreadyExists
+                PersistResult(false, CreateApplicationResult.ApplicationAlreadyExists)
             } else {
                 access.insertApplication(appName, System.currentTimeMillis())
-                CreateApplicationResult.OK
+                PersistResult(true, CreateApplicationResult.OK)
             }
         }
     }
@@ -52,10 +53,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         return processMutable<HostCreateResult>(requestId, HostCreateResult.OK) { _, access ->
             val host = access.getHostByName(hostName)
             if (host != null) {
-                HostCreateResult.HostAlreadyExists
+                PersistResult(false, HostCreateResult.HostAlreadyExists)
             } else {
                 access.insertHost(hostName, System.currentTimeMillis())
-                HostCreateResult.OK
+                PersistResult(true, HostCreateResult.OK)
             }
         }
     }
@@ -67,41 +68,43 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
-        return processMutable<PropertyCreateResult>(requestId, PropertyCreateResult.OK) { _, access ->
+        return processMutable<PropertyCreateResult>(requestId, PropertyCreateResult.OK) cb@{ _, access ->
             val app = access.getApplicationByName(appName)
-                    ?: return@processMutable PropertyCreateResult.ApplicationNotFound
-            val host = access.getHostByName(hostName) ?: return@processMutable PropertyCreateResult.HostNotFound
+                    ?: return@cb PersistResult(false, PropertyCreateResult.ApplicationNotFound)
+            val host = access.getHostByName(hostName)
+                    ?: return@cb PersistResult(false, PropertyCreateResult.HostNotFound)
             val property = access.getProperty(propertyName, host.id!!, app.id!!)
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
                 access.insertProperty(propertyName, value, host.id, app.id, app.lastVersion + 1, ct)
                 access.incrementAppVersion(app.id)
-                PropertyCreateResult.OK
+                return@cb PersistResult(true, PropertyCreateResult.OK)
             } else if (property != null) {
                 if (property.version != version) {
-                    PropertyCreateResult.UpdateConflict
+                    return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
                 } else {
                     access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct)
                     access.incrementAppVersion(app.id)
-                    PropertyCreateResult.OK
+                    return@cb PersistResult(false, PropertyCreateResult.OK)
                 }
             } else {
-                PropertyCreateResult.UpdateConflict
+                return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
             }
         }
     }
 
     override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
-        return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) { handle, access ->
+        return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) cb@{ _, access ->
             val app = access.getApplicationByName(appName)
-                    ?: return@processMutable DeletePropertyResult.PropertyNotFound
-            val host = access.getHostByName(hostName) ?: return@processMutable DeletePropertyResult.PropertyNotFound
+                    ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
+            val host = access.getHostByName(hostName)
+                    ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             val property = access.getProperty(propertyName, host.id!!, app.id!!)
-                    ?: return@processMutable DeletePropertyResult.PropertyNotFound
+                    ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             access.markPropertyAsDeleted(property.id!!)
             access.incrementAppVersion(app.id)
-            DeletePropertyResult.OK
+            PersistResult(false, DeletePropertyResult.OK)
         }
     }
 
@@ -135,7 +138,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    private fun <T> processMutable(requestId: String, default: T, callback: (handle: Handle, access: JdbiAccess) -> T): T {
+    private fun <T> processMutable(requestId: String, default: T, callback: (handle: Handle, access: JdbiAccess) -> PersistResult<T>): T {
         return dbi.inTransaction<T, java.lang.Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle: Handle ->
             val access = handle.attach<JdbiAccess>(JdbiAccess::class.java)
             val alreadyProcessed = access.getRequestIdCount(requestId) > 0
@@ -143,8 +146,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 return@inTransaction default
             }
             val res = callback.invoke(handle, access)
-            access.insertRequestId(requestId, System.currentTimeMillis())
-            res
+            if (res.persistRequestId) {
+                access.insertRequestId(requestId, System.currentTimeMillis())
+            }
+            res.res
         }
     }
 }

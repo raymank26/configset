@@ -1,5 +1,6 @@
 package com.letsconfig
 
+import com.letsconfig.db.memory.InMemoryConfigurationDao
 import com.letsconfig.network.grpc.GrpcConfigurationServer
 import com.letsconfig.network.grpc.GrpcConfigurationService
 import com.letsconfig.network.grpc.common.ApplicationCreateRequest
