@@ -89,22 +89,20 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             return PropertiesChangesResponse.getDefaultInstance()
         }
         val preparedItems = changes.propertyItems.map { change ->
+            val itemBuilder = PropertyItem.newBuilder()
+                    .setApplicationName(change.applicationName)
+                    .setPropertyName(change.name)
+                    .setVersion(change.version)
             when (change) {
                 is com.letsconfig.PropertyItem.Updated -> {
-                    PropertyItem.newBuilder()
+                    itemBuilder
                             .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                            .setApplicationName(change.applicationName)
-                            .setPropertyName(change.name)
                             .setPropertyValue(change.value)
-                            .setVersion(change.version)
                             .build()
                 }
                 is com.letsconfig.PropertyItem.Deleted -> {
-                    PropertyItem.newBuilder()
+                    itemBuilder
                             .setUpdateType(PropertyItem.UpdateType.DELETE)
-                            .setApplicationName(change.applicationName)
-                            .setPropertyName(change.name)
-                            .setVersion(change.version)
                             .build()
                 }
             }

@@ -120,6 +120,6 @@ service ConfigurationService {
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
-    rpc subscribeApplication (SubscribeApplicationRequest) returns (PropertiesChangesResponse);
+    rpc subscribeApplication (SubscribeApplicationRequest) returns (PropertiesChangesResponse); // TODO: add separate response
     rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChangesResponse);
 }
