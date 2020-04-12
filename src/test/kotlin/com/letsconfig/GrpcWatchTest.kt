@@ -1,6 +1,6 @@
 package com.letsconfig
 
-import com.letsconfig.network.grpc.common.PropertiesChange
+import com.letsconfig.network.grpc.common.PropertiesChangesResponse
 import com.letsconfig.network.grpc.common.PropertyItem
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
@@ -23,7 +23,7 @@ class GrpcWatchTest {
     @Test
     fun testWatch() {
         val subscriberId = "123"
-        val itemsQueue = ConcurrentLinkedQueue<PropertiesChange>()
+        val itemsQueue = ConcurrentLinkedQueue<PropertiesChangesResponse>()
 
         val subscribeResponse = serviceRule.subscribeTestApplication(subscriberId, null)
         Assert.assertEquals(0, subscribeResponse.itemsList.size)

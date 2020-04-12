@@ -36,7 +36,7 @@ class ConfigurationService(
     }
 
     fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
-                             applicationName: String, lastKnownVersion: Long?): List<PropertyItem> {
+                             applicationName: String, lastKnownVersion: Long?): PropertiesChanges? {
         return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
     }
 
@@ -57,7 +57,7 @@ class ConfigurationService(
 
 interface WatchSubscriber {
     fun getId(): String
-    fun pushChanges(items: List<PropertyItem>)
+    fun pushChanges(changes: PropertiesChanges)
 }
 
 sealed class PropertyItem {

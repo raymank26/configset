@@ -5,10 +5,10 @@ import com.letsconfig.db.ConfigurationProperty
 
 class ConfigurationResolver {
 
-    fun getProperties(snapshot: Map<String, ConfigurationApplication>, app: String, hostName: String,
-                      defaultHostName: String, lastVersion: Long?): ResolvedConfig {
+    fun getChanges(snapshot: Map<String, ConfigurationApplication>, app: String, hostName: String,
+                   defaultHostName: String, lastVersion: Long?): PropertiesChanges? {
 
-        val properties: ConfigurationApplication = snapshot[app] ?: return ResolvedConfig(null, emptyList())
+        val properties: ConfigurationApplication = snapshot[app] ?: return null
 
         val result = mutableListOf<PropertyItem>()
 
@@ -23,8 +23,12 @@ class ConfigurationResolver {
                 }
             }
         }
-        return ResolvedConfig(newLastVersion, result)
+        return if (newLastVersion == null) {
+            null;
+        } else {
+            PropertiesChanges(newLastVersion, result)
+        }
     }
 }
 
-data class ResolvedConfig(val lastVersion: Long?, val propertyItems: List<PropertyItem>)
+data class PropertiesChanges(val lastVersion: Long, val propertyItems: List<PropertyItem>)

@@ -24,10 +24,10 @@ class PropertiesWatchDispatcher(
 
     @Synchronized
     fun subscribeApplication(subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
-                             lastKnownVersion: Long?): List<PropertyItem> {
+                             lastKnownVersion: Long?): PropertiesChanges? {
 
         val defaultHostName = toDefaultHostname(defaultApplication)
-        val config = configurationResolver.getProperties(configurationSnapshot, applicationName, hostName,
+        val changes = configurationResolver.getChanges(configurationSnapshot, applicationName, hostName,
                 defaultApplication, lastKnownVersion)
 
         subscriptions.compute(subscriberId) { _, value ->
@@ -43,7 +43,7 @@ class PropertiesWatchDispatcher(
                         watchSubscriber = null)
             }
         }
-        return config.propertyItems
+        return changes
     }
 
 
@@ -85,10 +85,10 @@ class PropertiesWatchDispatcher(
             val watchSubscriber = observerState.watchSubscriber ?: continue
 
             for (appState: ApplicationState in observerState.applications) {
-                val changes = configurationResolver.getProperties(configurationSnapshot, appState.appName,
+                val changes = configurationResolver.getChanges(configurationSnapshot, appState.appName,
                         observerState.hostName, observerState.defaultHostName, appState.lastVersion)
-                if (changes.propertyItems.isNotEmpty()) {
-                    watchSubscriber.pushChanges(changes.propertyItems)
+                if (changes != null && changes.propertyItems.isNotEmpty()) {
+                    watchSubscriber.pushChanges(changes)
                     appState.lastVersion = changes.lastVersion
                 }
             }

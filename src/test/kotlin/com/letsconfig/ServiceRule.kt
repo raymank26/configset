@@ -5,13 +5,12 @@ import com.letsconfig.network.grpc.GrpcConfigurationServer
 import com.letsconfig.network.grpc.GrpcConfigurationService
 import com.letsconfig.network.grpc.common.ApplicationCreateRequest
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
-import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
 import com.letsconfig.network.grpc.common.CreateHostRequest
 import com.letsconfig.network.grpc.common.CreateHostResponse
 import com.letsconfig.network.grpc.common.DeletePropertyRequest
 import com.letsconfig.network.grpc.common.DeletePropertyResponse
-import com.letsconfig.network.grpc.common.PropertiesChange
+import com.letsconfig.network.grpc.common.PropertiesChangesResponse
 import com.letsconfig.network.grpc.common.SubscribeApplicationRequest
 import com.letsconfig.network.grpc.common.SubscriberInfoRequest
 import com.letsconfig.network.grpc.common.UpdatePropertyRequest
@@ -100,7 +99,7 @@ class ServiceRule : ExternalResource() {
         Assert.assertEquals(res.type, DeletePropertyResponse.Type.OK)
     }
 
-    fun subscribeTestApplication(subscriberId: String, lastKnownVersion: Long?): ApplicationSnapshotResponse {
+    fun subscribeTestApplication(subscriberId: String, lastKnownVersion: Long?): PropertiesChangesResponse {
         return blockingClient.subscribeApplication(SubscribeApplicationRequest.newBuilder()
                 .setApplicationName(TEST_APP_NAME)
                 .setDefaultApplicationName("my-app")
@@ -110,7 +109,7 @@ class ServiceRule : ExternalResource() {
                 .build())
     }
 
-    fun watchChanges(subscriberId: String, queue: Queue<PropertiesChange>) {
+    fun watchChanges(subscriberId: String, queue: Queue<PropertiesChangesResponse>) {
         asyncClient.watchChanges(SubscriberInfoRequest.newBuilder().setId(subscriberId).build(), QueueStreamObserver(queue))
     }
 

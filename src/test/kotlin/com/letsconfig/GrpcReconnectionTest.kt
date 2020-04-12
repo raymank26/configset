@@ -1,6 +1,6 @@
 package com.letsconfig
 
-import com.letsconfig.network.grpc.common.PropertiesChange
+import com.letsconfig.network.grpc.common.PropertiesChangesResponse
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -22,7 +22,7 @@ class GrpcReconnectionTest {
         serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, 2, "name2", "value2")
         serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, 3, "name3", "value3")
 
-        val itemsQueue = ConcurrentLinkedQueue<PropertiesChange>()
+        val itemsQueue = ConcurrentLinkedQueue<PropertiesChangesResponse>()
         serviceRule.subscribeTestApplication(subscriberId, 2)
         serviceRule.watchChanges(subscriberId, itemsQueue)
 

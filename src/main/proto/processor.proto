@@ -41,10 +41,6 @@ message SubscribeApplicationRequest {
     int64 lastKnownVersion = 5;
 }
 
-message ApplicationSnapshotResponse {
-    repeated PropertyItem items = 1;
-}
-
 message EmptyRequest {
 }
 
@@ -112,8 +108,9 @@ message ReadPropertyResponse {
     repeated PropertyItem items = 2;
 }
 
-message PropertiesChange {
-    repeated PropertyItem items = 1;
+message PropertiesChangesResponse {
+    int64 lastVersion = 1;
+    repeated PropertyItem items = 2;
 }
 
 service ConfigurationService {
@@ -123,6 +120,6 @@ service ConfigurationService {
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
-    rpc subscribeApplication (SubscribeApplicationRequest) returns (ApplicationSnapshotResponse);
-    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChange);
+    rpc subscribeApplication (SubscribeApplicationRequest) returns (PropertiesChangesResponse);
+    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChangesResponse);
 }

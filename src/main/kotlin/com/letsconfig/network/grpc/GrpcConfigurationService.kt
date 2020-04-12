@@ -4,11 +4,11 @@ import com.letsconfig.ConfigurationService
 import com.letsconfig.CreateApplicationResult
 import com.letsconfig.DeletePropertyResult
 import com.letsconfig.HostCreateResult
+import com.letsconfig.PropertiesChanges
 import com.letsconfig.PropertyCreateResult
 import com.letsconfig.WatchSubscriber
 import com.letsconfig.network.grpc.common.ApplicationCreateRequest
 import com.letsconfig.network.grpc.common.ApplicationCreatedResponse
-import com.letsconfig.network.grpc.common.ApplicationSnapshotResponse
 import com.letsconfig.network.grpc.common.ApplicationsResponse
 import com.letsconfig.network.grpc.common.ConfigurationServiceGrpc
 import com.letsconfig.network.grpc.common.CreateHostRequest
@@ -16,7 +16,7 @@ import com.letsconfig.network.grpc.common.CreateHostResponse
 import com.letsconfig.network.grpc.common.DeletePropertyRequest
 import com.letsconfig.network.grpc.common.DeletePropertyResponse
 import com.letsconfig.network.grpc.common.EmptyRequest
-import com.letsconfig.network.grpc.common.PropertiesChange
+import com.letsconfig.network.grpc.common.PropertiesChangesResponse
 import com.letsconfig.network.grpc.common.PropertyItem
 import com.letsconfig.network.grpc.common.SubscribeApplicationRequest
 import com.letsconfig.network.grpc.common.SubscriberInfoRequest
@@ -76,60 +76,54 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         responseObserver.onCompleted()
     }
 
-    override fun subscribeApplication(request: SubscribeApplicationRequest, responseObserver: StreamObserver<ApplicationSnapshotResponse>) {
-        val properties: List<com.letsconfig.PropertyItem> = configurationService.subscribeApplication(request.subscriberId,
+    override fun subscribeApplication(request: SubscribeApplicationRequest, responseObserver: StreamObserver<PropertiesChangesResponse>) {
+        val changes = configurationService.subscribeApplication(request.subscriberId,
                 request.defaultApplicationName, request.hostName, request.applicationName, request.lastKnownVersion)
-        responseObserver.onNext(ApplicationSnapshotResponse.newBuilder().addAllItems(properties.map { prop ->
-            val res = PropertyItem.newBuilder()
-                    .setApplicationName(prop.applicationName)
-                    .setPropertyName(prop.name)
-                    .setVersion(prop.version)
-            when (prop) {
-                is com.letsconfig.PropertyItem.Updated -> {
-                    res.propertyValue = prop.value
-                    res.updateType = PropertyItem.UpdateType.UPDATE
-                }
-                is com.letsconfig.PropertyItem.Deleted -> {
-                    res.updateType = PropertyItem.UpdateType.DELETE
-                }
-            }
-            res.build()
-        }).build())
+        val changesProto: PropertiesChangesResponse = toPropertiesChangesResponse(changes)
+        responseObserver.onNext(changesProto)
         responseObserver.onCompleted()
     }
 
-    override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertiesChange>) {
+    private fun toPropertiesChangesResponse(changes: PropertiesChanges?): PropertiesChangesResponse {
+        if (changes == null) {
+            return PropertiesChangesResponse.getDefaultInstance()
+        }
+        val preparedItems = changes.propertyItems.map { change ->
+            when (change) {
+                is com.letsconfig.PropertyItem.Updated -> {
+                    PropertyItem.newBuilder()
+                            .setUpdateType(PropertyItem.UpdateType.UPDATE)
+                            .setApplicationName(change.applicationName)
+                            .setPropertyName(change.name)
+                            .setPropertyValue(change.value)
+                            .setVersion(change.version)
+                            .build()
+                }
+                is com.letsconfig.PropertyItem.Deleted -> {
+                    PropertyItem.newBuilder()
+                            .setUpdateType(PropertyItem.UpdateType.DELETE)
+                            .setApplicationName(change.applicationName)
+                            .setPropertyName(change.name)
+                            .setVersion(change.version)
+                            .build()
+                }
+            }
+        }
+        return PropertiesChangesResponse.newBuilder().addAllItems(preparedItems).setLastVersion(changes.lastVersion).build()
+    }
+
+    override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertiesChangesResponse>) {
         configurationService.watchChanges(object : WatchSubscriber {
             override fun getId(): String {
                 return request.id
             }
 
-            override fun pushChanges(items: List<com.letsconfig.PropertyItem>) {
+            override fun pushChanges(changes: PropertiesChanges) {
+
                 if (Context.current().isCancelled) {
                     configurationService.unsubscribe(request.id)
                 }
-                val preparedItems = items.map { change ->
-                    when (change) {
-                        is com.letsconfig.PropertyItem.Updated -> {
-                            PropertyItem.newBuilder()
-                                    .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                                    .setApplicationName(change.applicationName)
-                                    .setPropertyName(change.name)
-                                    .setPropertyValue(change.value)
-                                    .setVersion(change.version)
-                                    .build()
-                        }
-                        is com.letsconfig.PropertyItem.Deleted -> {
-                            PropertyItem.newBuilder()
-                                    .setUpdateType(PropertyItem.UpdateType.DELETE)
-                                    .setApplicationName(change.applicationName)
-                                    .setPropertyName(change.name)
-                                    .setVersion(change.version)
-                                    .build()
-                        }
-                    }
-                }
-                responseObserver.onNext(PropertiesChange.newBuilder().addAllItems(preparedItems).build())
+                responseObserver.onNext(toPropertiesChangesResponse(changes))
             }
         })
     }
