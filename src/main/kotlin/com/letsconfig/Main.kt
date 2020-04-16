@@ -1,6 +1,7 @@
 package com.letsconfig
 import com.letsconfig.db.memory.InMemoryConfigurationDao
 import com.letsconfig.db.postgres.PostgreSqlConfigurationDao
+import com.letsconfig.extension.createLogger
 import com.letsconfig.network.grpc.GrpcConfigurationServer
 import com.letsconfig.network.grpc.GrpcConfigurationService
 import org.jdbi.v3.core.Jdbi
@@ -13,18 +14,23 @@ import java.util.concurrent.Semaphore
 /**
  * Date: 15.02.17.
  */
-
 object Main {
+
+    private val LOG = createLogger()
 
     @JvmStatic
     fun main(args: Array<String>) {
         val config = getConfig() ?: return
 
         val koinApp = startKoin {
-            modules(mainModule(config))
+            modules(createMainModule(config))
         }
+        Runtime.getRuntime().addShutdownHook(Thread {
+            koinApp.close()
+        })
         koinApp.koin.get<GrpcConfigurationServer>().start()
         val semaphore = Semaphore(0)
+        LOG.info("Server started")
         semaphore.acquire()
     }
 
@@ -40,7 +46,7 @@ object Main {
     }
 }
 
-fun mainModule(config: AppConfiguration) = module {
+fun createMainModule(config: AppConfiguration) = module {
 
     single {
         when (config.getDaoType()) {
@@ -67,7 +73,7 @@ fun mainModule(config: AppConfiguration) = module {
         ThreadScheduler()
     }
 
-    single<GrpcConfigurationServer> {
+    single {
         val server = GrpcConfigurationServer(get(), config.grpcPort())
         onClose {
             server.stop()
