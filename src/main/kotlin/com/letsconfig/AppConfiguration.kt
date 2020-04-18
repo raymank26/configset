@@ -26,7 +26,7 @@ class AppConfiguration {
     }
 
     fun grpcPort(): Int {
-        return readFromEnv("GRPC_PORT", "8080").toInt()
+        return 8080
     }
 
     private fun readFromEnv(key: String, default: String): String {
