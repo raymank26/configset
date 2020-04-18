@@ -1,0 +1,6 @@
+rootProject.name = 'letsconfig'
+
+include 'server'
+include 'client'
+include 'sdk'
+

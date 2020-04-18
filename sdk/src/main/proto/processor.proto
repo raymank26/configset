@@ -1,0 +1,125 @@
+syntax = "proto3";
+option java_multiple_files = true;
+
+package com.letsconfig.sdk.proto;
+
+message ApplicationCreateRequest {
+    string applicationName = 1;
+    string requestId = 2;
+}
+
+message ApplicationCreatedResponse {
+    Type type = 1;
+    enum Type {
+        OK = 0;
+        ALREADY_EXISTS = 1;
+    }
+}
+
+message SubscriberInfoRequest {
+    string id = 1;
+}
+
+message PropertyItem {
+    UpdateType updateType = 1;
+    string applicationName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+    int64 version = 5;
+
+    enum UpdateType {
+        UPDATE = 0;
+        DELETE = 1;
+    }
+}
+
+message SubscribeApplicationRequest {
+    string hostName = 1;
+    string subscriberId = 2;
+    string applicationName = 3;
+    string defaultApplicationName = 4;
+    int64 lastKnownVersion = 5;
+}
+
+message EmptyRequest {
+}
+
+message ApplicationsResponse {
+    repeated string application = 1;
+}
+
+message CreateHostRequest {
+    string hostName = 1;
+    string requestId = 2;
+}
+
+message CreateHostResponse {
+    Type type = 1;
+    enum Type {
+        OK = 0;
+        HOST_ALREADY_EXISTS = 1;
+    }
+}
+
+message UpdatePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+    int64 version = 5;
+    string requestId = 6;
+}
+
+message UpdatePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+        OK = 0;
+        HOST_NOT_FOUND = 1;
+        APPLICATION_NOT_FOUND = 2;
+        UPDATE_CONFLICT = 3;
+    }
+}
+
+message DeletePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string requestId = 4;
+}
+
+message DeletePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+        OK = 0;
+        PROPERTY_NOT_FOUND = 1;
+    }
+}
+
+message ReadPropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+}
+
+message ReadPropertyResponse {
+    string applicationName = 1;
+    repeated PropertyItem items = 2;
+}
+
+message PropertiesChangesResponse {
+    int64 lastVersion = 1;
+    repeated PropertyItem items = 2;
+}
+
+service ConfigurationService {
+    rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
+    rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
+    rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+    rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
+    rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
+    rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
+    rpc subscribeApplication (SubscribeApplicationRequest) returns (PropertiesChangesResponse); // TODO: add separate response
+    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChangesResponse);
+}

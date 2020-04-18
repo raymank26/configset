@@ -1,0 +1,9 @@
+dependencies {
+    compile project(':sdk')
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    testCompile 'junit:junit:4.12'
+}
+
+version = 0.1
+

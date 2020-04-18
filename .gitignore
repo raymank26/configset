@@ -1,4 +1,7 @@
 /build/
+/client/build/
+/server/build/
+/sdk/build/
 /.idea
 *.swp*
 /gradle
