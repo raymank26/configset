@@ -1,4 +1,4 @@
-package com.letsconfig.server.client
+package com.letsconfig.client
 
 class Hello {
 
