@@ -7,7 +7,10 @@ dependencies {
     testCompile "org.testcontainers:testcontainers:1.12.2"
     testCompile 'org.amshove.kluent:kluent:1.59'
     testCompile 'org.awaitility:awaitility:4.0.2'
+    testCompile group: 'io.mockk', name: 'mockk', version: '1.9.3'
 }
 
 version = 0.1
+
+test.dependsOn (":server:dockerBuildImage")
 

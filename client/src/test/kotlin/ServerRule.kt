@@ -101,4 +101,4 @@ class ServerRule : ExternalResource() {
     }
 }
 
-class KLetsconfigBackend(name: String) : GenericContainer<KLetsconfigBackend>(name)
+private class KLetsconfigBackend(name: String) : GenericContainer<KLetsconfigBackend>(name)

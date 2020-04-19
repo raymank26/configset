@@ -1,16 +1,22 @@
 package com.letsconfig.client
 
 import com.letsconfig.client.converter.Converter
+import com.letsconfig.sdk.extension.createLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
+private val LOG = ObservableConfProperty::class.createLogger()
+
+private typealias Listener<T> = (T) -> Unit
+
 class ObservableConfProperty<T>(
-        dynamicValue: DynamicValue<String?, String?>,
+        private val name: String,
         private val defaultValue: T,
-        private val converter: Converter<T>) : ConfProperty<T> {
+        private val converter: Converter<T>,
+        dynamicValue: DynamicValue<String?, String?>) : ConfProperty<T> {
 
     @Volatile
     private var currentValue: T
-    private val listeners: MutableCollection<ConfPropertyListener<T>> = CopyOnWriteArrayList()
+    private val listeners: MutableCollection<Listener<T>> = CopyOnWriteArrayList()
 
     init {
         currentValue = covertSafely(dynamicValue.initial)
@@ -26,7 +32,7 @@ class ObservableConfProperty<T>(
         return currentValue
     }
 
-    override fun subscribe(listener: ConfPropertyListener<T>) {
+    override fun subscribe(listener: (T) -> Unit) {
         listeners.add(listener)
     }
 
@@ -38,6 +44,7 @@ class ObservableConfProperty<T>(
                 converter.convert(value) ?: return defaultValue
             }
         } catch (e: Exception) {
+            LOG.warn("For propertyName = $name unable to convert value = $value")
             defaultValue
         }
     }
@@ -45,7 +52,11 @@ class ObservableConfProperty<T>(
     @Synchronized
     fun fireListeners(value: T) {
         for (listener in listeners) {
-            listener.consume(value)
+            try {
+                listener.invoke(value)
+            } catch (e: java.lang.Exception) {
+                LOG.warn("For propertyName = $name unable to call listener for value = $value", e)
+            }
         }
     }
 }

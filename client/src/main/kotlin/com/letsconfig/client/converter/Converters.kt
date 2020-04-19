@@ -4,5 +4,8 @@ object Converters {
     val STRING = GenericConverter { str -> str }
     val LONG = GenericConverter { str -> str.toLong() }
     val INTEGER = GenericConverter { str -> str.toInt() }
-    val CHAR = GenericConverter { str -> str.toCharArray() }
+    val CHAR = GenericConverter { str ->
+        require(str.length == 1)
+        str.first()
+    }
 }

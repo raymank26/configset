@@ -6,6 +6,6 @@ class ConstantConfProperty<T>(private val value: T) : ConfProperty<T> {
         return value
     }
 
-    override fun subscribe(listener: ConfPropertyListener<T>) {
+    override fun subscribe(listener: (T) -> Unit) {
     }
 }

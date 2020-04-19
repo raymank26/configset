@@ -45,7 +45,7 @@ class ApplicationRegistry(
         val observable = propertiesSubscribers.compute(name) { _, prev ->
             prev ?: ChangingObservable()
         }!!
-        return ObservableConfProperty(DynamicValue(value, observable), value?.let { converter.convert(it) }, converter)
+        return ObservableConfProperty(name, value?.let { converter.convert(it) }, converter, DynamicValue(value, observable))
     }
 
     @Synchronized
@@ -54,7 +54,7 @@ class ApplicationRegistry(
         val observable = propertiesSubscribers.compute(name) { _, prev ->
             prev ?: ChangingObservable()
         }!!
-        return ObservableConfProperty(DynamicValue(value, observable), value?.let { converter.convert(it) }
-                ?: defaultValue, converter)
+        return ObservableConfProperty(name, value?.let { converter.convert(it) } ?: defaultValue, converter,
+                DynamicValue(value, observable))
     }
 }
