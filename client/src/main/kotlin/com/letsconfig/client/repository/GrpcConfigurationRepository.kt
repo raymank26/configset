@@ -3,6 +3,7 @@ package com.letsconfig.client.repository
 import com.letsconfig.client.ChangingObservable
 import com.letsconfig.client.DynamicValue
 import com.letsconfig.client.PropertyItem
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
@@ -20,6 +21,7 @@ class GrpcConfigurationRepository(
 
     private val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
+    private val log = createLogger()
 
     init {
         val channel: ManagedChannel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
@@ -62,12 +64,11 @@ class GrpcConfigurationRepository(
                 updateObservable.setValue(updates)
             }
 
-            override fun onError(t: Throwable?) {
-                TODO("Not yet implemented")
+            override fun onError(t: Throwable) {
+                log.error("Exception occurrred", t)
             }
 
             override fun onCompleted() {
-                TODO("Not yet implemented")
             }
         })
 

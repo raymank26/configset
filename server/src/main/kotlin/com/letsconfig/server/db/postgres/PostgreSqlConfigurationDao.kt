@@ -1,5 +1,6 @@
 package com.letsconfig.server.db.postgres
 
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.server.ApplicationED
 import com.letsconfig.server.CreateApplicationResult
 import com.letsconfig.server.DeletePropertyResult
@@ -9,7 +10,6 @@ import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
-import com.letsconfig.server.extension.createLogger
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper

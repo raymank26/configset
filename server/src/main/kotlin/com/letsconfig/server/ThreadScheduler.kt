@@ -1,7 +1,7 @@
 package com.letsconfig.server
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.letsconfig.server.extension.createLogger
+import com.letsconfig.sdk.extension.createLogger
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 

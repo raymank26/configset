@@ -1,7 +1,7 @@
 package com.letsconfig.server
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.server.db.memory.InMemoryConfigurationDao
 import com.letsconfig.server.db.postgres.PostgreSqlConfigurationDao
-import com.letsconfig.server.extension.createLogger
 import com.letsconfig.server.network.grpc.GrpcConfigurationServer
 import com.letsconfig.server.network.grpc.GrpcConfigurationService
 import org.jdbi.v3.core.Jdbi

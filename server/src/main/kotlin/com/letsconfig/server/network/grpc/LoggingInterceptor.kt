@@ -1,6 +1,6 @@
 package com.letsconfig.server.network.grpc
 
-import com.letsconfig.server.extension.createLogger
+import com.letsconfig.sdk.extension.createLogger
 import io.grpc.ForwardingServerCallListener
 import io.grpc.Metadata
 import io.grpc.ServerCall
