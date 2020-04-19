@@ -13,7 +13,7 @@ class ClientTest {
     val serverRule = ServerRule()
 
     @Test
-    fun `test subscribe update, delete cycle`() {
+    fun `test subscribe update, delete routine`() {
         val propertyName = "configuration.property"
         val confProperty: ConfProperty<String?> = serverRule.configuration.getConfProperty(propertyName, Converters.STRING)
 
