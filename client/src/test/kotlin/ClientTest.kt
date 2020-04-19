@@ -1,3 +1,4 @@
+import com.letsconfig.client.ConfProperty
 import com.letsconfig.client.converter.StringConverter
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
@@ -12,8 +13,8 @@ class ClientTest {
 
     @Test
     fun test() {
-        val propertyName = "property"
-        val confProperty = serverRule.configuration.getConfProperty(propertyName, StringConverter())
+        val propertyName = "configuration.property"
+        val confProperty: ConfProperty<String?> = serverRule.configuration.getConfProperty(propertyName, StringConverter())
 
         confProperty.getValue() shouldBeEqualTo null
 
@@ -26,6 +27,12 @@ class ClientTest {
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo expectedValue
+        }
+
+        serverRule.deleteProperty(APP_NAME, HOSTNAME, propertyName)
+
+        Awaitility.await().untilAsserted {
+            confProperty.getValue() shouldBeEqualTo null
         }
     }
 }

@@ -25,6 +25,7 @@ class GrpcConfigurationRepository(
     private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     private lateinit var channel: ManagedChannel
+    private val subscriberId = UUID.randomUUID().toString()
 
     @Volatile
     private var isStopped = false
@@ -35,11 +36,11 @@ class GrpcConfigurationRepository(
                 .build()
         asyncClient = ConfigurationServiceGrpc.newStub(channel)
         blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
+        log.info("SubscriberId = $subscriberId")
     }
 
 
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
-        val subscriberId = UUID.randomUUID().toString()
         val response = blockingClient.subscribeApplication(SubscribeApplicationRequest
                 .newBuilder()
                 .setApplicationName(appName)
@@ -60,7 +61,7 @@ class GrpcConfigurationRepository(
             override fun onNext(value: PropertiesChangesResponse) {
                 val updates: MutableList<PropertyItem> = ArrayList()
                 for (propertyItemProto in value.itemsList) {
-                    if (propertyItemProto.propertyValue == null) {
+                    if (propertyItemProto.updateType == com.letsconfig.sdk.proto.PropertyItem.UpdateType.DELETE) {
                         updates.add(PropertyItem.Deleted(propertyItemProto.applicationName,
                                 propertyItemProto.propertyName, propertyItemProto.version))
                     } else {
