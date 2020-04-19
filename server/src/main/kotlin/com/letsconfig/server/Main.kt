@@ -27,6 +27,7 @@ object Main {
         }
         Runtime.getRuntime().addShutdownHook(Thread {
             koinApp.close()
+            LOG.info("Application has exited normally")
         })
         koinApp.koin.get<GrpcConfigurationServer>().start()
         val semaphore = Semaphore(0)

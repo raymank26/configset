@@ -1,8 +1,11 @@
 dependencies {
     compile project(':sdk')
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.1'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     testCompile 'junit:junit:4.12'
+    testCompile "org.testcontainers:testcontainers:1.12.2"
+    testCompile 'org.amshove.kluent:kluent:1.59'
 }
 
 version = 0.1
