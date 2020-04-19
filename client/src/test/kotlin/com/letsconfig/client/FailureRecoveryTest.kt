@@ -1,4 +1,5 @@
-import com.letsconfig.client.ConfProperty
+package com.letsconfig.client
+
 import com.letsconfig.client.converter.Converters
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility

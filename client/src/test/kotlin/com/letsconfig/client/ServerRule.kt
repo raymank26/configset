@@ -1,7 +1,5 @@
-import com.letsconfig.client.Configuration
-import com.letsconfig.client.ConfigurationFactory
-import com.letsconfig.client.ConfigurationRegistry
-import com.letsconfig.client.ConfigurationTransport
+package com.letsconfig.client
+
 import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
@@ -43,7 +41,7 @@ class ServerRule : ExternalResource() {
         container.start()
         container.followOutput(logConsumer)
 
-        registry = ConfigurationFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME, "localhost", container.getMappedPort(INTERNAL_PORT)))
+        registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME, "localhost", container.getMappedPort(INTERNAL_PORT)))
         configuration = registry.getConfiguration(APP_NAME)
 
         crudChannel = ManagedChannelBuilder.forAddress("localhost", container.getMappedPort(INTERNAL_PORT))

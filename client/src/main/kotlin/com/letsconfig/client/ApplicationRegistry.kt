@@ -1,8 +1,12 @@
 package com.letsconfig.client
 
 import com.letsconfig.client.converter.Converter
+import com.letsconfig.sdk.extension.createLogger
+
+private val LOG = ApplicationRegistry::class.java.createLogger()
 
 class ApplicationRegistry(
+        private val appName: String,
         private val propertiesProvider: DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>>
 ) {
 
@@ -24,6 +28,7 @@ class ApplicationRegistry(
     @Synchronized
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
+            LOG.info("Update come for appName = ${appName}, property = $propertyItem")
             val observable = propertiesSubscribers[propertyItem.name]
             if (observable != null) {
                 when (propertyItem) {
