@@ -1,5 +1,6 @@
 package com.letsconfig.server
 
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.server.db.ConfigurationApplication
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.ConfigurationProperty
@@ -14,6 +15,7 @@ class PropertiesWatchDispatcher(
     private val subscriptions: MutableMap<SubscriberId, ObserverState> = mutableMapOf()
 
     private var configurationSnapshot: Map<String, ConfigurationApplication> = mapOf()
+    private val log = createLogger()
 
     fun start() {
         scheduler.scheduleWithFixedDelay(updateDelayMs, updateDelayMs) {
@@ -54,6 +56,7 @@ class PropertiesWatchDispatcher(
             value.watchSubscriber = subscriber
             value
         }
+        log.info("Subscriber with id = ${subscriber.getId()} is connected to watch")
     }
 
     @Synchronized

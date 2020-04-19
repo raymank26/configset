@@ -67,7 +67,9 @@ fun createMainModule(config: AppConfiguration) = module {
     }
 
     single {
-        PropertiesWatchDispatcher(get(), get(), get(), config.getUpdateDelayMs())
+        val dispatcher = PropertiesWatchDispatcher(get(), get(), get(), config.getUpdateDelayMs())
+        dispatcher.start()
+        dispatcher
     }
 
     single<Scheduler> {
