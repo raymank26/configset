@@ -43,11 +43,13 @@ class FailureRecoveryTest {
     fun `test failed listener`() {
         var capturedValue: Long? = null
         val stringValue = "1023"
-        serverRule.updateProperty(APP_NAME, HOSTNAME, 1, propertyName, stringValue)
+
         confProperty.subscribe { value ->
             capturedValue = value
             throw RuntimeException("Unable to process value")
         }
+        serverRule.updateProperty(APP_NAME, HOSTNAME, 1, propertyName, stringValue)
+
         Awaitility.await().untilAsserted {
             capturedValue shouldBeEqualTo stringValue.toLong()
         }
