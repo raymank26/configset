@@ -1,12 +1,5 @@
 package com.letsconfig.server.network.grpc
 
-import com.letsconfig.server.ConfigurationService
-import com.letsconfig.server.CreateApplicationResult
-import com.letsconfig.server.DeletePropertyResult
-import com.letsconfig.server.HostCreateResult
-import com.letsconfig.server.PropertiesChanges
-import com.letsconfig.server.PropertyCreateResult
-import com.letsconfig.server.WatchSubscriber
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ApplicationsResponse
@@ -22,6 +15,13 @@ import com.letsconfig.sdk.proto.SubscribeApplicationRequest
 import com.letsconfig.sdk.proto.SubscriberInfoRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
+import com.letsconfig.server.ConfigurationService
+import com.letsconfig.server.CreateApplicationResult
+import com.letsconfig.server.DeletePropertyResult
+import com.letsconfig.server.HostCreateResult
+import com.letsconfig.server.PropertiesChanges
+import com.letsconfig.server.PropertyCreateResult
+import com.letsconfig.server.WatchSubscriber
 import io.grpc.Context
 import io.grpc.stub.StreamObserver
 
@@ -117,7 +117,6 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             }
 
             override fun pushChanges(changes: PropertiesChanges) {
-
                 if (Context.current().isCancelled) {
                     configurationService.unsubscribe(request.id)
                 }

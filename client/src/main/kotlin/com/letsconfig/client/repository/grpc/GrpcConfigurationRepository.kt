@@ -1,8 +1,9 @@
-package com.letsconfig.client.repository
+package com.letsconfig.client.repository.grpc
 
 import com.letsconfig.client.ChangingObservable
 import com.letsconfig.client.DynamicValue
 import com.letsconfig.client.PropertyItem
+import com.letsconfig.client.repository.ConfigurationRepository
 import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
@@ -12,24 +13,30 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class GrpcConfigurationRepository(
         private val applicationHostname: String,
-        serverHostname: String,
-        serverPort: Int
+        private val serverHostname: String,
+        private val serverPort: Int
 ) : ConfigurationRepository {
 
-    private val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
-    private val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     private val log = createLogger()
+    private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
+    private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
+    private lateinit var channel: ManagedChannel
 
-    init {
-        val channel: ManagedChannel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
+    @Volatile
+    private var isStopped = false
+
+    override fun start() {
+        channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
                 .usePlaintext()
                 .build()
         asyncClient = ConfigurationServiceGrpc.newStub(channel)
         blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
     }
+
 
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
         val subscriberId = UUID.randomUUID().toString()
@@ -65,7 +72,9 @@ class GrpcConfigurationRepository(
             }
 
             override fun onError(t: Throwable) {
-                log.error("Exception occurrred", t)
+                if (!isStopped) {
+                    log.error("Exception occurred", t)
+                }
             }
 
             override fun onCompleted() {
@@ -73,5 +82,10 @@ class GrpcConfigurationRepository(
         })
 
         return DynamicValue(snapshot, updateObservable)
+    }
+
+    override fun stop() {
+        isStopped = true
+        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
     }
 }

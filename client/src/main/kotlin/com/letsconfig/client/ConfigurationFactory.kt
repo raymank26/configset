@@ -1,18 +1,20 @@
 package com.letsconfig.client
 
-import com.letsconfig.client.repository.GrpcConfigurationRepository
+import com.letsconfig.client.repository.grpc.GrpcConfigurationRepository
 
 object ConfigurationFactory {
 
-    fun getConfiguration(applicationName: String, transport: ConfigurationTransport): Configuration {
+    fun getConfiguration(transport: ConfigurationTransport): ConfigurationRegistry {
         return when (transport) {
-            is ConfigurationTransport.RemoteGrpc -> createGrpcConfiguration(applicationName, transport)
+            is ConfigurationTransport.RemoteGrpc -> createGrpcConfiguration(transport)
             is ConfigurationTransport.LocalClasspath -> TODO()
         }
     }
 
-    private fun createGrpcConfiguration(applicationName: String, transport: ConfigurationTransport.RemoteGrpc): Configuration {
+    private fun createGrpcConfiguration(transport: ConfigurationTransport.RemoteGrpc): ConfigurationRegistry {
         val repository = GrpcConfigurationRepository(transport.applicaitonHostName, transport.backendHost, transport.backendPort)
-        return ConfigurationRegistry(repository).getConfiguration(applicationName)
+        val registry = ConfigurationRegistry(repository)
+        registry.start()
+        return registry
     }
 }

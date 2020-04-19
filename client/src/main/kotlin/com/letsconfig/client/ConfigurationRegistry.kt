@@ -5,13 +5,20 @@ import com.letsconfig.client.repository.ConfigurationRepository
 import java.util.concurrent.ConcurrentHashMap
 
 private typealias AppName = String
-private typealias PropertyName = String
 
 class ConfigurationRegistry(
         private val configurationRepository: ConfigurationRepository
 ) {
 
     private val appStates: MutableMap<AppName, AppState> = ConcurrentHashMap()
+
+    fun start() {
+        configurationRepository.start()
+    }
+
+    fun stop() {
+        configurationRepository.stop()
+    }
 
     fun getConfiguration(appName: String): Configuration {
         return getApplicationRegistry(appName).configuration
