@@ -35,7 +35,6 @@ message PropertyItem {
 
 message SubscribeApplicationRequest {
     string hostName = 1;
-    string subscriberId = 2;
     string applicationName = 3;
     string defaultApplicationName = 4;
     int64 lastKnownVersion = 5;
@@ -110,7 +109,8 @@ message ReadPropertyResponse {
 
 message PropertiesChangesResponse {
     int64 lastVersion = 1;
-    repeated PropertyItem items = 2;
+    string applicationName = 2;
+    repeated PropertyItem items = 3;
 }
 
 service ConfigurationService {
@@ -120,6 +120,5 @@ service ConfigurationService {
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
-    rpc subscribeApplication (SubscribeApplicationRequest) returns (PropertiesChangesResponse); // TODO: add separate response
-    rpc watchChanges (SubscriberInfoRequest) returns (stream PropertiesChangesResponse);
+    rpc watchChanges (stream SubscribeApplicationRequest) returns (stream PropertiesChangesResponse);
 }

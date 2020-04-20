@@ -47,7 +47,7 @@ class FailureRecoveryTest {
 
         confProperty.subscribe { value ->
             capturedValue = value
-            throw RuntimeException("Unable to process value")
+            throw RuntimeException("Failure for test only")
         }
         serverRule.updateProperty(APP_NAME, HOSTNAME, 1, propertyName, stringValue)
 

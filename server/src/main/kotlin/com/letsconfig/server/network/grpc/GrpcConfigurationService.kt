@@ -1,5 +1,6 @@
 package com.letsconfig.server.network.grpc
 
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ApplicationsResponse
@@ -12,7 +13,6 @@ import com.letsconfig.sdk.proto.EmptyRequest
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.PropertyItem
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
-import com.letsconfig.sdk.proto.SubscriberInfoRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import com.letsconfig.server.ConfigurationService
@@ -22,10 +22,13 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertiesChanges
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.WatchSubscriber
-import io.grpc.Context
 import io.grpc.stub.StreamObserver
+import java.util.*
+
 
 class GrpcConfigurationService(private val configurationService: ConfigurationService) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
+
+    private val log = createLogger()
 
     override fun createApplication(request: ApplicationCreateRequest, responseObserver: StreamObserver<ApplicationCreatedResponse>) {
         when (configurationService.createApplication(request.requestId, request.applicationName)) {
@@ -76,17 +79,9 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         responseObserver.onCompleted()
     }
 
-    override fun subscribeApplication(request: SubscribeApplicationRequest, responseObserver: StreamObserver<PropertiesChangesResponse>) {
-        val changes = configurationService.subscribeApplication(request.subscriberId,
-                request.defaultApplicationName, request.hostName, request.applicationName, request.lastKnownVersion)
-        val changesProto: PropertiesChangesResponse = toPropertiesChangesResponse(changes)
-        responseObserver.onNext(changesProto)
-        responseObserver.onCompleted()
-    }
-
-    private fun toPropertiesChangesResponse(changes: PropertiesChanges?): PropertiesChangesResponse {
+    private fun toPropertiesChangesResponse(appName: String, changes: PropertiesChanges?): PropertiesChangesResponse {
         if (changes == null) {
-            return PropertiesChangesResponse.getDefaultInstance()
+            return PropertiesChangesResponse.newBuilder().setApplicationName(appName).build()
         }
         val preparedItems = changes.propertyItems.map { change ->
             val itemBuilder = PropertyItem.newBuilder()
@@ -107,21 +102,42 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                 }
             }
         }
-        return PropertiesChangesResponse.newBuilder().addAllItems(preparedItems).setLastVersion(changes.lastVersion).build()
+        return PropertiesChangesResponse.newBuilder().setApplicationName(appName).addAllItems(preparedItems)
+                .setLastVersion(changes.lastVersion).build()
     }
 
-    override fun watchChanges(request: SubscriberInfoRequest, responseObserver: StreamObserver<PropertiesChangesResponse>) {
-        configurationService.watchChanges(object : WatchSubscriber {
-            override fun getId(): String {
-                return request.id
+    override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<SubscribeApplicationRequest> {
+        val subscriberId = UUID.randomUUID().toString()
+        var subscribed = false
+        return object : StreamObserver<SubscribeApplicationRequest> {
+            override fun onNext(value: SubscribeApplicationRequest) {
+                val changesToPush = configurationService.subscribeApplication(subscriberId, value.defaultApplicationName, value.hostName,
+                        value.applicationName, value.lastKnownVersion)
+                if (!subscribed) {
+                    configurationService.watchChanges(object : WatchSubscriber {
+                        override fun getId(): String {
+                            return subscriberId
+                        }
+
+                        override fun pushChanges(applicationName: String, changes: PropertiesChanges) {
+                            responseObserver.onNext(toPropertiesChangesResponse(applicationName, changes))
+                        }
+                    })
+                    subscribed = true
+                }
+                responseObserver.onNext(toPropertiesChangesResponse(value.applicationName, changesToPush))
             }
 
-            override fun pushChanges(changes: PropertiesChanges) {
-                if (Context.current().isCancelled) {
-                    configurationService.unsubscribe(request.id)
-                }
-                responseObserver.onNext(toPropertiesChangesResponse(changes))
+            override fun onError(t: Throwable?) {
+                log.warn("Error in incoming stream, the bidirectional stream will be closed", t)
+                configurationService.unsubscribe(subscriberId)
+                responseObserver.onCompleted()
             }
-        })
+
+            override fun onCompleted() {
+                configurationService.unsubscribe(subscriberId)
+                responseObserver.onCompleted()
+            }
+        }
     }
 }

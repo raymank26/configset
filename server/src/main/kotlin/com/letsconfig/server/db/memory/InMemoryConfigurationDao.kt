@@ -19,10 +19,12 @@ class InMemoryConfigurationDao : ConfigurationDao {
     private var appId = 0L
     private var processedIds: MutableSet<String> = mutableSetOf()
 
+    @Synchronized
     override fun listApplications(): List<ApplicationED> {
         return applications
     }
 
+    @Synchronized
     override fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         return processMutable<CreateApplicationResult>(requestId, CreateApplicationResult.OK) {
             if (applications.find { it.name == appName } != null) {
@@ -35,10 +37,12 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
+    @Synchronized
     override fun listHosts(): List<HostED> {
         return hosts
     }
 
+    @Synchronized
     override fun createHost(requestId: String, hostName: String): HostCreateResult {
         return processMutable<HostCreateResult>(requestId, HostCreateResult.OK) {
             if (hosts.find { it.name == hostName } != null) {
@@ -51,6 +55,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
+    @Synchronized
     override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
         return processMutable<PropertyCreateResult>(requestId, PropertyCreateResult.OK) cb@{
             val lastVersion = getLastVersionInApp(appName)
@@ -77,6 +82,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
+    @Synchronized
     override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
         return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) cb@{
             val lastVersion = getLastVersionInApp(appName)
@@ -113,6 +119,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         return applications.find { it.name == appName }?.lastVersion
     }
 
+    @Synchronized
     override fun getConfigurationSnapshotList(): List<PropertyItem> {
         return properties
     }

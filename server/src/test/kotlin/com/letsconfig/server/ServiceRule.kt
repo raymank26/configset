@@ -1,5 +1,6 @@
 package com.letsconfig.server
 
+import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
@@ -9,7 +10,6 @@ import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
-import com.letsconfig.sdk.proto.SubscriberInfoRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import com.letsconfig.server.db.memory.InMemoryConfigurationDao
@@ -17,15 +17,20 @@ import com.letsconfig.server.network.grpc.GrpcConfigurationServer
 import com.letsconfig.server.network.grpc.GrpcConfigurationService
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+import io.grpc.stub.StreamObserver
 import org.junit.Assert
 import org.junit.rules.ExternalResource
 import java.util.*
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 
 const val TEST_APP_NAME = "test-app"
 const val TEST_HOST = "srvd1"
 
+
 class ServiceRule : ExternalResource() {
 
+    private val log = createLogger()
     private val configurationDao = InMemoryConfigurationDao()
     val updateDelayMs: Long = 1000
     private val propertiesWatchDispatcher = PropertiesWatchDispatcher(
@@ -35,6 +40,8 @@ class ServiceRule : ExternalResource() {
                     ConfigurationService(configurationDao, propertiesWatchDispatcher)
             )
     )
+    private val changesQueue = LinkedBlockingDeque<PropertiesChangesResponse>()
+    private lateinit var subscribeStream: StreamObserver<SubscribeApplicationRequest>
 
     val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
@@ -58,6 +65,18 @@ class ServiceRule : ExternalResource() {
                 .setRequestId(createRequestId())
                 .setHostName(TEST_HOST).build())
         Assert.assertEquals(CreateHostResponse.Type.OK, res.type)
+        subscribeStream = asyncClient.watchChanges(object : StreamObserver<PropertiesChangesResponse> {
+            override fun onNext(value: PropertiesChangesResponse) {
+                changesQueue.add(value)
+            }
+
+            override fun onError(t: Throwable) {
+                log.warn("Error occurred in response stream", t)
+            }
+
+            override fun onCompleted() {
+            }
+        })
     }
 
     override fun after() {
@@ -99,18 +118,27 @@ class ServiceRule : ExternalResource() {
         Assert.assertEquals(res.type, DeletePropertyResponse.Type.OK)
     }
 
-    fun subscribeTestApplication(subscriberId: String, lastKnownVersion: Long?): PropertiesChangesResponse {
-        return blockingClient.subscribeApplication(SubscribeApplicationRequest.newBuilder()
+    fun subscribeTestApplication(lastKnownVersion: Long?) {
+        subscribeStream.onNext(SubscribeApplicationRequest.newBuilder()
                 .setApplicationName(TEST_APP_NAME)
                 .setDefaultApplicationName("my-app")
                 .setHostName(TEST_HOST)
-                .setSubscriberId(subscriberId)
                 .setLastKnownVersion(lastKnownVersion ?: 0)
                 .build())
     }
 
-    fun watchChanges(subscriberId: String, queue: Queue<PropertiesChangesResponse>) {
-        asyncClient.watchChanges(SubscriberInfoRequest.newBuilder().setId(subscriberId).build(), QueueStreamObserver(queue))
+    fun watchForChanges(count: Int, timeoutMs: Long): List<PropertiesChangesResponse> {
+        val res = mutableListOf<PropertiesChangesResponse>()
+        var consumed = 0
+        while (consumed != count) {
+            val value = changesQueue.poll(timeoutMs, TimeUnit.MILLISECONDS)
+                    ?: throw AssertionError("No value in timeout")
+            if (value.itemsCount != 0) {
+                consumed++
+                res.add(value)
+            }
+        }
+        return res
     }
 
     fun createRequestId(): String {
