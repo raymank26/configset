@@ -1,6 +1,7 @@
 package com.letsconfig.client
 
 import com.letsconfig.client.converter.Converters
+import com.letsconfig.client.metrics.Metrics
 import eu.rekawek.toxiproxy.model.ToxicDirection
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
@@ -69,7 +70,9 @@ class ReconnectionTest {
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo null
         }
+        Thread.sleep(1000)
 
         confUpdates shouldBeEqualTo 2
+        serverRule.metrics.get(Metrics.SKIPPED_OBSOLETE_UPDATES) shouldBeEqualTo 0
     }
 }

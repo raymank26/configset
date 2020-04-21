@@ -12,9 +12,9 @@ import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.PropertyItem
-import com.letsconfig.sdk.proto.SubscribeApplicationRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
+import com.letsconfig.sdk.proto.WatchRequest
 import com.letsconfig.server.ConfigurationService
 import com.letsconfig.server.CreateApplicationResult
 import com.letsconfig.server.DeletePropertyResult
@@ -106,28 +106,37 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                 .setLastVersion(changes.lastVersion).build()
     }
 
-    override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<SubscribeApplicationRequest> {
+    override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
         val subscriberId = UUID.randomUUID().toString()
         var subscribed = false
-        return object : StreamObserver<SubscribeApplicationRequest> {
-            override fun onNext(value: SubscribeApplicationRequest) {
-                log.debug("Subscriber with id = $subscriberId call subscribe for app = ${value.applicationName}" +
-                        " and lastVersion = ${value.lastKnownVersion}")
-                val changesToPush = configurationService.subscribeApplication(subscriberId, value.defaultApplicationName, value.hostName,
-                        value.applicationName, value.lastKnownVersion)
-                if (!subscribed) {
-                    configurationService.watchChanges(object : WatchSubscriber {
-                        override fun getId(): String {
-                            return subscriberId
-                        }
+        return object : StreamObserver<WatchRequest> {
+            override fun onNext(value: WatchRequest) {
+                when (value.type) {
+                    WatchRequest.Type.UPDATE_RECEIVED -> {
+                        val updateReceived = value.updateReceived
+                        configurationService.updateLastVersion(subscriberId, updateReceived.applicationName, updateReceived.version)
+                    }
+                    WatchRequest.Type.SUBSCRIBE_APPLICATION -> {
+                        val subscribeRequest = value.subscribeApplicationRequest
+                        log.debug("Subscriber with id = $subscriberId call subscribe for app = ${subscribeRequest.applicationName}" +
+                                " and lastVersion = ${subscribeRequest.lastKnownVersion}")
+                        val changesToPush = configurationService.subscribeApplication(subscriberId, subscribeRequest.defaultApplicationName, subscribeRequest.hostName,
+                                subscribeRequest.applicationName, subscribeRequest.lastKnownVersion)
+                        if (!subscribed) {
+                            configurationService.watchChanges(object : WatchSubscriber {
+                                override fun getId(): String {
+                                    return subscriberId
+                                }
 
-                        override fun pushChanges(applicationName: String, changes: PropertiesChanges) {
-                            responseObserver.onNext(toPropertiesChangesResponse(applicationName, changes))
+                                override fun pushChanges(applicationName: String, changes: PropertiesChanges) {
+                                    responseObserver.onNext(toPropertiesChangesResponse(applicationName, changes))
+                                }
+                            })
+                            subscribed = true
                         }
-                    })
-                    subscribed = true
+                        responseObserver.onNext(toPropertiesChangesResponse(subscribeRequest.applicationName, changesToPush))
+                    }
                 }
-                responseObserver.onNext(toPropertiesChangesResponse(value.applicationName, changesToPush))
             }
 
             override fun onError(t: Throwable?) {

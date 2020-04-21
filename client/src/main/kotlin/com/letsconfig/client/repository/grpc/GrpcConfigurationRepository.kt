@@ -4,10 +4,14 @@ import com.letsconfig.client.ChangingObservable
 import com.letsconfig.client.DynamicValue
 import com.letsconfig.client.PropertyItem
 import com.letsconfig.client.Subscriber
+import com.letsconfig.client.metrics.LibraryMetrics
+import com.letsconfig.client.metrics.Metrics
 import com.letsconfig.client.repository.ConfigurationRepository
 import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
+import com.letsconfig.sdk.proto.UpdateReceived
+import com.letsconfig.sdk.proto.WatchRequest
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
@@ -20,14 +24,15 @@ class GrpcConfigurationRepository(
         private val applicationHostname: String,
         private val defaultApplicationName: String,
         private val serverHostname: String,
-        private val serverPort: Int
+        private val serverPort: Int,
+        private val libraryMetrics: LibraryMetrics
 ) : ConfigurationRepository {
 
     private val log = createLogger()
     private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     private lateinit var channel: ManagedChannel
-    private lateinit var subscribeObserver: StreamObserver<SubscribeApplicationRequest>
+    private lateinit var subscribeObserver: StreamObserver<WatchRequest>
     private lateinit var watchObserver: WatchObserver
     private val appWatchMappers = ConcurrentHashMap<String, WatchState>()
 
@@ -46,9 +51,17 @@ class GrpcConfigurationRepository(
                     if (filteredUpdates.size != updates.size) {
                         log.debug("Some updates where filtered (they are obsolete)" +
                                 ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
+                        libraryMetrics.increment(Metrics.SKIPPED_OBSOLETE_UPDATES)
                     }
                     watchState.observable.setValue(filteredUpdates)
                     watchState.lastVersion = lastVersion
+                    subscribeObserver.onNext(WatchRequest.newBuilder()
+                            .setType(WatchRequest.Type.UPDATE_RECEIVED)
+                            .setUpdateReceived(UpdateReceived.newBuilder()
+                                    .setApplicationName(appName)
+                                    .setVersion(lastVersion)
+                                    .build())
+                            .build())
                 },
                 onEnd = {
                     thread {
@@ -64,11 +77,15 @@ class GrpcConfigurationRepository(
     private fun subscribe() {
         subscribeObserver = asyncClient.watchChanges(watchObserver)
         for (watchState in appWatchMappers) {
-            subscribeObserver.onNext(SubscribeApplicationRequest
+            val subscribeRequest = SubscribeApplicationRequest
                     .newBuilder()
                     .setApplicationName(watchState.value.appName)
                     .setHostName(applicationHostname)
                     .setLastKnownVersion(watchState.value.lastVersion)
+                    .build()
+            subscribeObserver.onNext(WatchRequest.newBuilder()
+                    .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                    .setSubscribeApplicationRequest(subscribeRequest)
                     .build())
             log.info("Resubscribed to app = ${watchState.value.appName} and lastVersion = ${watchState.value.lastVersion}")
         }
@@ -79,12 +96,17 @@ class GrpcConfigurationRepository(
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
         appWatchMappers[appName] = WatchState(appName, 0, currentObservable)
-        subscribeObserver.onNext(SubscribeApplicationRequest
+        val subscribeRequest = SubscribeApplicationRequest
                 .newBuilder()
                 .setApplicationName(appName)
                 .setDefaultApplicationName(defaultApplicationName)
                 .setHostName(applicationHostname)
+                .build()
+        subscribeObserver.onNext(WatchRequest.newBuilder()
+                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                .setSubscribeApplicationRequest(subscribeRequest)
                 .build())
+
 
         val future = CompletableFuture<List<PropertyItem.Updated>>()
         currentObservable.onSubscribe(object : Subscriber<List<PropertyItem>> {

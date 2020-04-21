@@ -33,7 +33,7 @@ class PropertiesWatchDispatcher(
                 defaultApplication, lastKnownVersion)
 
         subscriptions.compute(subscriberId) { _, value ->
-            val newAppState = ApplicationState(applicationName, changes?.lastVersion)
+            val newAppState = ApplicationState(applicationName, lastKnownVersion)
             if (value == null) {
                 ObserverState(hostName = hostName, defaultHostName = defaultHostName, applications = setOf(newAppState),
                         watchSubscriber = null)
@@ -96,7 +96,6 @@ class PropertiesWatchDispatcher(
                             ", subscriberId = ${watchSubscriber.getId()}" +
                             ", prevVersion = ${appState.lastVersion}")
                     watchSubscriber.pushChanges(appState.appName, changes)
-                    appState.lastVersion = changes.lastVersion
                 }
             }
         }
@@ -104,6 +103,26 @@ class PropertiesWatchDispatcher(
 
     private fun toDefaultHostname(defaultApplicationName: String): String {
         return "host-$defaultApplicationName"
+    }
+
+    @Synchronized
+    fun updateVersion(subscriberId: String, applicationName: String, version: Long) {
+        val subscription = subscriptions[subscriberId]
+        if (subscription == null) {
+            log.warn("Unable to find subscription for subscriber = $subscriberId")
+            return
+        }
+        val appSubscription = subscription.applications.find { it.appName == applicationName }
+        if (appSubscription == null) {
+            log.warn("Unable to find app subscription for subscriber = $subscriberId, app = $applicationName")
+            return
+        }
+        if (appSubscription.lastVersion != null && version <= appSubscription.lastVersion!!) {
+            log.debug("Incoming version is obsolete for subscriber = $subscriberId, app = $applicationName")
+            return
+        }
+        appSubscription.lastVersion = version
+        log.debug("Version updated for for subscriber = $subscriberId, app = $applicationName")
     }
 }
 

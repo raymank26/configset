@@ -40,6 +40,10 @@ class ConfigurationService(
         return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
     }
 
+    fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
+        propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
+    }
+
     fun watchChanges(subscriber: WatchSubscriber) {
         propertiesWatchDispatcher.watchChanges(subscriber)
     }

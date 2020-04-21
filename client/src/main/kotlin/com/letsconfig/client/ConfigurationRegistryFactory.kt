@@ -17,7 +17,8 @@ object ConfigurationRegistryFactory {
     }
 
     private fun createGrpcConfiguration(transport: ConfigurationTransport.RemoteGrpc): ConfigurationRepository {
-        return GrpcConfigurationRepository(transport.applicationHostName, transport.defaultApplicationName, transport.backendHost, transport.backendPort)
+        return GrpcConfigurationRepository(transport.applicationHostName, transport.defaultApplicationName,
+                transport.backendHost, transport.backendPort, transport.libraryMetrics)
     }
 
     private fun createLocalClasspath(transport: ConfigurationTransport.LocalClasspath): ConfigurationRepository {

@@ -1,5 +1,6 @@
 package com.letsconfig.client
 
+import com.letsconfig.client.metrics.LibraryMetrics
 import com.letsconfig.sdk.extension.createLogger
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
@@ -32,6 +33,8 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
 
     lateinit var configuration: Configuration
     lateinit var registry: ConfigurationRegistry
+    lateinit var metrics: LibraryMetrics
+
     private lateinit var crudChannel: ManagedChannel
     private lateinit var crudClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     var proxy: ToxiproxyContainer.ContainerProxy? = null
@@ -50,8 +53,9 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
         proxy = toxiproxyContainer?.getProxy(container, INTERNAL_PORT)
         val backendHost = proxy?.containerIpAddress ?: "localhost"
         val backendPort = proxy?.proxyPort ?: container.getMappedPort(INTERNAL_PORT)
+        metrics = TestMetrics()
         registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME,
-                DEFAULT_APP_NAME, backendHost, backendPort))
+                DEFAULT_APP_NAME, backendHost, backendPort, metrics))
         configuration = registry.getConfiguration(APP_NAME)
 
         crudChannel = ManagedChannelBuilder.forAddress("localhost", container.getMappedPort(INTERNAL_PORT))

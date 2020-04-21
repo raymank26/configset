@@ -33,13 +33,6 @@ message PropertyItem {
     }
 }
 
-message SubscribeApplicationRequest {
-    string hostName = 1;
-    string applicationName = 3;
-    string defaultApplicationName = 4;
-    int64 lastKnownVersion = 5;
-}
-
 message EmptyRequest {
 }
 
@@ -113,6 +106,29 @@ message PropertiesChangesResponse {
     repeated PropertyItem items = 3;
 }
 
+message WatchRequest {
+    Type type = 1;
+    UpdateReceived updateReceived = 2;
+    SubscribeApplicationRequest subscribeApplicationRequest = 3;
+
+    enum Type {
+        UPDATE_RECEIVED = 0;
+        SUBSCRIBE_APPLICATION = 1;
+    }
+}
+
+message SubscribeApplicationRequest {
+    string hostName = 1;
+    string applicationName = 3;
+    string defaultApplicationName = 4;
+    int64 lastKnownVersion = 5;
+}
+
+message UpdateReceived {
+    string applicationName = 1;
+    int64 version = 2;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
@@ -120,5 +136,5 @@ service ConfigurationService {
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
-    rpc watchChanges (stream SubscribeApplicationRequest) returns (stream PropertiesChangesResponse);
+    rpc watchChanges (stream WatchRequest) returns (stream PropertiesChangesResponse);
 }

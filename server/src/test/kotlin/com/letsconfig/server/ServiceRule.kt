@@ -12,6 +12,8 @@ import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
+import com.letsconfig.sdk.proto.UpdateReceived
+import com.letsconfig.sdk.proto.WatchRequest
 import com.letsconfig.server.db.memory.InMemoryConfigurationDao
 import com.letsconfig.server.network.grpc.GrpcConfigurationServer
 import com.letsconfig.server.network.grpc.GrpcConfigurationService
@@ -41,7 +43,7 @@ class ServiceRule : ExternalResource() {
             )
     )
     private val changesQueue = LinkedBlockingDeque<PropertiesChangesResponse>()
-    private lateinit var subscribeStream: StreamObserver<SubscribeApplicationRequest>
+    private lateinit var subscribeStream: StreamObserver<WatchRequest>
 
     val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
@@ -119,12 +121,17 @@ class ServiceRule : ExternalResource() {
     }
 
     fun subscribeTestApplication(lastKnownVersion: Long?) {
-        subscribeStream.onNext(SubscribeApplicationRequest.newBuilder()
-                .setApplicationName(TEST_APP_NAME)
-                .setDefaultApplicationName("my-app")
-                .setHostName(TEST_HOST)
-                .setLastKnownVersion(lastKnownVersion ?: 0)
-                .build())
+        val data = WatchRequest.newBuilder()
+                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                .setSubscribeApplicationRequest(SubscribeApplicationRequest.newBuilder()
+                        .setApplicationName(TEST_APP_NAME)
+                        .setDefaultApplicationName("my-app")
+                        .setHostName(TEST_HOST)
+                        .setLastKnownVersion(lastKnownVersion ?: 0)
+                        .build())
+                .build()
+
+        subscribeStream.onNext(data)
     }
 
     fun watchForChanges(count: Int, timeoutMs: Long): List<PropertiesChangesResponse> {
@@ -136,6 +143,14 @@ class ServiceRule : ExternalResource() {
             if (value.itemsCount != 0) {
                 consumed++
                 res.add(value)
+
+                subscribeStream.onNext(WatchRequest.newBuilder()
+                        .setType(WatchRequest.Type.UPDATE_RECEIVED)
+                        .setUpdateReceived(UpdateReceived.newBuilder()
+                                .setApplicationName(value.applicationName)
+                                .setVersion(value.lastVersion))
+                        .build()
+                )
             }
         }
         return res
