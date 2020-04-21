@@ -111,6 +111,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         var subscribed = false
         return object : StreamObserver<SubscribeApplicationRequest> {
             override fun onNext(value: SubscribeApplicationRequest) {
+                log.debug("Subscriber with id = $subscriberId call subscribe for app = ${value.applicationName}" +
+                        " and lastVersion = ${value.lastKnownVersion}")
                 val changesToPush = configurationService.subscribeApplication(subscriberId, value.defaultApplicationName, value.hostName,
                         value.applicationName, value.lastKnownVersion)
                 if (!subscribed) {
@@ -129,9 +131,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             }
 
             override fun onError(t: Throwable?) {
-                log.warn("Error in incoming stream, the bidirectional stream will be closed", t)
+                log.warn("Error in incoming stream, the bidirectional stream will be closed, unsubscribe will be called", t)
                 configurationService.unsubscribe(subscriberId)
-                responseObserver.onCompleted()
             }
 
             override fun onCompleted() {

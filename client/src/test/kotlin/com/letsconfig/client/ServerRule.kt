@@ -15,16 +15,18 @@ import io.grpc.ManagedChannelBuilder
 import org.junit.Assert
 import org.junit.rules.ExternalResource
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.ToxiproxyContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 const val APP_NAME = "test"
 const val HOSTNAME = "srvd1"
+const val DEFAULT_APP_NAME = "default-app"
 
 private const val INTERNAL_PORT = 8080
 
-class ServerRule : ExternalResource() {
+class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : ExternalResource() {
 
     private lateinit var container: KLetsconfigBackend
 
@@ -32,16 +34,24 @@ class ServerRule : ExternalResource() {
     lateinit var registry: ConfigurationRegistry
     private lateinit var crudChannel: ManagedChannel
     private lateinit var crudClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
+    var proxy: ToxiproxyContainer.ContainerProxy? = null
     private val log = createLogger()
 
     override fun before() {
         container = KLetsconfigBackend("letsconfig-backend:latest")
                 .withExposedPorts(INTERNAL_PORT)
+        if (toxiproxyContainer != null) {
+            container.withNetwork(toxiproxyContainer.network)
+        }
         val logConsumer = Slf4jLogConsumer(log)
         container.start()
         container.followOutput(logConsumer)
 
-        registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME, "localhost", container.getMappedPort(INTERNAL_PORT)))
+        proxy = toxiproxyContainer?.getProxy(container, INTERNAL_PORT)
+        val backendHost = proxy?.containerIpAddress ?: "localhost"
+        val backendPort = proxy?.proxyPort ?: container.getMappedPort(INTERNAL_PORT)
+        registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME,
+                DEFAULT_APP_NAME, backendHost, backendPort))
         configuration = registry.getConfiguration(APP_NAME)
 
         crudChannel = ManagedChannelBuilder.forAddress("localhost", container.getMappedPort(INTERNAL_PORT))

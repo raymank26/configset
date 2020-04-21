@@ -33,7 +33,7 @@ class PropertiesWatchDispatcher(
                 defaultApplication, lastKnownVersion)
 
         subscriptions.compute(subscriberId) { _, value ->
-            val newAppState = ApplicationState(applicationName, lastKnownVersion)
+            val newAppState = ApplicationState(applicationName, changes?.lastVersion)
             if (value == null) {
                 ObserverState(hostName = hostName, defaultHostName = defaultHostName, applications = setOf(newAppState),
                         watchSubscriber = null)
@@ -91,6 +91,10 @@ class PropertiesWatchDispatcher(
                 val changes = configurationResolver.getChanges(configurationSnapshot, appState.appName,
                         observerState.hostName, observerState.defaultHostName, appState.lastVersion)
                 if (changes != null && changes.propertyItems.isNotEmpty()) {
+                    log.debug("Found changes with size = ${changes.propertyItems.size}" +
+                            " and lastVersion = ${changes.lastVersion}" +
+                            ", subscriberId = ${watchSubscriber.getId()}" +
+                            ", prevVersion = ${appState.lastVersion}")
                     watchSubscriber.pushChanges(appState.appName, changes)
                     appState.lastVersion = changes.lastVersion
                 }

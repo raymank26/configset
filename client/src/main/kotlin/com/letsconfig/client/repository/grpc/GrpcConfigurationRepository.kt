@@ -12,11 +12,13 @@ import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class GrpcConfigurationRepository(
         private val applicationHostname: String,
+        private val defaultApplicationName: String,
         private val serverHostname: String,
         private val serverPort: Int
 ) : ConfigurationRepository {
@@ -27,7 +29,7 @@ class GrpcConfigurationRepository(
     private lateinit var channel: ManagedChannel
     private lateinit var subscribeObserver: StreamObserver<SubscribeApplicationRequest>
     private lateinit var watchObserver: WatchObserver
-    private val appWatchMappers = HashMap<String, WatchState>()
+    private val appWatchMappers = ConcurrentHashMap<String, WatchState>()
 
     @Synchronized
     override fun start() {
@@ -39,15 +41,18 @@ class GrpcConfigurationRepository(
 
         watchObserver = WatchObserver(
                 onUpdate = { appName, updates, lastVersion ->
-                    synchronized(this) {
-                        val watchState: WatchState = appWatchMappers[appName]!!
-                        watchState.observable.setValue(updates)
-                        watchState.lastVersion = lastVersion
+                    val watchState: WatchState = appWatchMappers[appName]!!
+                    val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
+                    if (filteredUpdates.size != updates.size) {
+                        log.debug("Some updates where filtered (they are obsolete)" +
+                                ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
                     }
+                    watchState.observable.setValue(filteredUpdates)
+                    watchState.lastVersion = lastVersion
                 },
                 onEnd = {
                     thread {
-                        log.info("Resubscribe initialized, waiting for 2 seconds")
+                        log.info("Resubscribe started, waiting for 2 seconds")
                         Thread.sleep(2000)
                         subscribe()
                     }
@@ -77,6 +82,7 @@ class GrpcConfigurationRepository(
         subscribeObserver.onNext(SubscribeApplicationRequest
                 .newBuilder()
                 .setApplicationName(appName)
+                .setDefaultApplicationName(defaultApplicationName)
                 .setHostName(applicationHostname)
                 .build())
 
