@@ -21,19 +21,19 @@ class FailureRecoveryTest {
     @Before
     fun before() {
         serverRule.createApplication(APP_NAME)
-        serverRule.createHost(HOSTNAME)
+        serverRule.createHost(HOST_NAME)
 
-        confProperty = serverRule.configuration.getConfProperty(propertyName, Converters.LONG, DEFAULT_VALUE)
+        confProperty = serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.LONG, DEFAULT_VALUE)
     }
 
     @Test
     fun `test wrong value use default`() {
-        serverRule.updateProperty(APP_NAME, HOSTNAME, null, propertyName, "123")
+        serverRule.updateProperty(APP_NAME, HOST_NAME, null, propertyName, "123")
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo 123L
         }
 
-        serverRule.updateProperty(APP_NAME, HOSTNAME, 1, propertyName, "10.23") // double is not long => default value
+        serverRule.updateProperty(APP_NAME, HOST_NAME, 1, propertyName, "10.23") // double is not long => default value
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo DEFAULT_VALUE
@@ -49,7 +49,7 @@ class FailureRecoveryTest {
             capturedValue = value
             throw RuntimeException("Failure for test only")
         }
-        serverRule.updateProperty(APP_NAME, HOSTNAME, 1, propertyName, stringValue)
+        serverRule.updateProperty(APP_NAME, HOST_NAME, 1, propertyName, stringValue)
 
         Awaitility.await().untilAsserted {
             capturedValue shouldBeEqualTo stringValue.toLong()

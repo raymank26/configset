@@ -15,22 +15,22 @@ class ClientTest {
     @Test
     fun `test subscribe update, delete routine`() {
         val propertyName = "configuration.property"
-        val confProperty: ConfProperty<String?> = serverRule.configuration.getConfProperty(propertyName, Converters.STRING)
+        val confProperty: ConfProperty<String?> = serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
         confProperty.getValue() shouldBeEqualTo null
 
         serverRule.createApplication(APP_NAME)
-        serverRule.createHost(HOSTNAME)
+        serverRule.createHost(HOST_NAME)
 
         val expectedValueAfterUpdate = "123"
 
-        serverRule.updateProperty(APP_NAME, HOSTNAME, null, propertyName, expectedValueAfterUpdate)
+        serverRule.updateProperty(APP_NAME, HOST_NAME, null, propertyName, expectedValueAfterUpdate)
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate
         }
 
-        serverRule.deleteProperty(APP_NAME, HOSTNAME, propertyName)
+        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName)
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo null

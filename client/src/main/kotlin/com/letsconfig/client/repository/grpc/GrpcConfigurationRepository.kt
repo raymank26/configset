@@ -18,7 +18,10 @@ import io.grpc.stub.StreamObserver
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
+
+private const val INITIAL_TIMEOUT_SEC: Long = 10L
 
 class GrpcConfigurationRepository(
         private val applicationHostname: String,
@@ -92,21 +95,22 @@ class GrpcConfigurationRepository(
         log.info("Watch subscription is (re)initialized")
     }
 
-    @Synchronized
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
-        appWatchMappers[appName] = WatchState(appName, 0, currentObservable)
-        val subscribeRequest = SubscribeApplicationRequest
-                .newBuilder()
-                .setApplicationName(appName)
-                .setDefaultApplicationName(defaultApplicationName)
-                .setHostName(applicationHostname)
-                .build()
-        subscribeObserver.onNext(WatchRequest.newBuilder()
-                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                .setSubscribeApplicationRequest(subscribeRequest)
-                .build())
+        synchronized(this) {
+            appWatchMappers[appName] = WatchState(appName, 0, currentObservable)
+            val subscribeRequest = SubscribeApplicationRequest
+                    .newBuilder()
+                    .setApplicationName(appName)
+                    .setDefaultApplicationName(defaultApplicationName)
+                    .setHostName(applicationHostname)
+                    .build()
+            subscribeObserver.onNext(WatchRequest.newBuilder()
+                    .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                    .setSubscribeApplicationRequest(subscribeRequest)
+                    .build())
 
+        }
 
         val future = CompletableFuture<List<PropertyItem.Updated>>()
         currentObservable.onSubscribe(object : Subscriber<List<PropertyItem>> {
@@ -116,7 +120,17 @@ class GrpcConfigurationRepository(
                 future.complete(snapshot)
             }
         })
-        return DynamicValue(future.get(30, TimeUnit.SECONDS), currentObservable)
+        var initialProperties: List<PropertyItem.Updated>
+        while (true) {
+            try {
+                initialProperties = future.get(INITIAL_TIMEOUT_SEC, TimeUnit.SECONDS)
+                break
+            } catch (e: TimeoutException) {
+                log.warn("Unable to get initial configuration for seconds = $INITIAL_TIMEOUT_SEC seconds, retrying..")
+            }
+        }
+        log.info("Initial properties for app = $appName received with size = ${initialProperties.size}")
+        return DynamicValue(initialProperties, currentObservable)
     }
 
     @Synchronized

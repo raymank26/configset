@@ -31,10 +31,10 @@ class ReconnectionTest {
     }
 
     @Test
-    fun `test subscribe update, delete routine`() {
+    fun testDeletePropertyDuringConnectionLoss() {
         val propertyName = "configuration.property"
         var confUpdates = 0
-        val confProperty: ConfProperty<String?> = serverRule.configuration.getConfProperty(propertyName, Converters.STRING)
+        val confProperty: ConfProperty<String?> = serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
         confProperty.subscribe {
             confUpdates++
@@ -43,11 +43,11 @@ class ReconnectionTest {
         confProperty.getValue() shouldBeEqualTo null
 
         serverRule.createApplication(APP_NAME)
-        serverRule.createHost(HOSTNAME)
+        serverRule.createHost(HOST_NAME)
 
         val expectedValueAfterUpdate = "123"
 
-        serverRule.updateProperty(APP_NAME, HOSTNAME, null, propertyName, expectedValueAfterUpdate)
+        serverRule.updateProperty(APP_NAME, HOST_NAME, null, propertyName, expectedValueAfterUpdate)
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate
@@ -57,7 +57,7 @@ class ReconnectionTest {
 
         Thread.sleep(5000) // waiting for connection loss
 
-        serverRule.deleteProperty(APP_NAME, HOSTNAME, propertyName)
+        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName)
 
         Thread.sleep(5000) // waiting more
 

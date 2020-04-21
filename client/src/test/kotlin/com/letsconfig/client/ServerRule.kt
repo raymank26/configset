@@ -22,7 +22,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 const val APP_NAME = "test"
-const val HOSTNAME = "srvd1"
+const val HOST_NAME = "srvd1"
 const val DEFAULT_APP_NAME = "default-app"
 
 private const val INTERNAL_PORT = 8080
@@ -31,7 +31,10 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
 
     private lateinit var container: KLetsconfigBackend
 
-    lateinit var configuration: Configuration
+    val defaultConfiguration: Configuration by lazy {
+        registry.getConfiguration(APP_NAME)
+    }
+
     lateinit var registry: ConfigurationRegistry
     lateinit var metrics: LibraryMetrics
 
@@ -54,9 +57,8 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
         val backendHost = proxy?.containerIpAddress ?: "localhost"
         val backendPort = proxy?.proxyPort ?: container.getMappedPort(INTERNAL_PORT)
         metrics = TestMetrics()
-        registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOSTNAME,
+        registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOST_NAME,
                 DEFAULT_APP_NAME, backendHost, backendPort, metrics))
-        configuration = registry.getConfiguration(APP_NAME)
 
         crudChannel = ManagedChannelBuilder.forAddress("localhost", container.getMappedPort(INTERNAL_PORT))
                 .usePlaintext()
