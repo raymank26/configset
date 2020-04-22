@@ -1,9 +1,9 @@
 package com.letsconfig.client
 
 import com.letsconfig.client.converter.Converter
-import org.slf4j.LoggerFactory
+import com.letsconfig.sdk.extension.createLoggerStatic
 
-private val LOG = LoggerFactory.getLogger(ApplicationRegistry::class.java)
+private val LOG = createLoggerStatic<ApplicationRegistry>()
 
 class ApplicationRegistry(
         private val appName: String,

@@ -1,10 +1,11 @@
 package com.letsconfig.client
 
 import com.letsconfig.client.converter.Converter
-import com.letsconfig.sdk.extension.createLogger
+import com.letsconfig.sdk.extension.createLoggerStatic
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.concurrent.thread
 
-private val LOG = ObservableConfProperty::class.createLogger()
+private val LOG = createLoggerStatic<ObservableConfProperty<*>>()
 
 private typealias Listener<T> = (T) -> Unit
 
@@ -23,7 +24,9 @@ class ObservableConfProperty<T>(
         dynamicValue.observable.onSubscribe(object : Subscriber<String?> {
             override fun process(value: String?) {
                 currentValue = covertSafely(value)
-                fireListeners(currentValue)
+                thread(name = "property-$name-updater") {
+                    fireListeners(currentValue)
+                }
             }
         })
     }
@@ -49,7 +52,6 @@ class ObservableConfProperty<T>(
         }
     }
 
-    @Synchronized
     fun fireListeners(value: T) {
         for (listener in listeners) {
             try {

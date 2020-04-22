@@ -1,12 +1,12 @@
 package com.letsconfig.client.repository.grpc
 
 import com.letsconfig.client.PropertyItem
-import com.letsconfig.sdk.extension.createLogger
+import com.letsconfig.sdk.extension.createLoggerStatic
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import io.grpc.stub.StreamObserver
 import java.util.*
 
-private val log = WatchObserver::class.java.createLogger()
+private val LOG = createLoggerStatic<WatchObserver>()
 
 class WatchObserver(private val onUpdate: (String, List<PropertyItem>, Long) -> Unit,
                     private val onEnd: () -> Unit) : StreamObserver<PropertiesChangesResponse> {
