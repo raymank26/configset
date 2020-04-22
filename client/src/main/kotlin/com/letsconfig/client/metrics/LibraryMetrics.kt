@@ -1,7 +1,6 @@
 package com.letsconfig.client.metrics
 
 interface LibraryMetrics {
-
     fun increment(metricName: String)
     fun get(metricName: String): Int
 }
