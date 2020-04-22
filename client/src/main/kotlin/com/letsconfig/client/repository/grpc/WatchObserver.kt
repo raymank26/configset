@@ -8,8 +8,10 @@ import java.util.*
 
 private val LOG = createLoggerStatic<WatchObserver>()
 
-class WatchObserver(private val onUpdate: (String, List<PropertyItem>, Long) -> Unit,
-                    private val onEnd: () -> Unit) : StreamObserver<PropertiesChangesResponse> {
+class WatchObserver(
+        private val onUpdate: (String, List<PropertyItem>, Long) -> Unit,
+        private val onEnd: () -> Unit
+) : StreamObserver<PropertiesChangesResponse> {
 
     @Volatile
     var isStopped = false
