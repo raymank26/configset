@@ -37,7 +37,7 @@ message EmptyRequest {
 }
 
 message ApplicationsResponse {
-    repeated string application = 1;
+    repeated string applications = 1;
 }
 
 message CreateHostRequest {
@@ -136,12 +136,12 @@ message SearchPropertiesRequest {
 }
 
 message SearchPropertiesResponse {
-    repeated SearchResponseItem item = 1;
+    repeated SearchResponseItem items = 1;
 }
 
 message SearchResponseItem {
     string appName = 1;
-    repeated string propertyName = 2;
+    repeated string propertyNames = 2;
 }
 
 message ListPropertiesRequest {
@@ -149,7 +149,7 @@ message ListPropertiesRequest {
 }
 
 message ListPropertiesResponse {
-    repeated string propertyName = 1;
+    repeated string propertyNames = 1;
 }
 
 message ShowPropertyRequest {
@@ -158,7 +158,7 @@ message ShowPropertyRequest {
 }
 
 message ShowPropertyResponse {
-    repeated ShowPropertyItem item = 1;
+    repeated ShowPropertyItem items = 1;
 }
 
 message ShowPropertyItem {

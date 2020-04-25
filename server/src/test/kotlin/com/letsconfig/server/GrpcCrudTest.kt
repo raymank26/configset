@@ -25,7 +25,7 @@ class GrpcCrudTest {
                 .setApplicationName(appName).build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
 
-        val result: List<String> = serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationList
+        val result: List<String> = serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationsList
         Assert.assertEquals(listOf(appName), result)
     }
 

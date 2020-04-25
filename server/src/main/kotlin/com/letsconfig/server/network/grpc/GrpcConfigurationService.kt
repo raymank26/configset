@@ -57,7 +57,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
 
     override fun listApplications(request: EmptyRequest, responseObserver: StreamObserver<ApplicationsResponse>) {
         val listApplications = configurationService.listApplications().map { it.name }
-        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplication(listApplications).build())
+        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplications(listApplications).build())
         responseObserver.onCompleted()
     }
 
@@ -99,18 +99,18 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         val searchItems: List<SearchResponseItem> = foundProperties.map { (appName, properties) ->
             val itemBuilder = SearchResponseItem.newBuilder().setAppName(appName)
             for (property in properties) {
-                itemBuilder.addPropertyName(property)
+                itemBuilder.addPropertyNames(property)
             }
             itemBuilder.build()
         }
-        val response = SearchPropertiesResponse.newBuilder().addAllItem(searchItems).build()
+        val response = SearchPropertiesResponse.newBuilder().addAllItems(searchItems).build()
         responseObserver.onNext(response)
         responseObserver.onCompleted()
     }
 
     override fun listProperties(request: ListPropertiesRequest, responseObserver: StreamObserver<ListPropertiesResponse>) {
         val properties: List<String> = configurationService.listProperties(request.applicationName)
-        responseObserver.onNext(ListPropertiesResponse.newBuilder().addAllPropertyName(properties).build())
+        responseObserver.onNext(ListPropertiesResponse.newBuilder().addAllPropertyNames(properties).build())
         responseObserver.onCompleted()
     }
 
@@ -123,7 +123,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                     .setPropertyValue(it.propertyValue)
                     .build()
         }
-        responseObserver.onNext(ShowPropertyResponse.newBuilder().addAllItem(protoItems).build())
+        responseObserver.onNext(ShowPropertyResponse.newBuilder().addAllItems(protoItems).build())
     }
 
     private fun toPropertiesChangesResponse(appName: String, changes: PropertiesChanges?): PropertiesChangesResponse {

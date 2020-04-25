@@ -101,10 +101,12 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             val app = access.listApplications().find { it.name == applicationName } ?: return@withExtension null
             val hosts = access.listHosts().associateBy { it.id }
             val properties = access.showProperty(app.id!!, propertyName)
-            properties.mapNotNull {
-                val host = hosts[it.hostId]?.name ?: return@mapNotNull null
-                ShowPropertyItem(host, it.name, it.value)
-            }
+            properties
+                    .filter { !it.deleted }
+                    .mapNotNull {
+                        val host = hosts[it.hostId]?.name ?: return@mapNotNull null
+                        ShowPropertyItem(host, it.name, it.value)
+                    }
         }
     }
 
