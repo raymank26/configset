@@ -8,6 +8,7 @@ import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
+import com.letsconfig.server.ShowPropertyItem
 
 interface ConfigurationDao {
     fun listApplications(): List<ApplicationED>
@@ -19,6 +20,7 @@ interface ConfigurationDao {
     fun getConfigurationSnapshotList(): List<PropertyItem>
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>>
     fun listProperties(applicationName: String): List<String>
+    fun showProperty(applicationName: String, propertyName: String): List<ShowPropertyItem>
 }
 
 data class ConfigurationApplication(val appName: String, val config: Map<String, ConfigurationProperty>)

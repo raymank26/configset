@@ -9,6 +9,7 @@ import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
+import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
 import org.jdbi.v3.core.Handle
@@ -91,6 +92,18 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 }
             } else {
                 return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
+            }
+        }
+    }
+
+    override fun showProperty(applicationName: String, propertyName: String): List<ShowPropertyItem> {
+        return dbi.withExtension<List<ShowPropertyItem>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+            val app = access.listApplications().find { it.name == applicationName } ?: return@withExtension null
+            val hosts = access.listHosts().associateBy { it.id }
+            val properties = access.showProperty(app.id!!, propertyName)
+            properties.mapNotNull {
+                val host = hosts[it.hostId]?.name ?: return@mapNotNull null
+                ShowPropertyItem(host, it.name, it.value)
             }
         }
     }
@@ -238,6 +251,9 @@ private interface JdbiAccess {
 
     @SqlQuery("select count(*) from RequestId where requestId = :requestId")
     fun getRequestIdCount(@Bind("requestId") requestId: String): Int
+
+    @SqlQuery("select * from ConfigurationProperty where appId = :appId and name = :name")
+    fun showProperty(@Bind("appId") appId: Long, @Bind("name") name: String): List<PropertyItemED>
 }
 
 private data class PropertyItemED(val id: Long?, val name: String, val value: String, val hostId: Long,

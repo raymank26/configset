@@ -152,12 +152,28 @@ message ListPropertiesResponse {
     repeated string propertyName = 1;
 }
 
+message ShowPropertyRequest {
+    string applicationName = 1;
+    string propertyName = 2;
+}
+
+message ShowPropertyResponse {
+    repeated ShowPropertyItem item = 1;
+}
+
+message ShowPropertyItem {
+    string hostName = 1;
+    string propertyName = 2;
+    string propertyValue = 3;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
     rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
     rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+    rpc showProperty (ShowPropertyRequest) returns (ShowPropertyResponse);
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
     rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);

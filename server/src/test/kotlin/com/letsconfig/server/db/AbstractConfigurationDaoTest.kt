@@ -5,6 +5,7 @@ import com.letsconfig.server.DeletePropertyResult
 import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.SearchPropertyRequest
+import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.TEST_APP_NAME
 import com.letsconfig.server.TEST_HOST
 import org.amshove.kluent.shouldBeEqualTo
@@ -95,6 +96,23 @@ abstract class AbstractConfigurationDaoTest {
 
         dao.searchProperties(SearchPropertyRequest("nam", "val", "srvd1")) shouldBeEqualTo mapOf(Pair(TEST_APP_NAME, listOf("name", "name2")))
         dao.searchProperties(SearchPropertyRequest("nam", "val", "srvd")) shouldBeEqualTo mapOf(Pair(TEST_APP_NAME, listOf("name", "name2", "name1")))
+    }
+
+    @Test
+    fun showProperty() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME) shouldBeEqualTo CreateApplicationResult.OK
+        dao.createHost(createRequestId(), TEST_HOST) shouldBeEqualTo HostCreateResult.OK
+        dao.createHost(createRequestId(), "srvd2") shouldBeEqualTo HostCreateResult.OK
+        dao.createHost(createRequestId(), "srvd3") shouldBeEqualTo HostCreateResult.OK
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd2", "name", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd3", "name", "value3", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        dao.showProperty(TEST_APP_NAME, "name") shouldBeEqualTo listOf(
+                ShowPropertyItem(hostName = "srvd1", propertyName = "name", propertyValue = "value"),
+                ShowPropertyItem(hostName = "srvd2", propertyName = "name", propertyValue = "value2"),
+                ShowPropertyItem(hostName = "srvd3", propertyName = "name", propertyValue = "value3"))
     }
 
     private fun testIdempotent(call: () -> Unit) {

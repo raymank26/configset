@@ -48,6 +48,10 @@ class ConfigurationService(
         return configurationDao.listProperties(applicationName)
     }
 
+    fun showProperty(applicationName: String, propertyName: String): List<ShowPropertyItem> {
+        return configurationDao.showProperty(applicationName, propertyName)
+    }
+
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
         propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
     }
@@ -122,3 +126,5 @@ data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long,
 data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)
 
 data class SearchPropertyRequest(val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)
+
+data class ShowPropertyItem(val hostName: String, val propertyName: String, val propertyValue: String)

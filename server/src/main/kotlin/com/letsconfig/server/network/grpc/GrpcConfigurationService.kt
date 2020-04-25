@@ -17,6 +17,8 @@ import com.letsconfig.sdk.proto.PropertyItem
 import com.letsconfig.sdk.proto.SearchPropertiesRequest
 import com.letsconfig.sdk.proto.SearchPropertiesResponse
 import com.letsconfig.sdk.proto.SearchResponseItem
+import com.letsconfig.sdk.proto.ShowPropertyRequest
+import com.letsconfig.sdk.proto.ShowPropertyResponse
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import com.letsconfig.sdk.proto.WatchRequest
@@ -27,6 +29,7 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertiesChanges
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.SearchPropertyRequest
+import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.WatchSubscriber
 import io.grpc.stub.StreamObserver
 import java.util.*
@@ -109,6 +112,18 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         val properties: List<String> = configurationService.listProperties(request.applicationName)
         responseObserver.onNext(ListPropertiesResponse.newBuilder().addAllPropertyName(properties).build())
         responseObserver.onCompleted()
+    }
+
+    override fun showProperty(request: ShowPropertyRequest, responseObserver: StreamObserver<ShowPropertyResponse>) {
+        val res: List<ShowPropertyItem> = configurationService.showProperty(request.applicationName, request.propertyName)
+        val protoItems = res.map {
+            com.letsconfig.sdk.proto.ShowPropertyItem.newBuilder()
+                    .setHostName(it.hostName)
+                    .setPropertyName(it.propertyValue)
+                    .setPropertyValue(it.propertyValue)
+                    .build()
+        }
+        responseObserver.onNext(ShowPropertyResponse.newBuilder().addAllItem(protoItems).build())
     }
 
     private fun toPropertiesChangesResponse(appName: String, changes: PropertiesChanges?): PropertiesChangesResponse {
