@@ -10,8 +10,13 @@ import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.ListPropertiesRequest
+import com.letsconfig.sdk.proto.ListPropertiesResponse
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.PropertyItem
+import com.letsconfig.sdk.proto.SearchPropertiesRequest
+import com.letsconfig.sdk.proto.SearchPropertiesResponse
+import com.letsconfig.sdk.proto.SearchResponseItem
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import com.letsconfig.sdk.proto.WatchRequest
@@ -21,6 +26,7 @@ import com.letsconfig.server.DeletePropertyResult
 import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertiesChanges
 import com.letsconfig.server.PropertyCreateResult
+import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.WatchSubscriber
 import io.grpc.stub.StreamObserver
 import java.util.*
@@ -76,6 +82,32 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
             DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND).build())
         }
+        responseObserver.onCompleted()
+    }
+
+    override fun searchProperties(request: SearchPropertiesRequest, responseObserver: StreamObserver<SearchPropertiesResponse>) {
+        val propertyNameQuery = request.propertyName?.takeIf { it.isNotEmpty() }
+        val propertyValueQuery = request.propertyValue?.takeIf { it.isNotEmpty() }
+        val hostNameQuery = request.hostName?.takeIf { it.isNotEmpty() }
+
+        val foundProperties: Map<String, List<String>> = configurationService.searchProperties(
+                SearchPropertyRequest(propertyNameQuery, propertyValueQuery, hostNameQuery))
+
+        val searchItems: List<SearchResponseItem> = foundProperties.map { (appName, properties) ->
+            val itemBuilder = SearchResponseItem.newBuilder().setAppName(appName)
+            for (property in properties) {
+                itemBuilder.addPropertyName(property)
+            }
+            itemBuilder.build()
+        }
+        val response = SearchPropertiesResponse.newBuilder().addAllItem(searchItems).build()
+        responseObserver.onNext(response)
+        responseObserver.onCompleted()
+    }
+
+    override fun listProperties(request: ListPropertiesRequest, responseObserver: StreamObserver<ListPropertiesResponse>) {
+        val properties: List<String> = configurationService.listProperties(request.applicationName)
+        responseObserver.onNext(ListPropertiesResponse.newBuilder().addAllPropertyName(properties).build())
         responseObserver.onCompleted()
     }
 
@@ -136,6 +168,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                         }
                         responseObserver.onNext(toPropertiesChangesResponse(subscribeRequest.applicationName, changesToPush))
                     }
+                    else -> log.warn("Unrecognized message type = ${value.type}")
                 }
             }
 

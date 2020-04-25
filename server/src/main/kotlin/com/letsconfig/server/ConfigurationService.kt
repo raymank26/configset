@@ -40,6 +40,14 @@ class ConfigurationService(
         return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
     }
 
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
+        return configurationDao.searchProperties(searchPropertyRequest)
+    }
+
+    fun listProperties(applicationName: String): List<String> {
+        return configurationDao.listProperties(applicationName)
+    }
+
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
         propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
     }
@@ -112,3 +120,5 @@ sealed class DeletePropertyResult {
 data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long, val createdMs: Long, val modifiedMs: Long)
 
 data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)
+
+data class SearchPropertyRequest(val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)

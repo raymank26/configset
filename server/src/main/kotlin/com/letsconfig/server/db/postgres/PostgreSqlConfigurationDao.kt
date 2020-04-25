@@ -8,6 +8,7 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
+import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
 import org.jdbi.v3.core.Handle
@@ -77,7 +78,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
-                access.insertProperty(propertyName, value, host.id, app.id, app.lastVersion + 1, ct)
+                access.insertProperty(propertyName, value, app.lastVersion + 1, app.id, host.id, ct)
                 access.incrementAppVersion(app.id)
                 return@cb PersistResult(true, PropertyCreateResult.OK)
             } else if (property != null) {
@@ -135,6 +136,43 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 res.add(propertyItem)
             }
             res
+        }
+    }
+
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
+        return dbi.withExtension<Map<String, List<String>>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+            val hosts = access.listHosts().associateBy { it.id }
+            val apps = access.listApplications().associateBy { it.id }
+            access.selectAllProperties()
+                    .filter { !it.deleted }
+                    .mapNotNull { property ->
+                        val hostName = hosts[property.hostId]?.name ?: return@mapNotNull null
+                        val appName = apps[property.appId]?.name ?: return@mapNotNull null
+                        if (searchPropertyRequest.hostNameQuery != null && !hostName.contains(searchPropertyRequest.hostNameQuery)) {
+                            return@mapNotNull null
+                        }
+                        if (searchPropertyRequest.propertyNameQuery != null && !property.name.contains(searchPropertyRequest.propertyNameQuery)) {
+                            return@mapNotNull null
+                        }
+                        if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
+                            return@mapNotNull null
+                        }
+                        Pair(appName, property.name)
+                    }
+                    .distinct()
+                    .groupBy({ it.first }) { it.second }
+        }
+    }
+
+    override fun listProperties(applicationName: String): List<String> {
+        return dbi.withExtension<List<String>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+            val apps = access.listApplications().associateBy { it.id }
+            access.selectAllProperties()
+                    .filter { !it.deleted }
+                    .mapNotNull {
+                        val appName = apps[it.appId]?.name ?: return@mapNotNull null
+                        if (applicationName == appName) it.name else null
+                    }.distinct()
         }
     }
 

@@ -7,6 +7,7 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
+import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
 
@@ -53,6 +54,32 @@ class InMemoryConfigurationDao : ConfigurationDao {
                 PersistResult(true, HostCreateResult.OK)
             }
         }
+    }
+
+    @Synchronized
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
+        return properties.filterIsInstance(PropertyItem.Updated::class.java).mapNotNull { property ->
+            if (searchPropertyRequest.hostNameQuery != null && !property.hostName.contains(searchPropertyRequest.hostNameQuery)) {
+                return@mapNotNull null
+            }
+            if (searchPropertyRequest.propertyNameQuery != null && !property.name.contains(searchPropertyRequest.propertyNameQuery)) {
+                return@mapNotNull null
+            }
+            if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
+                return@mapNotNull null
+            }
+            Pair(property.applicationName, property.name)
+        }
+                .distinct()
+                .groupBy({ it.first }) { it.second }
+    }
+
+    @Synchronized
+    override fun listProperties(applicationName: String): List<String> {
+        return properties
+                .filterIsInstance(PropertyItem.Updated::class.java)
+                .filter { it.applicationName == applicationName }
+                .map { it.name }.distinct()
     }
 
     @Synchronized

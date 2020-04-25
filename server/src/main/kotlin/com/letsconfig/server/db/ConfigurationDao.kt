@@ -7,6 +7,7 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
+import com.letsconfig.server.SearchPropertyRequest
 
 interface ConfigurationDao {
     fun listApplications(): List<ApplicationED>
@@ -16,6 +17,8 @@ interface ConfigurationDao {
     fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
     fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult
     fun getConfigurationSnapshotList(): List<PropertyItem>
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>>
+    fun listProperties(applicationName: String): List<String>
 }
 
 data class ConfigurationApplication(val appName: String, val config: Map<String, ConfigurationProperty>)

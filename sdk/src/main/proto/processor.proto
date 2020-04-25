@@ -129,9 +129,34 @@ message UpdateReceived {
     int64 version = 2;
 }
 
+message SearchPropertiesRequest {
+    string propertyName = 1;
+    string propertyValue = 2;
+    string hostName = 3;
+}
+
+message SearchPropertiesResponse {
+    repeated SearchResponseItem item = 1;
+}
+
+message SearchResponseItem {
+    string appName = 1;
+    repeated string propertyName = 2;
+}
+
+message ListPropertiesRequest {
+    string applicationName = 1;
+}
+
+message ListPropertiesResponse {
+    repeated string propertyName = 1;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
+    rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
+    rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);

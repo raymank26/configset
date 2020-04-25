@@ -4,6 +4,7 @@ import com.letsconfig.server.CreateApplicationResult
 import com.letsconfig.server.DeletePropertyResult
 import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertyCreateResult
+import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.TEST_APP_NAME
 import com.letsconfig.server.TEST_HOST
 import org.amshove.kluent.shouldBeEqualTo
@@ -65,6 +66,35 @@ abstract class AbstractConfigurationDaoTest {
         testIdempotent {
             dao.deleteProperty(requestId, TEST_APP_NAME, TEST_HOST, "name") shouldBeEqualTo DeletePropertyResult.OK
         }
+    }
+
+    @Test
+    fun listProperties() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME) shouldBeEqualTo CreateApplicationResult.OK
+        dao.createApplication(createRequestId(), "test-app2") shouldBeEqualTo CreateApplicationResult.OK
+        dao.createHost(createRequestId(), TEST_HOST) shouldBeEqualTo HostCreateResult.OK
+        dao.createHost(createRequestId(), "srvd2")
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd2", "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), "test-app2", TEST_HOST, "name2", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        dao.listProperties(TEST_APP_NAME) shouldBeEqualTo listOf("name")
+    }
+
+    @Test
+    fun searchProperties() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME) shouldBeEqualTo CreateApplicationResult.OK
+        dao.createApplication(createRequestId(), "test-app2") shouldBeEqualTo CreateApplicationResult.OK
+        dao.createHost(createRequestId(), TEST_HOST) shouldBeEqualTo HostCreateResult.OK
+        dao.createHost(createRequestId(), "srvd2") shouldBeEqualTo HostCreateResult.OK
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name2", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd2", "name1", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        dao.searchProperties(SearchPropertyRequest("nam", "val", "srvd1")) shouldBeEqualTo mapOf(Pair(TEST_APP_NAME, listOf("name", "name2")))
+        dao.searchProperties(SearchPropertyRequest("nam", "val", "srvd")) shouldBeEqualTo mapOf(Pair(TEST_APP_NAME, listOf("name", "name2", "name1")))
     }
 
     private fun testIdempotent(call: () -> Unit) {
