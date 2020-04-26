@@ -11,7 +11,12 @@ object Main {
     fun main(args: Array<String>) {
         val koinApp = startKoin {
             modules(mainModule)
-        }
+        }.properties(mapOf(
+                Pair("config_server.hostname", "localhost"),
+                Pair("config_server.port", 8988),
+                Pair("dashboard.port", 8188)
+
+        ))
         Runtime.getRuntime().addShutdownHook(Thread {
             koinApp.close()
             LOG.info("Application has exited normally")
