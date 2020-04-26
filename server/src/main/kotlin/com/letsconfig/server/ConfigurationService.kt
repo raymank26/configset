@@ -125,6 +125,6 @@ data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long,
 
 data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)
 
-data class SearchPropertyRequest(val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)
+data class SearchPropertyRequest(val applicationName: String?, val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)
 
 data class ShowPropertyItem(val hostName: String, val propertyName: String, val propertyValue: String)

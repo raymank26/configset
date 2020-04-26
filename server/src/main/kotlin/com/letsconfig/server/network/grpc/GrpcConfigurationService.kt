@@ -89,12 +89,13 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun searchProperties(request: SearchPropertiesRequest, responseObserver: StreamObserver<SearchPropertiesResponse>) {
+        val applicationName = request.applicationName?.takeIf { it.isNotEmpty() }
         val propertyNameQuery = request.propertyName?.takeIf { it.isNotEmpty() }
         val propertyValueQuery = request.propertyValue?.takeIf { it.isNotEmpty() }
         val hostNameQuery = request.hostName?.takeIf { it.isNotEmpty() }
 
         val foundProperties: Map<String, List<String>> = configurationService.searchProperties(
-                SearchPropertyRequest(propertyNameQuery, propertyValueQuery, hostNameQuery))
+                SearchPropertyRequest(applicationName, propertyNameQuery, propertyValueQuery, hostNameQuery))
 
         val searchItems: List<SearchResponseItem> = foundProperties.map { (appName, properties) ->
             val itemBuilder = SearchResponseItem.newBuilder().setAppName(appName)

@@ -163,6 +163,9 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                     .mapNotNull { property ->
                         val hostName = hosts[property.hostId]?.name ?: return@mapNotNull null
                         val appName = apps[property.appId]?.name ?: return@mapNotNull null
+                        if (searchPropertyRequest.applicationName != null && appName != searchPropertyRequest.applicationName) {
+                            return@mapNotNull null
+                        }
                         if (searchPropertyRequest.hostNameQuery != null && !hostName.contains(searchPropertyRequest.hostNameQuery)) {
                             return@mapNotNull null
                         }

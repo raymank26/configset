@@ -130,9 +130,10 @@ message UpdateReceived {
 }
 
 message SearchPropertiesRequest {
-    string propertyName = 1;
-    string propertyValue = 2;
-    string hostName = 3;
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
 }
 
 message SearchPropertiesResponse {

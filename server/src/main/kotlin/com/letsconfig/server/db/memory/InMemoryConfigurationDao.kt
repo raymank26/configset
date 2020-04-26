@@ -67,6 +67,9 @@ class InMemoryConfigurationDao : ConfigurationDao {
     @Synchronized
     override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
         return properties.filterIsInstance(PropertyItem.Updated::class.java).mapNotNull { property ->
+            if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
+                return@mapNotNull null
+            }
             if (searchPropertyRequest.hostNameQuery != null && !property.hostName.contains(searchPropertyRequest.hostNameQuery)) {
                 return@mapNotNull null
             }
