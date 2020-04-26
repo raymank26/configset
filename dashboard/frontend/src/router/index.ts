@@ -18,14 +18,16 @@ const routes: Array<RouteConfig> = [
     component: Dashboard,
     children: [
       {
-        // при совпадении пути с шаблоном /user/:id/profile
-        // в <router-view> компонента User будет показан UserProfile
         path: 'search',
-        component: Search
+        component: Search,
+        props: (route => ({
+          propApplicationName: route.query['applicationName'] as string,
+          propSearchHost: route.query["host"] as string,
+          propSearchPropertyName: route.query["propertyName"] as string,
+          propSearchPropertyValue: route.query["propertyValue"] as string
+        }))
       },
       {
-        // при совпадении пути с шаблоном /user/:id/profile
-        // в <router-view> компонента User будет показан UserProfile
         path: 'applications',
         component: Applications
       },
