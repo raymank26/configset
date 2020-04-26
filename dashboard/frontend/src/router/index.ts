@@ -4,6 +4,7 @@ import Dashboard from '@/components/Dashboard.vue'
 import Search from "@/components/Search.vue";
 import Applications from "@/components/Applications.vue";
 import AddNewApplication from "@/components/AddNewApplication.vue";
+import UpdateProperty from "@/components/UpdateProperty.vue";
 
 
 Vue.use(VueRouter);
@@ -35,7 +36,12 @@ const routes: Array<RouteConfig> = [
       {
         path: 'applications/add',
         component: AddNewApplication
+
       },
+      {
+        path: 'updateProperty',
+        component: UpdateProperty
+      }
     ]
   },
 ];

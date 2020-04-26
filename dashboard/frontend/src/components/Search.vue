@@ -23,7 +23,7 @@
             <button class="btn btn-info" v-on:click="showProperties">Search properties</button>
           </div>
           <div class="col">
-            <button class="btn btn-primary">Add new property</button>
+            <router-link class="btn btn-primary" to="updateProperty">Add new property</router-link>
           </div>
         </div>
       </form>
@@ -104,9 +104,5 @@
   li {
     display: inline-block;
     margin: 0 10px;
-  }
-
-  a {
-    color: #42b983;
   }
 </style>
