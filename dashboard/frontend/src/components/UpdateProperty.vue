@@ -20,24 +20,24 @@
           </div>
           <div class="form-group">
             <label for="hostName">Host name</label>
-            <input class="form-control" id="hostName" pattern="[A-Za-z-]+" required type="text" v-model="hostName">
+            <input class="form-control" id="hostName" pattern="[A-Za-z-0-9.]+" required type="text" v-model="hostName">
             <div class="invalid-feedback">
-              Invalid application name, patterm = [A-Za-z-]+
+              Invalid application name, pattern = [A-Za-z-]+
             </div>
           </div>
           <div class="form-group">
             <label for="propertyName">Property name</label>
-            <input class="form-control" id="propertyName" pattern="[A-Za-z-]+" required type="text"
+            <input class="form-control" id="propertyName" pattern="[A-Za-z-0-9.]+" required type="text"
                    v-model="propertyName">
             <div class="invalid-feedback">
-              Invalid application name, patterm = [A-Za-z-]+
+              Invalid application name, pattern = [A-Za-z-]+
             </div>
           </div>
           <div class="form-group">
             <label for="propertyValue">Property value</label>
             <textarea class="form-control" id="propertyValue" type="text" v-model="propertyValue"/>
             <div class="invalid-feedback">
-              Invalid application name, patterm = [A-Za-z-]+
+              Invalid application name, pattern = [A-Za-z-]+
             </div>
           </div>
           <div class="form-group">
@@ -51,7 +51,7 @@
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator'
-  import {applicationService} from "@/service/services";
+  import {applicationService, propertyService} from "@/service/services";
 
   @Component
   export default class UpdateProperty extends Vue {
@@ -74,12 +74,10 @@
       form.classList.add('was-validated');
 
       if (isValid) {
-        applicationService.createApplication(this.appName!)
-          .then(() => {
-            this.$router.push("/applications");
-          });
-      } else {
-        e.preventDefault();
+        propertyService.updateProperty(this.appName, this.hostName, this.propertyName, this.propertyValue, null)
+          .then(() =>
+            this.$router.push("/search")
+          )
       }
     }
   }

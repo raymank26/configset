@@ -12,7 +12,7 @@
             <label for="appName">Application name</label>
             <input class="form-control" id="appName" pattern="[A-Za-z-]+" required type="text" v-model="appName">
             <div class="invalid-feedback">
-              Invalid application name, patterm = [A-Za-z-]+
+              Invalid application name, pattern = [A-Za-z-]+
             </div>
           </div>
           <div class="form-group">

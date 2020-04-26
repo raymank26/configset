@@ -12,7 +12,7 @@ class UpdatePropertyTest {
     fun test() {
         dashboardRule.executePostRequest("/application/", mapOf(Pair("appName", "testApp")), Any::class.java)
         val hostName = "srvd1"
-        val res = dashboardRule.executePostRequest("/property/update", mapOf(
+        dashboardRule.executePostRequest("/property/update", mapOf(
                 Pair("applicationName", "testApp"),
                 Pair("hostName", hostName),
                 Pair("propertyName", "propertyName"),
