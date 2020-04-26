@@ -22,7 +22,10 @@
             <input class="form-control" placeholder="Property value" type="text">
           </div>
           <div class="col">
-            <button class="btn btn-info">Search properties</button>
+            <button class="btn btn-info ">Search properties</button>
+          </div>
+          <div class="col">
+            <button class="btn btn-primary">Add new property</button>
           </div>
         </div>
       </form>
@@ -30,7 +33,6 @@
     <div class="row">
       Here2
     </div>
-
   </div>
 </template>
 
@@ -38,7 +40,7 @@
   import {Component, Prop, Vue} from 'vue-property-decorator'
 
   @Component
-  export default class Main extends Vue {
+  export default class Search extends Vue {
     @Prop() private msg!: string;
 
     created() {
