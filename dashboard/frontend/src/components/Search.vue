@@ -59,7 +59,7 @@
     private searchPropertiesRequest: SearchPropertiesRequest | null = null;
 
     created() {
-      this.searchApplicationName = this.propApplicationName;
+      this.searchApplicationName = this.propApplicationName || "";
       this.searchHost = this.propSearchHost;
       this.searchPropertyName = this.propSearchPropertyName;
       this.searchPropertyValue = this.propSearchPropertyValue;
