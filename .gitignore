@@ -2,8 +2,10 @@
 /client/build/
 /server/build/
 /sdk/build/
+/dashboard/build/
 /.idea
 *.swp*
 /gradle
 /.gradle
 /out
+node_modules/
