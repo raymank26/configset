@@ -5,7 +5,7 @@
       <div class="sidebar-sticky">
         <ul class="nav flex-column">
           <li class="nav-item">
-            <a class="nav-link active" href="#">
+            <router-link class="nav-link" to="/search">
               <svg class="feather feather-home" fill="none" height="24" stroke="currentColor" stroke-linecap="round"
                    stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"
                    xmlns="http://www.w3.org/2000/svg">
@@ -13,10 +13,10 @@
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
               </svg>
               Search <span class="sr-only">(current)</span>
-            </a>
+            </router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">
+            <router-link class="nav-link" to="/applications">
               <svg class="feather feather-file" fill="none" height="24" stroke="currentColor" stroke-linecap="round"
                    stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24"
                    xmlns="http://www.w3.org/2000/svg">
@@ -24,7 +24,7 @@
                 <polyline points="13 2 13 9 20 9"></polyline>
               </svg>
               Applications
-            </a>
+            </router-link>
           </li>
         </ul>
       </div>
