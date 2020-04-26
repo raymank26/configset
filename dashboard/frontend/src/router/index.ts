@@ -3,6 +3,7 @@ import VueRouter, {RouteConfig} from 'vue-router'
 import Dashboard from '@/components/Dashboard.vue'
 import Search from "@/components/Search.vue";
 import Applications from "@/components/Applications.vue";
+import AddNewApplication from "@/components/AddNewApplication.vue";
 
 
 Vue.use(VueRouter);
@@ -30,6 +31,10 @@ const routes: Array<RouteConfig> = [
       {
         path: 'applications',
         component: Applications
+      },
+      {
+        path: 'applications/add',
+        component: AddNewApplication
       },
     ]
   },

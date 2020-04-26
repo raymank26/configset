@@ -3,10 +3,6 @@
     <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
       <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="#">Let's config</a>
     </nav>
-    <!--    <div id="nav">-->
-    <!--      <router-link to="/">Home</router-link> |-->
-    <!--      <router-link to="/about">About</router-link>-->
-    <!--    </div>-->
     <div class="container-fluid">
       <div class="mt-2">
         <router-view/>
