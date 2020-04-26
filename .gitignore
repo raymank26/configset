@@ -3,6 +3,7 @@
 /server/build/
 /sdk/build/
 /dashboard/build/
+/dashboard/dist/
 /.idea
 *.swp*
 /gradle
