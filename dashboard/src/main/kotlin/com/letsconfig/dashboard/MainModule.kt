@@ -1,8 +1,10 @@
 package com.letsconfig.dashboard
 
 import com.letsconfig.dashboard.application.ApplicationController
-import com.letsconfig.dashboard.search.SearchPropertiesController
+import com.letsconfig.dashboard.property.CreatePropertyService
+import com.letsconfig.dashboard.property.PropertyController
 import com.letsconfig.dashboard.util.ExceptionMapper
+import com.letsconfig.dashboard.util.RequestIdProducer
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
@@ -10,7 +12,7 @@ import org.koin.dsl.module
 val mainModule = module {
 
     single {
-        val server = JavalinServer(get(), get(), getProperty("dashboard.port"), get())
+        val server = JavalinServer(get(), getProperty("dashboard.port"), get(), get())
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
@@ -25,7 +27,15 @@ val mainModule = module {
     }
 
     single {
-        SearchPropertiesController(get())
+        PropertyController(get())
+    }
+
+    single {
+        CreatePropertyService(get(), get())
+    }
+
+    single {
+        RequestIdProducer()
     }
 
     single {

@@ -10,6 +10,7 @@ import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.ListHostsResponse
 import com.letsconfig.sdk.proto.ListPropertiesRequest
 import com.letsconfig.sdk.proto.ListPropertiesResponse
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
@@ -66,6 +67,15 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
             HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
         }
+        responseObserver.onCompleted()
+    }
+
+    override fun listHosts(request: EmptyRequest, responseObserver: StreamObserver<ListHostsResponse>) {
+        val builder = ListHostsResponse.newBuilder()
+        for (host in configurationService.listHosts()) {
+            builder.addHostNames(host.name)
+        }
+        responseObserver.onNext(builder.build())
         responseObserver.onCompleted()
     }
 

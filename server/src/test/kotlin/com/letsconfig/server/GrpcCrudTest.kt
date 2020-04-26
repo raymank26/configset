@@ -2,11 +2,13 @@ package com.letsconfig.server
 
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
+import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
+import org.amshove.kluent.shouldBe
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -16,6 +18,14 @@ class GrpcCrudTest {
     @JvmField
     @Rule
     val serviceRule = ServiceRule()
+
+    @Test
+    fun testCreateHost() {
+        val expectedHostName = "someHost"
+        serviceRule.blockingClient.createHost(CreateHostRequest.newBuilder().setRequestId(serviceRule.createRequestId()).setHostName(expectedHostName).build())
+        val response = serviceRule.blockingClient.listHosts(EmptyRequest.getDefaultInstance()).hostNamesList.map { it }
+        response.contains(expectedHostName) shouldBe true
+    }
 
     @Test
     fun testCreateApplication() {

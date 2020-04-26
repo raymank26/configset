@@ -7,7 +7,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.rules.ExternalResource
+import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.output.Slf4jLogConsumer
 import java.util.*
@@ -18,8 +20,8 @@ val OBJECT_MAPPER = ObjectMapper()
 
 class DashboardRule : ExternalResource() {
 
+    private lateinit var koinApp: KoinApplication
     private lateinit var configServiceContainer: KLetsconfigBackend
-    private lateinit var server: JavalinServer
 
     private lateinit var okHttp: OkHttpClient
 
@@ -38,17 +40,14 @@ class DashboardRule : ExternalResource() {
     }
 
     private fun startDashboard() {
-        val koinApp = startKoin {
+        koinApp = startKoin {
             modules(mainModule)
         }.properties(mapOf(
                 Pair("config_server.hostname", "localhost"),
                 Pair("config_server.port", configServiceContainer.getMappedPort(INTERNAL_PORT)),
                 Pair("dashboard.port", 9299)
         ))
-        Runtime.getRuntime().addShutdownHook(Thread {
-            koinApp.close()
-        })
-        server = koinApp.koin.get()
+        val server = koinApp.koin.get<JavalinServer>()
         server.start()
 
         okHttp = OkHttpClient()
@@ -62,7 +61,7 @@ class DashboardRule : ExternalResource() {
         }
     }
 
-    fun <T> executePostRequest(endpoint: String, bodyParams: Map<String, String>, responseClass: Class<T>): T {
+    fun <T> executePostRequest(endpoint: String, bodyParams: Map<String, String>, responseClass: Class<T>): T? {
         val formBody = FormBody.Builder()
         bodyParams.forEach { (key, value) -> formBody.add(key, value) }
         formBody.add("requestId", UUID.randomUUID().toString())
@@ -70,13 +69,16 @@ class DashboardRule : ExternalResource() {
                 .post(formBody.build())
                 .build()).execute()
         response.code shouldBeEqualTo 200
+        if (response.body?.contentLength() == 0L) {
+            return null
+        }
         return response.body?.byteStream().use {
             OBJECT_MAPPER.readValue(it, responseClass)
         }
     }
 
     override fun after() {
-        server.stop()
+        stopKoin()
         configServiceContainer.stop()
     }
 }

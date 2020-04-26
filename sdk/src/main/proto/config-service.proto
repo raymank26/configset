@@ -168,12 +168,17 @@ message ShowPropertyItem {
     string propertyValue = 3;
 }
 
+message ListHostsResponse {
+    repeated string hostNames = 1;
+}
+
 service ConfigurationService {
     rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
     rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
     rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
     rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+    rpc listHosts (EmptyRequest) returns (ListHostsResponse);
     rpc showProperty (ShowPropertyRequest) returns (ShowPropertyResponse);
     rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
     rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);

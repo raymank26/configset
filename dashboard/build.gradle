@@ -39,7 +39,7 @@ docker {
     javaApplication {
         baseImage = 'openjdk:12'
         ports = [8080]
-        images = ["letsconfig-dashboard:${version}", 'letsconfig-backend:latest']
+        images = ["letsconfig-dashboard:${version}", 'letsconfig-dashboard:latest']
     }
 }
 
