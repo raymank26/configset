@@ -1,37 +1,23 @@
 package com.letsconfig.dashboard
 
-import org.junit.After
-import org.junit.Before
+import org.amshove.kluent.shouldBe
+import org.junit.Rule
 import org.junit.Test
-import org.koin.core.context.startKoin
 
 class CreateApplicationTest {
 
-    private lateinit var server: JavalinServer
+    @Rule
+    @JvmField
+    val dashboardRule = DashboardRule()
 
-    @Before
-    fun setUp() {
-        val koinApp = startKoin {
-            modules(mainModule)
-        }.properties(mapOf(
-                Pair("config_server.hostname", "localhost"),
-                Pair("config_server.port", 8988),
-                Pair("dashboard.port", 9299)
-        ))
-        Runtime.getRuntime().addShutdownHook(Thread {
-            koinApp.close()
-        })
-        server = koinApp.koin.get<JavalinServer>()
-        server.start()
-    }
-
-    @After
-    fun tearDown() {
-        server.stop()
+    @Test
+    fun testNoApplications() {
+        val res = dashboardRule.executeGetRequest("/application/list", List::class.java)
+        res.isEmpty() shouldBe true
     }
 
     @Test
     fun createApplication() {
-
+        dashboardRule.executePostRequest("/application/", mapOf(Pair("appName", "testApp")), Any::class.java)
     }
 }

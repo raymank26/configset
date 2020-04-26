@@ -2,6 +2,7 @@ package com.letsconfig.dashboard
 
 import com.letsconfig.dashboard.application.ApplicationController
 import com.letsconfig.dashboard.search.SearchPropertiesController
+import com.letsconfig.dashboard.util.ExceptionMapper
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
@@ -9,7 +10,7 @@ import org.koin.dsl.module
 val mainModule = module {
 
     single {
-        val server = JavalinServer(get(), get(), getProperty("dashboard.port"))
+        val server = JavalinServer(get(), get(), getProperty("dashboard.port"), get())
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
@@ -25,6 +26,10 @@ val mainModule = module {
 
     single {
         SearchPropertiesController(get())
+    }
+
+    single {
+        ExceptionMapper()
     }
 
     single {

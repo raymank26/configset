@@ -20,8 +20,12 @@ class ServerApiGateway(
         blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
     }
 
-    fun createApplication(appName: String) {
-        val res = blockingClient.createApplication(ApplicationCreateRequest.newBuilder().setApplicationName(appName).build())
+    fun createApplication(requestId: String, appName: String) {
+        val res = blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .build()
+        )
     }
 
     fun listApplications(): List<String> {
