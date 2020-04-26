@@ -12,7 +12,7 @@ export class ApplicationService {
     }))
   }
 
-  listApplication(): Promise<string[]> {
+  listApplications(): Promise<string[]> {
     return Axios.get("/api/application/list").then(data => data.data)
   }
 }

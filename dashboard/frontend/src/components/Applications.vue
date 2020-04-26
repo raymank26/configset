@@ -51,7 +51,7 @@
     private applications: string[] = [];
 
     created() {
-      applicationService.listApplication().then(apps => {
+      applicationService.listApplications().then(apps => {
         this.applications = apps
       });
     }

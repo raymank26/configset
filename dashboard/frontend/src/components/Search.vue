@@ -7,9 +7,7 @@
             <label class="mr-sm-2 sr-only" for="appSelect">Application</label>
             <select class="custom-select" id="appSelect" v-model="searchApplicationName">
               <option selected value="">Select application</option>
-              <option>One</option>
-              <option>Two</option>
-              <option>Three</option>
+              <option v-for="app in applications">{{ app }}</option>
             </select>
           </div>
           <div class="col">
@@ -40,6 +38,7 @@
   import {Component, Prop, Vue} from 'vue-property-decorator'
   import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
   import PropertiesTable from "@/components/PropertiesTable.vue";
+  import {applicationService} from "@/service/services";
 
   @Component({
       components: {PropertiesTable}
@@ -50,6 +49,8 @@
     @Prop() private propSearchHost!: string | null;
     @Prop() private propSearchPropertyName!: string | null;
     @Prop() private propSearchPropertyValue!: string | null;
+
+    private applications: string[] = [];
 
     private searchApplicationName: string | null = "";
     private searchHost: string | null = null;
@@ -63,6 +64,10 @@
       this.searchHost = this.propSearchHost;
       this.searchPropertyName = this.propSearchPropertyName;
       this.searchPropertyValue = this.propSearchPropertyValue;
+
+      applicationService.listApplications().then(apps => {
+        this.applications = apps;
+      });
 
       this.showProperties()
     }
