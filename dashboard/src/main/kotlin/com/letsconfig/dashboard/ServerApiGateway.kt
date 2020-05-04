@@ -109,7 +109,7 @@ class ServerApiGateway(
 
         return when (response.type) {
             UpdatePropertyResponse.Type.OK -> PropertyCreateResult.OK
-            UpdatePropertyResponse.Type.HOST_NOT_FOUND -> PropertyCreateResult.HostNotFound
+            UpdatePropertyResponse.Type.HOST_NOT_FOUND -> throw java.lang.RuntimeException("Host not found but has to be created")
             UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND -> PropertyCreateResult.ApplicationNotFound
             UpdatePropertyResponse.Type.UPDATE_CONFLICT -> PropertyCreateResult.UpdateConflict
             else -> throw RuntimeException("Unrecognized type for msg = $response")
@@ -140,7 +140,6 @@ sealed class CreateHostResult {
 
 sealed class PropertyCreateResult {
     object OK : PropertyCreateResult()
-    object HostNotFound : PropertyCreateResult()
     object ApplicationNotFound : PropertyCreateResult()
     object UpdateConflict : PropertyCreateResult()
 }

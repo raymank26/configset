@@ -22,9 +22,8 @@ class PropertyController(
             val propertyValue = ctx.formParamSafe("propertyValue")
             val version = ctx.formParam("version")?.toLong()
 
-            when (createPropertyService.createProperty(ctx.requestId(), appName, hostName, propertyName, propertyValue, version)) {
+            when (createPropertyService.updateProperty(ctx.requestId(), appName, hostName, propertyName, propertyValue, version)) {
                 PropertyCreateResult.OK -> Unit
-                PropertyCreateResult.HostNotFound -> throw BadRequest("host.not.found")
                 PropertyCreateResult.ApplicationNotFound -> throw BadRequest("application.not.found")
                 PropertyCreateResult.UpdateConflict -> throw BadRequest("update.conflict")
             }

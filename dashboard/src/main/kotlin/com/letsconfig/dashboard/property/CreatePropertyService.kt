@@ -7,7 +7,7 @@ import com.letsconfig.dashboard.util.RequestIdProducer
 class CreatePropertyService(private val serverApiGateway: ServerApiGateway,
                             private val requestIdProducer: RequestIdProducer) {
 
-    fun createProperty(requestId: String, appName: String, hostName: String, propertyName: String, propertyValue: String, version: Long?): PropertyCreateResult {
+    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, propertyValue: String, version: Long?): PropertyCreateResult {
         val apps = serverApiGateway.listApplications()
         if (!apps.contains(appName)) {
             return PropertyCreateResult.ApplicationNotFound

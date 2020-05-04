@@ -7,7 +7,7 @@ const qs = require('querystring');
 
 export default class PropertyService {
 
-  updateProperty(appName: string, hostName: string, propertyName: string, propertyValue: string, version: string | null): Promise<any> {
+  updateProperty(appName: string, hostName: string, propertyName: string, propertyValue: string, version: number | null): Promise<UpdateResult> {
     let request = {
       "applicationName": appName,
       "hostName": hostName,
@@ -19,6 +19,15 @@ export default class PropertyService {
       request["version"] = version
     }
     return Axios.post("/api/property/update", qs.stringify(request))
+      .then(() => UpdateResult.OK)
+      .catch(reason => {
+        switch (reason.response.data.code) {
+          case "update.conflict":
+            return UpdateResult.CONFLICT;
+          case "application.not.found":
+            return UpdateResult.APPLICATION_NOT_FOUND
+        }
+      })
   }
 
   searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Promise<ShowPropertyItem[]> {
@@ -32,4 +41,17 @@ export default class PropertyService {
       params: request
     }).then(response => response.data)
   }
+
+  readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ShowPropertyItem> {
+    return this.searchProperties(new SearchPropertiesRequest(applicationName, hostName, propertyName, null)).then(response => {
+      return response[0]
+    });
+  }
+}
+
+export enum UpdateResult {
+  OK,
+  CONFLICT,
+  APPLICATION_NOT_FOUND,
+
 }
