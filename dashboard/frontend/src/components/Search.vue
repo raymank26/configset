@@ -29,7 +29,9 @@
       </form>
     </div>
     <div class="row">
-      <properties-table :search-request="searchPropertiesRequest"></properties-table>
+      <div class="col-6">
+        <properties-table :search-request="searchPropertiesRequest"></properties-table>
+      </div>
     </div>
   </div>
 </template>
@@ -73,9 +75,12 @@
     }
 
     showProperties() {
-      console.log("clicked");
-
-      this.searchPropertiesRequest = new SearchPropertiesRequest(this.searchApplicationName, this.searchHost, this.searchPropertyName, this.searchPropertyValue)
+      if (!!this.searchApplicationName || !!this.searchHost || !!this.searchPropertyName || !!this.searchPropertyValue) {
+        this.searchPropertiesRequest = new SearchPropertiesRequest(this.searchApplicationName, this.searchHost,
+          this.searchPropertyName, this.searchPropertyValue);
+      } else {
+        this.searchPropertiesRequest = null;
+      }
 
       this.$router.replace({
         query: {
