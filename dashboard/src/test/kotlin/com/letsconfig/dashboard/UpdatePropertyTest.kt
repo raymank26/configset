@@ -38,13 +38,13 @@ class UpdatePropertyTest {
 
     @Test
     fun testSearch() {
-        val byHost = dashboardRule.executeGetRequest("/property/search?hostName=srvd", Map::class.java)
+        val byHost = dashboardRule.executeGetRequest("/property/search?hostName=srvd", List::class.java)
         byHost.size shouldBeEqualTo 2
 
-        val byPropertyName = dashboardRule.executeGetRequest("/property/search?propertyName=prop", Map::class.java)
+        val byPropertyName = dashboardRule.executeGetRequest("/property/search?propertyName=prop", List::class.java)
         byPropertyName.size shouldBeEqualTo 2
 
-        val byPropertyValue = dashboardRule.executeGetRequest("/property/search?propertyValue=234", Map::class.java)
+        val byPropertyValue = dashboardRule.executeGetRequest("/property/search?propertyValue=234", List::class.java)
         byPropertyValue.size shouldBeEqualTo 2
     }
 }

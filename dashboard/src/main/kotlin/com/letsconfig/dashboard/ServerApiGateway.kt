@@ -50,7 +50,7 @@ class ServerApiGateway(
                 .map { it }
     }
 
-    fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Map<String, List<String>> {
+    fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
         val response = blockingClient.searchProperties(com.letsconfig.sdk.proto.SearchPropertiesRequest
                 .newBuilder()
                 .apply {
@@ -69,13 +69,20 @@ class ServerApiGateway(
                 }
                 .build())
 
-        return response.itemsList.map { searchResponseItem ->
-            Pair(searchResponseItem.appName, searchResponseItem.propertyNamesList.map { it })
-        }.toMap()
+        return response.itemsList.map { item ->
+            ShowPropertyItem(item.applicationName, item.hostName, item.propertyName, item.propertyValue, item.version)
+        }
     }
 
     fun listProperties(appName: String): List<String> {
-        return searchProperties(SearchPropertiesRequest(appName, null, null, null)).getOrDefault(appName, emptyList())
+        return searchProperties(SearchPropertiesRequest(appName, null, null, null))
+                .mapNotNull {
+                    if (it.applicationName == appName) {
+                        it.propertyName
+                    } else {
+                        null
+                    }
+                }
     }
 
     fun createHost(requestId: String, hostName: String): CreateHostResult {
@@ -137,4 +144,7 @@ sealed class PropertyCreateResult {
     object ApplicationNotFound : PropertyCreateResult()
     object UpdateConflict : PropertyCreateResult()
 }
+
+data class ShowPropertyItem(val applicationName: String, val hostName: String, val propertyName: String,
+                            val propertyValue: String, val version: Long)
 

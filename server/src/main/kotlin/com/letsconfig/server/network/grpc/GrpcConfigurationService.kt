@@ -112,6 +112,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                     .setApplicationName(prop.applicationName)
                     .setPropertyName(prop.name)
                     .setPropertyValue(prop.value)
+                    .setVersion(prop.version)
                     .build()
         }
         val response = SearchPropertiesResponse.newBuilder().addAllItems(searchItems).build()

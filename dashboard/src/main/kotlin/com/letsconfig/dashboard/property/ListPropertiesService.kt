@@ -2,6 +2,7 @@ package com.letsconfig.dashboard.property
 
 import com.letsconfig.dashboard.SearchPropertiesRequest
 import com.letsconfig.dashboard.ServerApiGateway
+import com.letsconfig.dashboard.ShowPropertyItem
 
 class ListPropertiesService(
         private val apiGateway: ServerApiGateway
@@ -10,7 +11,7 @@ class ListPropertiesService(
         return apiGateway.listProperties(appName)
     }
 
-    fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Map<String, List<String>> {
+    fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
         return apiGateway.searchProperties(searchPropertiesRequest)
     }
 }
