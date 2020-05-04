@@ -63,6 +63,13 @@ import {UpdateResult} from "@/service/PropertyService";
           </div>
         </div>
       </div>
+      <div class="row">
+        <div class="col-6">
+          <div class="alert alert-danger" v-if="propertyNotFound">
+            The property is not found.
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else>
       Loading...
@@ -88,6 +95,7 @@ import {UpdateResult} from "@/service/PropertyService";
     loading: boolean = true;
     hasConflict: boolean = false;
     appNotFound: boolean = false;
+    propertyNotFound: boolean = false;
 
     created() {
       if (this.$router.currentRoute.query) {
@@ -97,10 +105,14 @@ import {UpdateResult} from "@/service/PropertyService";
         this.hostName = query.hostName;
         this.applications = [this.appName];
 
-        propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(property => {
-          this.propertyValue = property.propertyValue;
-          this._version = property.version;
-          this.loading = false;
+        propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(result => {
+          if (result.property) {
+            this.propertyValue = result.property.propertyValue;
+            this._version = result.property.version;
+            this.loading = false;
+          } else {
+            this.propertyNotFound = true;
+          }
         });
       } else {
         applicationService.listApplications().then(apps => {

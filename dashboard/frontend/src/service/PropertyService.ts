@@ -45,11 +45,19 @@ export default class PropertyService {
     }).then(response => response.data)
   }
 
-  readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ShowPropertyItem> {
+  readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ReadPropertyResult> {
     return this.searchProperties(new SearchPropertiesRequest(applicationName, hostName, propertyName, null)).then(response => {
-      return response[0]
+      if (response.length == 1) {
+        return {property: response[0]}
+      } else {
+        return {property: null}
+      }
     });
   }
+}
+
+export interface ReadPropertyResult {
+  property: ShowPropertyItem | null
 }
 
 export enum UpdateResult {
