@@ -35,7 +35,7 @@
                 <tbody>
                 <tr v-for="(property, host) in byName.byHost">
                   <td>
-                    <button class="btn btn-success mr-1">Update</button>
+                    <button class="btn btn-success mr-1" v-on:click="updateProperty(property.prop)">Update</button>
                     <button class="btn btn-danger">Delete</button>
                   </td>
                   <td>{{ property.prop.hostName }}</td>
@@ -57,6 +57,7 @@
   import SearchPropertiesRequest from "../model/SearchPropertiesRequest";
   import {propertyService} from "@/service/services";
   import ShowPropertyItem from "@/model/ShowPropertyItem";
+  import {Location} from "vue-router";
 
   @Component
   export default class PropertiesTable extends Vue {
@@ -90,6 +91,17 @@
 
     enableShow(propByName: PropByName) {
       propByName.showEnabled = true;
+    }
+
+    updateProperty(property: ShowPropertyItem) {
+      this.$router.push({
+        path: "/updateProperty",
+        query: {
+          applicationName: property.applicationName,
+          hostName: property.hostName,
+          propertyName: property.propertyName,
+        }
+      } as Location)
     }
   }
 
