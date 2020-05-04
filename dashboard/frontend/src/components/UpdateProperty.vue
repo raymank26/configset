@@ -72,7 +72,7 @@ import {UpdateResult} from "@/service/PropertyService";
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator'
-  import {applicationService, propertyService} from "@/service/services";
+  import {applicationService, propertyService, searchService} from "@/service/services";
   import {UpdateResult} from "@/service/PropertyService";
 
   @Component
@@ -110,7 +110,7 @@ import {UpdateResult} from "@/service/PropertyService";
       }
     }
 
-    submitApp(e: any) {
+    submitApp() {
       if (this.hasConflict) {
         return;
       }
@@ -118,7 +118,12 @@ import {UpdateResult} from "@/service/PropertyService";
         .then(updateResult => {
           switch (updateResult) {
             case UpdateResult.OK:
-              this.$router.push("/search");
+              searchService.searchPush({
+                searchApplicationName: this.appName,
+                searchHost: this.hostName,
+                searchPropertyName: this.propertyName,
+                searchPropertyValue: this.propertyValue
+              });
               break;
             case UpdateResult.CONFLICT:
               this.hasConflict = true;

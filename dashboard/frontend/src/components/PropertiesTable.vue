@@ -77,9 +77,10 @@
       if (this.searchRequest) {
         propertyService.searchProperties(this.searchRequest!!).then(properties => {
           let newProps: Record<string, PropByApp> = {};
+          let showEnabled = properties.length == 1;
           for (let prop of properties) {
             let propByApp = getOrCreate(newProps, prop.applicationName, () => new PropByApp(prop.applicationName));
-            let propByName = getOrCreate(propByApp.byName, prop.propertyName, () => new PropByName(prop.propertyName));
+            let propByName = getOrCreate(propByApp.byName, prop.propertyName, () => new PropByName(prop.propertyName, showEnabled));
             propByName.byHost[prop.hostName] = new PropByHost(prop.hostName, prop);
           }
           this.properties = newProps;
@@ -127,10 +128,10 @@
     byHost: Record<string, PropByHost>;
     showEnabled: boolean;
 
-    constructor(propertyName: string) {
+    constructor(propertyName: string, showEnabled: boolean) {
       this.propertyName = propertyName;
       this.byHost = {};
-      this.showEnabled = false;
+      this.showEnabled = showEnabled;
     }
   }
 

@@ -40,7 +40,7 @@
   import {Component, Prop, Vue} from 'vue-property-decorator'
   import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
   import PropertiesTable from "@/components/PropertiesTable.vue";
-  import {applicationService} from "@/service/services";
+  import {applicationService, searchService} from "@/service/services";
 
   @Component({
       components: {PropertiesTable}
@@ -82,15 +82,12 @@
         this.searchPropertiesRequest = null;
       }
 
-      this.$router.replace({
-        query: {
-          applicationName: this.searchApplicationName || undefined,
-          host: this.searchHost || undefined,
-          propertyName: this.searchPropertyName || undefined,
-          propertyValue: this.searchPropertyValue || undefined
-        }
-      }).catch(err => {
-      })
+      searchService.searchReplace({
+        searchApplicationName: this.searchApplicationName,
+        searchHost: this.searchHost,
+        searchPropertyName: this.searchPropertyName,
+        searchPropertyValue: this.searchPropertyValue
+      });
     }
   }
 </script>
