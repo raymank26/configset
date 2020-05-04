@@ -122,7 +122,7 @@ import {UpdateResult} from "@/service/PropertyService";
                 searchApplicationName: this.appName,
                 searchHost: this.hostName,
                 searchPropertyName: this.propertyName,
-                searchPropertyValue: this.propertyValue
+                searchPropertyValue: null
               });
               break;
             case UpdateResult.CONFLICT:
