@@ -6,8 +6,6 @@ import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.EmptyRequest
-import com.letsconfig.sdk.proto.ListPropertiesRequest
-import com.letsconfig.sdk.proto.ListPropertiesResponse
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
@@ -55,20 +53,30 @@ class ServerApiGateway(
     fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Map<String, List<String>> {
         val response = blockingClient.searchProperties(com.letsconfig.sdk.proto.SearchPropertiesRequest
                 .newBuilder()
-                .setApplicationName(searchPropertiesRequest.applicationName)
-                .setHostName(searchPropertiesRequest.hostNameQuery)
-                .setPropertyName(searchPropertiesRequest.propertyNameQuery)
-                .setPropertyName(searchPropertiesRequest.propertyValueQuery)
+                .apply {
+                    if (searchPropertiesRequest.applicationName != null) {
+                        applicationName = searchPropertiesRequest.applicationName
+                    }
+                    if (searchPropertiesRequest.hostNameQuery != null) {
+                        hostName = searchPropertiesRequest.hostNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyNameQuery != null) {
+                        propertyName = searchPropertiesRequest.propertyNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyValueQuery != null) {
+                        propertyValue = searchPropertiesRequest.propertyValueQuery
+                    }
+                }
                 .build())
 
         return response.itemsList.map { searchResponseItem ->
             Pair(searchResponseItem.appName, searchResponseItem.propertyNamesList.map { it })
         }.toMap()
     }
-//
-//    fun listProperties(listPropertiesRequest: ListPropertiesRequest) {
-//
-//    }
+
+    fun listProperties(appName: String): List<String> {
+        return searchProperties(SearchPropertiesRequest(appName, null, null, null)).getOrDefault(appName, emptyList())
+    }
 
     fun createHost(requestId: String, hostName: String): CreateHostResult {
         val response = blockingClient.createHost(CreateHostRequest.newBuilder()
@@ -103,11 +111,6 @@ class ServerApiGateway(
 
     fun stop() {
         channel.shutdown()
-    }
-
-    fun listProperties(appName: String): List<String> {
-        val response: ListPropertiesResponse = blockingClient.listProperties(ListPropertiesRequest.newBuilder().setApplicationName(appName).build())
-        return response.propertyNamesList.map { it }
     }
 }
 

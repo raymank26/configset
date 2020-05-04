@@ -1,6 +1,7 @@
 package com.letsconfig.dashboard.property
 
 import com.letsconfig.dashboard.PropertyCreateResult
+import com.letsconfig.dashboard.SearchPropertiesRequest
 import com.letsconfig.dashboard.util.BadRequest
 import com.letsconfig.dashboard.util.formParamSafe
 import com.letsconfig.dashboard.util.queryParamSafe
@@ -29,8 +30,16 @@ class PropertyController(
             }
         }
         get("list") { ctx ->
-            val appName = ctx.queryParamSafe("appName")
+            val appName = ctx.queryParamSafe("applicationName")
             ctx.json(listPropertiesService.list(appName))
+        }
+        get("search") { ctx ->
+            val appName = ctx.queryParam("applicationName")
+            val hostName = ctx.queryParam("hostName")
+            val propertyName = ctx.queryParam("propertyName")
+            val propertyValue = ctx.queryParam("propertyValue")
+
+            ctx.json(listPropertiesService.searchProperties(SearchPropertiesRequest(appName, hostName, propertyName, propertyValue)))
         }
     }
 }
