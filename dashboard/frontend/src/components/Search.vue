@@ -29,7 +29,7 @@
       </form>
     </div>
     <div class="row">
-      <div class="col-6">
+      <div class="col-10">
         <properties-table :search-request="searchPropertiesRequest"></properties-table>
       </div>
     </div>

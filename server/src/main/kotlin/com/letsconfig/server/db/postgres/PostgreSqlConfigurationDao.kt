@@ -175,7 +175,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
                             return@mapNotNull null
                         }
-                        PropertyItem.Updated(appName, property.name, property.value, property.version, hostName)
+                        PropertyItem.Updated(appName, property.name, hostName, property.version, property.value)
                     }
         }
     }

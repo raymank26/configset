@@ -1,20 +1,49 @@
 <template>
   <div>
     <div v-if="properties">
-      <div class="row" v-for="(appProperties, appName) in properties">
-        <table class="table table-striped">
+      <div v-for="(byApp, appName) in properties">
+        <h5>Application = {{ appName }}</h5>
+        <table class="table table-bordered">
           <thead>
           <tr>
             <th scope="col">#</th>
+            <th scope="col">Application name</th>
             <th scope="col">Property name</th>
+            <th scope="col">Property</th>
           </tr>
           </thead>
           <tbody>
-          <tr v-for="propertyName in appProperties">
+          <tr v-for="(byName, propertyName) in byApp.byName">
             <td>
-              <button class="btn btn-info">Select</button>
+              <button class="btn btn-info" v-on:click="enableShow(byName)">Select</button>
             </td>
-            <td>{{ propertyName }}</td>
+            <td>
+              {{ appName }}
+            </td>
+            <td>
+              {{ propertyName }}
+            </td>
+            <td class="property-content">
+              <table class="property-content-table" v-show="byName.showEnabled">
+                <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Host</th>
+                  <th scope="col">Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="(property, host) in byName.byHost">
+                  <td>
+                    <button class="btn btn-success mr-1">Update</button>
+                    <button class="btn btn-danger">Delete</button>
+                  </td>
+                  <td>{{ property.prop.hostName }}</td>
+                  <td>{{ property.prop.propertyValue }}</td>
+                </tr>
+                </tbody>
+              </table>
+            </td>
           </tr>
           </tbody>
         </table>
@@ -27,20 +56,18 @@
   import {Component, Prop, Vue, Watch} from 'vue-property-decorator'
   import SearchPropertiesRequest from "../model/SearchPropertiesRequest";
   import {propertyService} from "@/service/services";
-  import SearchPropertiesResult from "@/model/SearchPropertiesResult";
+  import ShowPropertyItem from "@/model/ShowPropertyItem";
 
   @Component
   export default class PropertiesTable extends Vue {
     @Prop()
     private searchRequest?: SearchPropertiesRequest;
 
-    private properties: SearchPropertiesResult | null = null;
+    private properties: Record<string, PropByApp> = {};
 
     created() {
       if (this.searchRequest) {
         this.updateContent()
-      } else {
-        this.properties = null;
       }
     }
 
@@ -48,15 +75,70 @@
     updateContent() {
       if (this.searchRequest) {
         propertyService.searchProperties(this.searchRequest!!).then(properties => {
-          this.properties = properties;
+          let newProps: Record<string, PropByApp> = {};
+          for (let prop of properties) {
+            let propByApp = getOrCreate(newProps, prop.applicationName, () => new PropByApp(prop.applicationName));
+            let propByName = getOrCreate(propByApp.byName, prop.propertyName, () => new PropByName(prop.propertyName));
+            propByName.byHost[prop.hostName] = new PropByHost(prop.hostName, prop);
+          }
+          this.properties = newProps;
         });
       } else {
-        this.properties = null;
+        this.properties = {};
       }
+    }
+
+    enableShow(propByName: PropByName) {
+      propByName.showEnabled = true;
+    }
+  }
+
+  function getOrCreate<T>(record: Record<string, T>, key: string, factory: () => T): T {
+    if (!(key in record)) {
+      record[key] = factory()
+    }
+    return record[key]
+  }
+
+  class PropByApp {
+    applicationName: string;
+    byName: Record<string, PropByName>;
+
+    constructor(applicationName: string) {
+      this.applicationName = applicationName;
+      this.byName = {};
+    }
+  }
+
+  class PropByName {
+    propertyName: string;
+    byHost: Record<string, PropByHost>;
+    showEnabled: boolean;
+
+    constructor(propertyName: string) {
+      this.propertyName = propertyName;
+      this.byHost = {};
+      this.showEnabled = false;
+    }
+  }
+
+  class PropByHost {
+    host: string;
+    prop: ShowPropertyItem;
+
+    constructor(host: string, prop: ShowPropertyItem) {
+      this.host = host;
+      this.prop = prop;
     }
   }
 </script>
 
 <style scoped>
+  .property-content {
+    width: 700px;
+  }
 
+  .property-content-table {
+    width: 100%;
+  }
 </style>

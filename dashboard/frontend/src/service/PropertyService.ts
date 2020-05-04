@@ -1,7 +1,7 @@
 import Axios from "axios";
 import {uuidv4} from "@/service/Uuid";
-import SearchPropertiesResult from "@/model/SearchPropertiesResult";
 import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
+import ShowPropertyItem from "@/model/ShowPropertyItem";
 
 const qs = require('querystring');
 
@@ -21,7 +21,7 @@ export default class PropertyService {
     return Axios.post("/api/property/update", qs.stringify(request))
   }
 
-  searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Promise<SearchPropertiesResult> {
+  searchProperties(searchPropertiesRequest: SearchPropertiesRequest): Promise<ShowPropertyItem[]> {
     let request = {
       "applicationName": searchPropertiesRequest.applicationName,
       "hostName": searchPropertiesRequest.searchHost,
