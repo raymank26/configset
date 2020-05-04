@@ -21,6 +21,8 @@ dependencies {
     compile 'com.googlecode.lanterna:lanterna:3.0.2'
     compile 'io.javalin:javalin:3.8.0'
     compile "com.squareup.okhttp3:okhttp:4.5.0"
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.14'
+
 
     testCompile 'org.awaitility:awaitility:4.0.2'
     testCompile 'junit:junit:4.12'

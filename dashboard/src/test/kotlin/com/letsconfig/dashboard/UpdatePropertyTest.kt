@@ -29,4 +29,21 @@ class UpdatePropertyTest {
         update.invoke()
         update.invoke()
     }
+
+    @Test
+    fun testIdempotentUpdateDifferentRequests() {
+        dashboardRule.executePostRequest("/property/update", mapOf(
+                Pair("applicationName", "testApp"),
+                Pair("hostName", "srvd1"),
+                Pair("propertyName", "propertyName"),
+                Pair("propertyValue", "234")
+        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+
+        dashboardRule.executePostRequest("/property/update", mapOf(
+                Pair("applicationName", "testApp"),
+                Pair("hostName", "srvd1"),
+                Pair("propertyName", "propertyName"),
+                Pair("propertyValue", "235") // <--
+        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+    }
 }

@@ -21,11 +21,14 @@ export default class PropertyService {
     return Axios.post("/api/property/update", qs.stringify(request))
       .then(() => UpdateResult.OK)
       .catch(reason => {
+        let code = reason.response.data.code;
         switch (reason.response.data.code) {
           case "update.conflict":
             return UpdateResult.CONFLICT;
           case "application.not.found":
-            return UpdateResult.APPLICATION_NOT_FOUND
+            return UpdateResult.APPLICATION_NOT_FOUND;
+          default:
+            throw Error("Unhandled code = " + code)
         }
       })
   }

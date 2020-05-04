@@ -1,12 +1,10 @@
 package com.letsconfig.dashboard.util
 
-import java.security.MessageDigest
+import org.apache.commons.codec.digest.DigestUtils
 
 class RequestIdProducer {
 
     fun nextRequestId(requestId: String): String {
-        val digest = MessageDigest.getInstance("MD5")
-        digest.update(requestId.toByteArray())
-        return String(digest.digest())
+        return DigestUtils.md5Hex(requestId)
     }
 }

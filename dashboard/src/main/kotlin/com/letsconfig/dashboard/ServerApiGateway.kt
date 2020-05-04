@@ -1,5 +1,6 @@
 package com.letsconfig.dashboard
 
+import com.letsconfig.sdk.extension.createLoggerStatic
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
@@ -10,6 +11,8 @@ import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
+
+private val LOG = createLoggerStatic<ServerApiGateway>()
 
 class ServerApiGateway(
         private val serverHostname: String,

@@ -57,6 +57,19 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
+    fun testUpdateProperty() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME)
+        dao.createHost(createRequestId(), TEST_HOST)
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        val updateRequest = createRequestId()
+        testIdempotent {
+            dao.updateProperty(updateRequest, TEST_APP_NAME, TEST_HOST, "name", "value1", 1) shouldBeEqualTo PropertyCreateResult.OK
+        }
+        dao.listApplications().first().lastVersion shouldBeEqualTo 2
+    }
+
+    @Test
     fun testDeleteProperty() {
         dao.createApplication(createRequestId(), TEST_APP_NAME)
         dao.createHost(createRequestId(), TEST_HOST)
