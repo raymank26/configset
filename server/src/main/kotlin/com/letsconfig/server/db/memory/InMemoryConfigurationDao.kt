@@ -65,7 +65,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
         return properties.filterIsInstance(PropertyItem.Updated::class.java).mapNotNull { property ->
             if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
                 return@mapNotNull null
@@ -79,10 +79,8 @@ class InMemoryConfigurationDao : ConfigurationDao {
             if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
                 return@mapNotNull null
             }
-            Pair(property.applicationName, property.name)
+            property
         }
-                .distinct()
-                .groupBy({ it.first }) { it.second }
     }
 
     @Synchronized

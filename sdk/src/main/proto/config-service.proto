@@ -137,12 +137,7 @@ message SearchPropertiesRequest {
 }
 
 message SearchPropertiesResponse {
-    repeated SearchResponseItem items = 1;
-}
-
-message SearchResponseItem {
-    string appName = 1;
-    repeated string propertyNames = 2;
+    repeated ShowPropertyItem items = 1;
 }
 
 message ListPropertiesRequest {
@@ -163,9 +158,10 @@ message ShowPropertyResponse {
 }
 
 message ShowPropertyItem {
-    string hostName = 1;
-    string propertyName = 2;
-    string propertyValue = 3;
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
 }
 
 message ListHostsResponse {

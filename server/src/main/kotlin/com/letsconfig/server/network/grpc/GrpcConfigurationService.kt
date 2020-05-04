@@ -17,7 +17,6 @@ import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.PropertyItem
 import com.letsconfig.sdk.proto.SearchPropertiesRequest
 import com.letsconfig.sdk.proto.SearchPropertiesResponse
-import com.letsconfig.sdk.proto.SearchResponseItem
 import com.letsconfig.sdk.proto.ShowPropertyRequest
 import com.letsconfig.sdk.proto.ShowPropertyResponse
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
@@ -104,15 +103,16 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         val propertyValueQuery = request.propertyValue?.takeIf { it.isNotEmpty() }
         val hostNameQuery = request.hostName?.takeIf { it.isNotEmpty() }
 
-        val foundProperties: Map<String, List<String>> = configurationService.searchProperties(
+        val foundProperties: List<com.letsconfig.server.PropertyItem.Updated> = configurationService.searchProperties(
                 SearchPropertyRequest(applicationName, propertyNameQuery, propertyValueQuery, hostNameQuery))
 
-        val searchItems: List<SearchResponseItem> = foundProperties.map { (appName, properties) ->
-            val itemBuilder = SearchResponseItem.newBuilder().setAppName(appName)
-            for (property in properties) {
-                itemBuilder.addPropertyNames(property)
-            }
-            itemBuilder.build()
+        val searchItems = foundProperties.map { prop ->
+            com.letsconfig.sdk.proto.ShowPropertyItem.newBuilder()
+                    .setHostName(prop.hostName)
+                    .setApplicationName(prop.applicationName)
+                    .setPropertyName(prop.name)
+                    .setPropertyValue(prop.value)
+                    .build()
         }
         val response = SearchPropertiesResponse.newBuilder().addAllItems(searchItems).build()
         responseObserver.onNext(response)

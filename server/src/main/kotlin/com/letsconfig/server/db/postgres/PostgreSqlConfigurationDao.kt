@@ -154,8 +154,8 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
-        return dbi.withExtension<Map<String, List<String>>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
+        return dbi.withExtension<List<PropertyItem.Updated>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
             val hosts = access.listHosts().associateBy { it.id }
             val apps = access.listApplications().associateBy { it.id }
             access.selectAllProperties()
@@ -175,10 +175,8 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
                             return@mapNotNull null
                         }
-                        Pair(appName, property.name)
+                        PropertyItem.Updated(appName, property.name, property.value, property.version, hostName)
                     }
-                    .distinct()
-                    .groupBy({ it.first }) { it.second }
         }
     }
 

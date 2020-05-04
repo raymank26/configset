@@ -40,7 +40,7 @@ class ConfigurationService(
         return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
     }
 
-    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): Map<String, List<String>> {
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
         return configurationDao.searchProperties(searchPropertyRequest)
     }
 
