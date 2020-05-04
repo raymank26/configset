@@ -28,6 +28,8 @@ export default class PropertyService {
       "propertyName": searchPropertiesRequest.searchPropertyName,
       "propertyValue": searchPropertiesRequest.searchPropertyValue,
     };
-    return Axios.get("/api/property/search", qs.stringify(request)).then(response => response.data)
+    return Axios.get("/api/property/search", {
+      params: request
+    }).then(response => response.data)
   }
 }
