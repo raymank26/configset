@@ -61,10 +61,12 @@ class DashboardRule : ExternalResource() {
         }
     }
 
-    fun <T> executePostRequest(endpoint: String, bodyParams: Map<String, String>, responseClass: Class<T>): T? {
+    fun <T> executePostRequest(endpoint: String, bodyParams: Map<String, String>, responseClass: Class<T>,
+                               requestId: String = UUID.randomUUID().toString()): T? {
+
         val formBody = FormBody.Builder()
         bodyParams.forEach { (key, value) -> formBody.add(key, value) }
-        formBody.add("requestId", UUID.randomUUID().toString())
+        formBody.add("requestId", requestId)
         val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint")
                 .post(formBody.build())
                 .build()).execute()
