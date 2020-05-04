@@ -86,7 +86,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 if (property.version != version) {
                     return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
                 } else {
-                    access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct)
+                    access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct, app.id, propertyName, host.id)
                     access.incrementAppVersion(app.id)
                     return@cb PersistResult(true, PropertyCreateResult.OK)
                 }
@@ -239,9 +239,11 @@ private interface JdbiAccess {
     fun insertProperty(@Bind("name") name: String, @Bind("value") value: String, @Bind("version") version: Long,
                        @Bind("appId") appId: Long, @Bind("hostId") hostId: Long, @Bind("createdMs") modifiedMs: Long)
 
-    @SqlUpdate("update ConfigurationProperty set value = :value, version = :version, deleted = :deleted, modifiedMs = :modifiedMs")
+    @SqlUpdate("update ConfigurationProperty set value = :value, version = :version, deleted = :deleted, modifiedMs = :modifiedMs " +
+            "where appId = :appId and name = :name and hostId = :hostId")
     fun updateProperty(@Bind("id") id: Long, @Bind("value") value: String, @Bind("version") version: Long,
-                       @Bind("deleted") deleted: Boolean, @Bind("modifiedMs") modifiedMs: Long)
+                       @Bind("deleted") deleted: Boolean, @Bind("modifiedMs") modifiedMs: Long, @Bind("appId") appId: Long,
+                       @Bind("name") name: String, @Bind("hostId") hostId: Long)
 
     @SqlUpdate("update ConfigurationProperty SET deleted = true where id = :id")
     fun markPropertyAsDeleted(@Bind("id") id: Long)

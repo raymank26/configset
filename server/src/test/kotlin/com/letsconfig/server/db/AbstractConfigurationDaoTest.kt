@@ -4,6 +4,7 @@ import com.letsconfig.server.CreateApplicationResult
 import com.letsconfig.server.DeletePropertyResult
 import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertyCreateResult
+import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.TEST_APP_NAME
@@ -67,6 +68,20 @@ abstract class AbstractConfigurationDaoTest {
             dao.updateProperty(updateRequest, TEST_APP_NAME, TEST_HOST, "name", "value1", 1) shouldBeEqualTo PropertyCreateResult.OK
         }
         dao.listApplications().first().lastVersion shouldBeEqualTo 2
+    }
+
+    @Test
+    fun testUpdateDoesntBreak() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME)
+        dao.createHost(createRequestId(), TEST_HOST)
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "foobar", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value1", 1) shouldBeEqualTo PropertyCreateResult.OK
+
+        val searchRes: List<PropertyItem.Updated> = dao.searchProperties(SearchPropertyRequest(TEST_APP_NAME, null, null, null))
+        searchRes.find { it.name == "name" }!!.value shouldBeEqualTo "value1"
+        searchRes.find { it.name == "foobar" }!!.value shouldBeEqualTo "value2"
     }
 
     @Test
