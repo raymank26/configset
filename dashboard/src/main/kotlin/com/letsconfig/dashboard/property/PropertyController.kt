@@ -4,9 +4,13 @@ import com.letsconfig.dashboard.PropertyCreateResult
 import com.letsconfig.dashboard.util.BadRequest
 import com.letsconfig.dashboard.util.formParamSafe
 import com.letsconfig.dashboard.util.requestId
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
-class PropertyController(private val createPropertyService: CreatePropertyService) {
+class PropertyController(
+        private val createPropertyService: CreatePropertyService,
+        private val listPropertiesService: ListPropertiesService
+) {
 
     fun bind() {
         post("update") { ctx ->
@@ -22,6 +26,14 @@ class PropertyController(private val createPropertyService: CreatePropertyServic
                 PropertyCreateResult.ApplicationNotFound -> throw BadRequest("application.not.found")
                 PropertyCreateResult.UpdateConflict -> throw BadRequest("update.conflict")
             }
+        }
+        get("list") { ctx ->
+            val appName = ctx.formParam("applicationName")
+            val hostName = ctx.formParam("hostName")
+            val propertyName = ctx.formParam("propertyName")
+            val propertyValue = ctx.formParam("propertyValue")
+
+//            listPropertiesService.list(appName, hostName, propertyName, propertyValue)
         }
     }
 }

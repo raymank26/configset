@@ -1,0 +1,18 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    environment:
+      - "POSTGRES_PASSWORD=1234"
+  backend:
+    image: "letsconfig-backend"
+    environment:
+      - "DB_TYPE=POSTGRES"
+      - "JDBC_URL=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
+  dashboard:
+    image: "letsconfig-dashboard"
+    ports:
+      - "8188:8188"
+    environment:
+      - "config_server.hostname=backend"
+      - "config_server.port=8080"

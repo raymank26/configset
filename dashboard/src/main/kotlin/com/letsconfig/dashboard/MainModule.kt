@@ -2,6 +2,7 @@ package com.letsconfig.dashboard
 
 import com.letsconfig.dashboard.application.ApplicationController
 import com.letsconfig.dashboard.property.CreatePropertyService
+import com.letsconfig.dashboard.property.ListPropertiesService
 import com.letsconfig.dashboard.property.PropertyController
 import com.letsconfig.dashboard.util.ExceptionMapper
 import com.letsconfig.dashboard.util.RequestIdProducer
@@ -27,7 +28,11 @@ val mainModule = module {
     }
 
     single {
-        PropertyController(get())
+        PropertyController(get(), get())
+    }
+
+    single {
+        ListPropertiesService(get())
     }
 
     single {

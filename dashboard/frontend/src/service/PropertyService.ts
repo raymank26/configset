@@ -12,7 +12,7 @@ export default class PropertyService {
       "propertyName": propertyName,
       "propertyValue": propertyValue,
       "requestId": uuidv4()
-    };
+    } as any;
     if (version) {
       request["version"] = version
     }

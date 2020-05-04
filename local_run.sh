@@ -1,1 +1,3 @@
-./gradlew server:dockerBuildImage && docker run -p 8988:8080 letsconfig-backend
+./gradlew server:dockerBuildImage &&
+  ./gradlew dashboard:dockerBuildImage &&
+  docker-compose up

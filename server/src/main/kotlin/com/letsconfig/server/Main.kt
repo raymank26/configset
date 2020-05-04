@@ -5,6 +5,8 @@ import com.letsconfig.server.db.postgres.PostgreSqlConfigurationDao
 import com.letsconfig.server.network.grpc.GrpcConfigurationServer
 import com.letsconfig.server.network.grpc.GrpcConfigurationService
 import org.jdbi.v3.core.Jdbi
+import org.jdbi.v3.postgres.PostgresPlugin
+import org.jdbi.v3.sqlobject.SqlObjectPlugin
 import org.koin.core.context.startKoin
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
@@ -53,7 +55,10 @@ fun createMainModule(config: AppConfiguration) = module {
         when (config.getDaoType()) {
             DaoType.IN_MEMORY -> InMemoryConfigurationDao()
             DaoType.POSTGRES -> {
-                PostgreSqlConfigurationDao(Jdbi.create(config.getJdbcUrl()))
+                val dbi = Jdbi.create(config.getJdbcUrl())
+                dbi.installPlugin(SqlObjectPlugin())
+                dbi.installPlugin(PostgresPlugin())
+                PostgreSqlConfigurationDao(dbi)
             }
         }
     }

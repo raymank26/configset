@@ -63,6 +63,10 @@ class ServerApiGateway(
             Pair(searchResponseItem.appName, searchResponseItem.propertyNamesList.map { it })
         }.toMap()
     }
+//
+//    fun listProperties(listPropertiesRequest: ListPropertiesRequest) {
+//
+//    }
 
     fun createHost(requestId: String, hostName: String): CreateHostResult {
         val response = blockingClient.createHost(CreateHostRequest.newBuilder()
