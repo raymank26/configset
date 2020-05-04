@@ -3,6 +3,7 @@ package com.letsconfig.dashboard.property
 import com.letsconfig.dashboard.PropertyCreateResult
 import com.letsconfig.dashboard.util.BadRequest
 import com.letsconfig.dashboard.util.formParamSafe
+import com.letsconfig.dashboard.util.queryParamSafe
 import com.letsconfig.dashboard.util.requestId
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
@@ -28,12 +29,8 @@ class PropertyController(
             }
         }
         get("list") { ctx ->
-            val appName = ctx.formParam("applicationName")
-            val hostName = ctx.formParam("hostName")
-            val propertyName = ctx.formParam("propertyName")
-            val propertyValue = ctx.formParam("propertyValue")
-
-//            listPropertiesService.list(appName, hostName, propertyName, propertyValue)
+            val appName = ctx.queryParamSafe("appName")
+            ctx.json(listPropertiesService.list(appName))
         }
     }
 }

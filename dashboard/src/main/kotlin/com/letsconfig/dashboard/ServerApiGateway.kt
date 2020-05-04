@@ -6,6 +6,8 @@ import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.ListPropertiesRequest
+import com.letsconfig.sdk.proto.ListPropertiesResponse
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
@@ -101,6 +103,11 @@ class ServerApiGateway(
 
     fun stop() {
         channel.shutdown()
+    }
+
+    fun listProperties(appName: String): List<String> {
+        val response: ListPropertiesResponse = blockingClient.listProperties(ListPropertiesRequest.newBuilder().setApplicationName(appName).build())
+        return response.propertyNamesList.map { it }
     }
 }
 
