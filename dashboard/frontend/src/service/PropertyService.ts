@@ -47,7 +47,7 @@ export default class PropertyService {
 
   readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ReadPropertyResult> {
     return this.searchProperties(new SearchPropertiesRequest(applicationName, hostName, propertyName, null)).then(response => {
-      if (response.length == 1) {
+      if (response.length == 1 && response[0].applicationName === applicationName && response[0].hostName === hostName && response[0].propertyName === propertyName) {
         return {property: response[0]}
       } else {
         return {property: null}

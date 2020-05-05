@@ -24,7 +24,7 @@
               <button class="btn btn-info" v-on:click="showProperties">Search properties</button>
             </div>
             <div class="col">
-              <router-link class="btn btn-primary" to="updateProperty">Add new property</router-link>
+              <router-link class="btn btn-primary" v-bind:to="{path: '/updateProperty', query: {applicationName: searchApplicationName}}">Add new property</router-link>
             </div>
           </div>
         </form>

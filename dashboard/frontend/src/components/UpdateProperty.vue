@@ -105,15 +105,19 @@ import {UpdateResult} from "@/service/PropertyService";
         this.hostName = query.hostName;
         this.applications = [this.appName];
 
-        propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(result => {
-          if (result.property) {
-            this.propertyValue = result.property.propertyValue;
-            this._version = result.property.version;
+        if (this.appName && this.hostName && this.propertyName) {
+          propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(result => {
+            if (result.property) {
+              this.propertyValue = result.property.propertyValue;
+              this._version = result.property.version;
+            } else {
+              this.propertyNotFound = true;
+            }
             this.loading = false;
-          } else {
-            this.propertyNotFound = true;
-          }
-        });
+          });
+        } else {
+          this.loading = false;
+        }
       } else {
         applicationService.listApplications().then(apps => {
           this.applications = apps;

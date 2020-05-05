@@ -24,7 +24,7 @@
               {{ propertyName }}
             </td>
             <td class="property-content">
-              <table class="property-content-table" v-show="byName.showEnabled">
+              <table class="property-content-table mb-2" v-show="byName.showEnabled">
                 <thead>
                 <tr>
                   <th scope="col">#</th>
@@ -43,6 +43,7 @@
                 </tr>
                 </tbody>
               </table>
+              <router-link class="btn btn-success" v-bind:to="{path: '/updateProperty', query: {applicationName: appName, propertyName: propertyName}}">Add new property</router-link>
             </td>
           </tr>
           </tbody>
