@@ -1,32 +1,34 @@
 <template>
   <div>
-    <div class="row">
-      <form onsubmit="return false;">
-        <div class="form-row">
-          <div class="col">
-            <label class="mr-sm-2 sr-only" for="appSelect">Application</label>
-            <select class="custom-select" id="appSelect" v-model="searchApplicationName">
-              <option selected value="">Select application</option>
-              <option v-for="app in applications">{{ app }}</option>
-            </select>
+    <div class="row mb-4">
+      <div class="col-9">
+        <form onsubmit="return false;">
+          <div class="form-row">
+            <div class="col">
+              <label class="mr-sm-2 sr-only" for="appSelect">Application</label>
+              <select class="custom-select" id="appSelect" v-model="searchApplicationName">
+                <option selected value="">Select application</option>
+                <option v-for="app in applications">{{ app }}</option>
+              </select>
+            </div>
+            <div class="col">
+              <input class="form-control" placeholder="Host name" type="text" v-model="searchHost">
+            </div>
+            <div class="col">
+              <input class="form-control" placeholder="Property name" type="text" v-model="searchPropertyName">
+            </div>
+            <div class="col">
+              <input class="form-control" placeholder="Property value" type="text" v-model="searchPropertyValue">
+            </div>
+            <div class="col">
+              <button class="btn btn-info" v-on:click="showProperties">Search properties</button>
+            </div>
+            <div class="col">
+              <router-link class="btn btn-primary" to="updateProperty">Add new property</router-link>
+            </div>
           </div>
-          <div class="col">
-            <input class="form-control" placeholder="Host name" type="text" v-model="searchHost">
-          </div>
-          <div class="col">
-            <input class="form-control" placeholder="Property name" type="text" v-model="searchPropertyName">
-          </div>
-          <div class="col">
-            <input class="form-control" placeholder="Property value" type="text" v-model="searchPropertyValue">
-          </div>
-          <div class="col">
-            <button class="btn btn-info" v-on:click="showProperties">Search properties</button>
-          </div>
-          <div class="col">
-            <router-link class="btn btn-primary" to="updateProperty">Add new property</router-link>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
     <div class="row">
       <div class="col-10">

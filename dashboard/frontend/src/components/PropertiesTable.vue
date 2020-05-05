@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="properties">
+    <div v-if="Object.keys(properties).length > 0">
       <div v-for="(byApp, appName) in properties">
         <h5>Application = {{ appName }}</h5>
         <table class="table table-bordered">
@@ -48,6 +48,9 @@
           </tbody>
         </table>
       </div>
+    </div>
+    <div v-else-if="searchRequest">
+      <p>No properties found</p>
     </div>
   </div>
 </template>
