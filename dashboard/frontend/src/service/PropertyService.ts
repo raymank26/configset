@@ -75,7 +75,25 @@ export default class PropertyService {
             throw Error("Unhandled code = " + code)
         }
       })
+  }
 
+  importConfiguration(applicationName: string, propertiesXml: string): Promise<ImportResult> {
+    let request = {
+      "applicationName": applicationName,
+      "properties": propertiesXml,
+      "requestId": uuidv4()
+    };
+    return Axios.post("/api/property/import", qs.stringify(request))
+      .then(() => ImportResult.OK)
+      .catch(reason => {
+        let code = reason.response.data.code;
+        switch (reason.response.data.code) {
+          case "illegal.format":
+            return ImportResult.INVALID_FORMAT;
+          default:
+            throw Error("Unhandled code = " + code)
+        }
+      })
   }
 }
 
@@ -92,4 +110,9 @@ export enum UpdateResult {
 export enum DeleteResult {
   OK,
   CONFLICT
+}
+
+export enum ImportResult {
+  OK,
+  INVALID_FORMAT
 }

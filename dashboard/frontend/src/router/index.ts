@@ -5,6 +5,7 @@ import Search from "@/components/Search.vue";
 import Applications from "@/components/Applications.vue";
 import AddNewApplication from "@/components/AddNewApplication.vue";
 import UpdateProperty from "@/components/UpdateProperty.vue";
+import ImportProperties from "@/components/ImportProperties.vue";
 
 
 Vue.use(VueRouter);
@@ -41,6 +42,10 @@ const routes: Array<RouteConfig> = [
       {
         path: 'updateProperty',
         component: UpdateProperty
+      },
+      {
+        path: 'importProperties',
+        component: ImportProperties
       }
     ]
   },

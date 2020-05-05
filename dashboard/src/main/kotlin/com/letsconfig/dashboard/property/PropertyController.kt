@@ -12,7 +12,8 @@ import io.javalin.apibuilder.ApiBuilder.post
 
 class PropertyController(
         private val crudPropertyService: CrudPropertyService,
-        private val listPropertiesService: ListPropertiesService
+        private val listPropertiesService: ListPropertiesService,
+        private val propertyImportService: PropertyImportService
 ) {
 
     fun bind() {
@@ -44,10 +45,22 @@ class PropertyController(
             }
         }
 
+        post("import") { ctx ->
+            val appName = ctx.formParamSafe("applicationName")
+            val properties = ctx.formParamSafe("properties")
+            val requestId = ctx.requestId()
+            when (propertyImportService.import(requestId, appName, properties)) {
+                PropertiesImport.ApplicationNotFound -> throw BadRequest("application.not.found")
+                PropertiesImport.OK -> Unit
+                PropertiesImport.IllegalFormat -> throw BadRequest("illegal.format")
+            }
+        }
+
         get("list") { ctx ->
             val appName = ctx.queryParamSafe("applicationName")
             ctx.json(listPropertiesService.list(appName))
         }
+
         get("search") { ctx ->
             val appName = ctx.queryParam("applicationName")
             val hostName = ctx.queryParam("hostName")

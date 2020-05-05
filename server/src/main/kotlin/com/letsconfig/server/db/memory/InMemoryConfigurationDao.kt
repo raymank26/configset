@@ -8,7 +8,6 @@ import com.letsconfig.server.HostED
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
-import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
 
@@ -57,11 +56,8 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
-    override fun showProperty(applicationName: String, propertyName: String): List<ShowPropertyItem> {
-        return properties
-                .filterIsInstance(PropertyItem.Updated::class.java)
-                .filter { it.applicationName == applicationName && it.name == propertyName }
-                .map { ShowPropertyItem(it.hostName, it.name, it.value) }
+    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
+        return properties.firstOrNull { it.applicationName == applicationName && it.name == propertyName && it.hostName == hostName }
     }
 
     @Synchronized

@@ -48,10 +48,6 @@ class ConfigurationService(
         return configurationDao.listProperties(applicationName)
     }
 
-    fun showProperty(applicationName: String, propertyName: String): List<ShowPropertyItem> {
-        return configurationDao.showProperty(applicationName, propertyName)
-    }
-
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
         propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
     }
@@ -68,6 +64,10 @@ class ConfigurationService(
         if (requestId.isEmpty()) {
             throw IllegalArgumentException("RequestId is empty")
         }
+    }
+
+    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
+        return configurationDao.readProperty(applicationName, hostName, propertyName)
     }
 }
 

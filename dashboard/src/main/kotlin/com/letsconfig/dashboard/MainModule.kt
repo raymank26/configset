@@ -4,6 +4,7 @@ import com.letsconfig.dashboard.application.ApplicationController
 import com.letsconfig.dashboard.property.CrudPropertyService
 import com.letsconfig.dashboard.property.ListPropertiesService
 import com.letsconfig.dashboard.property.PropertyController
+import com.letsconfig.dashboard.property.PropertyImportService
 import com.letsconfig.dashboard.util.ExceptionMapper
 import com.letsconfig.dashboard.util.RequestIdProducer
 import org.koin.core.scope.Scope
@@ -28,7 +29,11 @@ val mainModule = module {
     }
 
     single {
-        PropertyController(get(), get())
+        PropertyController(get(), get(), get())
+    }
+
+    single {
+        PropertyImportService(get(), get())
     }
 
     single {

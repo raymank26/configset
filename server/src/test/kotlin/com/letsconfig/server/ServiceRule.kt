@@ -9,6 +9,8 @@ import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
+import com.letsconfig.sdk.proto.PropertyItem
+import com.letsconfig.sdk.proto.ReadPropertyRequest
 import com.letsconfig.sdk.proto.SubscribeApplicationRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
@@ -161,5 +163,15 @@ class ServiceRule : ExternalResource() {
 
     fun createRequestId(): String {
         return UUID.randomUUID().toString()
+    }
+
+    fun readProperty(appName: String, hostName: String, propertyName: String): PropertyItem? {
+        val response = blockingClient.readProperty(ReadPropertyRequest.newBuilder().setApplicationName(appName)
+                .setHostName(hostName).setPropertyName(propertyName).build())
+        return if (response.hasItem) {
+            response.item
+        } else {
+            null
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.PropertyItem
 import com.letsconfig.sdk.proto.SearchPropertiesRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
@@ -27,6 +28,27 @@ class GrpcCrudTest {
         serviceRule.blockingClient.createHost(CreateHostRequest.newBuilder().setRequestId(serviceRule.createRequestId()).setHostName(expectedHostName).build())
         val response = serviceRule.blockingClient.listHosts(EmptyRequest.getDefaultInstance()).hostNamesList.map { it }
         response.contains(expectedHostName) shouldBe true
+    }
+
+    @Test
+    fun testReadPropertyEmpty() {
+        val propertyItem = serviceRule.readProperty(TEST_APP_NAME, TEST_HOST, "test")
+        propertyItem shouldBeEqualTo null
+    }
+
+    @Test
+    fun testUpdateProperty() {
+        serviceRule.createApplication(TEST_APP_NAME)
+        serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, null, "test", "value")
+        serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, 1, "test", "value2")
+
+        val propertyItem = serviceRule.readProperty(TEST_APP_NAME, TEST_HOST, "test")
+        propertyItem!!.let {
+            it.applicationName shouldBeEqualTo TEST_APP_NAME
+            it.propertyValue shouldBeEqualTo "value2"
+            it.version shouldBeEqualTo 2
+            it.updateType shouldBeEqualTo PropertyItem.UpdateType.UPDATE
+        }
     }
 
     @Test
@@ -83,8 +105,7 @@ class GrpcCrudTest {
 
     @Test
     fun testDeletePropertyNotFoundWithApp() {
-        serviceRule
-                .createApplication("test-app")
+        serviceRule.createApplication("test-app")
         testDeletePropertyNotFoundWithoutApp()
     }
 

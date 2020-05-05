@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row mb-4">
-      <div class="col-9">
+      <div class="col-12">
         <form onsubmit="return false;">
           <div class="form-row align-items-center">
             <div class="col-auto">
@@ -25,6 +25,9 @@
             </div>
             <div class="col-auto">
               <router-link class="form-control btn btn-primary" v-bind:to="{path: '/updateProperty', query: {applicationName: searchApplicationName}}">Add new property</router-link>
+            </div>
+            <div class="col-auto">
+              <router-link class="form-control btn btn-primary" v-bind:to="{path: '/importProperties', query: {applicationName: searchApplicationName}}">Import properties</router-link>
             </div>
           </div>
         </form>

@@ -9,6 +9,8 @@ import com.letsconfig.sdk.proto.CreateHostResponse
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.PropertyItem
+import com.letsconfig.sdk.proto.ReadPropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
@@ -99,6 +101,19 @@ class ServerApiGateway(
             CreateHostResponse.Type.OK -> CreateHostResult.OK
             CreateHostResponse.Type.HOST_ALREADY_EXISTS -> CreateHostResult.HostAlreadyExists
             else -> throw RuntimeException("Unrecognized type for msg = $response")
+        }
+    }
+
+    fun readProperty(appName: String, hostName: String, propertyName: String): PropertyItem? {
+        val response = blockingClient.readProperty(ReadPropertyRequest.newBuilder()
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .build())
+        return if (response.hasItem) {
+            response.item
+        } else {
+            null
         }
     }
 

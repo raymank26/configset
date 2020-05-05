@@ -15,10 +15,10 @@ import com.letsconfig.sdk.proto.ListPropertiesRequest
 import com.letsconfig.sdk.proto.ListPropertiesResponse
 import com.letsconfig.sdk.proto.PropertiesChangesResponse
 import com.letsconfig.sdk.proto.PropertyItem
+import com.letsconfig.sdk.proto.ReadPropertyRequest
+import com.letsconfig.sdk.proto.ReadPropertyResponse
 import com.letsconfig.sdk.proto.SearchPropertiesRequest
 import com.letsconfig.sdk.proto.SearchPropertiesResponse
-import com.letsconfig.sdk.proto.ShowPropertyRequest
-import com.letsconfig.sdk.proto.ShowPropertyResponse
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import com.letsconfig.sdk.proto.WatchRequest
@@ -29,7 +29,6 @@ import com.letsconfig.server.HostCreateResult
 import com.letsconfig.server.PropertiesChanges
 import com.letsconfig.server.PropertyCreateResult
 import com.letsconfig.server.SearchPropertyRequest
-import com.letsconfig.server.ShowPropertyItem
 import com.letsconfig.server.WatchSubscriber
 import io.grpc.stub.StreamObserver
 import java.util.*
@@ -127,43 +126,45 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
         responseObserver.onCompleted()
     }
 
-    override fun showProperty(request: ShowPropertyRequest, responseObserver: StreamObserver<ShowPropertyResponse>) {
-        val res: List<ShowPropertyItem> = configurationService.showProperty(request.applicationName, request.propertyName)
-        val protoItems = res.map {
-            com.letsconfig.sdk.proto.ShowPropertyItem.newBuilder()
-                    .setHostName(it.hostName)
-                    .setPropertyName(it.propertyValue)
-                    .setPropertyValue(it.propertyValue)
-                    .build()
-        }
-        responseObserver.onNext(ShowPropertyResponse.newBuilder().addAllItems(protoItems).build())
-    }
-
     private fun toPropertiesChangesResponse(appName: String, changes: PropertiesChanges?): PropertiesChangesResponse {
         if (changes == null) {
             return PropertiesChangesResponse.newBuilder().setApplicationName(appName).build()
         }
         val preparedItems = changes.propertyItems.map { change ->
-            val itemBuilder = PropertyItem.newBuilder()
-                    .setApplicationName(change.applicationName)
-                    .setPropertyName(change.name)
-                    .setVersion(change.version)
-            when (change) {
-                is com.letsconfig.server.PropertyItem.Updated -> {
-                    itemBuilder
-                            .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                            .setPropertyValue(change.value)
-                            .build()
-                }
-                is com.letsconfig.server.PropertyItem.Deleted -> {
-                    itemBuilder
-                            .setUpdateType(PropertyItem.UpdateType.DELETE)
-                            .build()
-                }
-            }
+            convertPropertyItem(change)
         }
         return PropertiesChangesResponse.newBuilder().setApplicationName(appName).addAllItems(preparedItems)
                 .setLastVersion(changes.lastVersion).build()
+    }
+
+    private fun convertPropertyItem(change: com.letsconfig.server.PropertyItem): PropertyItem {
+        val itemBuilder = PropertyItem.newBuilder()
+                .setApplicationName(change.applicationName)
+                .setPropertyName(change.name)
+                .setVersion(change.version)
+        return when (change) {
+            is com.letsconfig.server.PropertyItem.Updated -> {
+                itemBuilder
+                        .setUpdateType(PropertyItem.UpdateType.UPDATE)
+                        .setPropertyValue(change.value)
+                        .build()
+            }
+            is com.letsconfig.server.PropertyItem.Deleted -> {
+                itemBuilder
+                        .setUpdateType(PropertyItem.UpdateType.DELETE)
+                        .build()
+            }
+        }
+    }
+
+    override fun readProperty(request: ReadPropertyRequest, responseObserver: StreamObserver<ReadPropertyResponse>) {
+        val propertyItem: com.letsconfig.server.PropertyItem? = configurationService.readProperty(request.applicationName, request.hostName, request.propertyName)
+        if (propertyItem == null) {
+            responseObserver.onNext(ReadPropertyResponse.newBuilder().setHasItem(false).build())
+        } else {
+            responseObserver.onNext(ReadPropertyResponse.newBuilder().setHasItem(true).setItem(convertPropertyItem(propertyItem)).build())
+        }
+        responseObserver.onCompleted()
     }
 
     override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {

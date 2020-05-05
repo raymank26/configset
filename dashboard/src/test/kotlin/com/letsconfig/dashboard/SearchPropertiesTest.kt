@@ -32,19 +32,13 @@ class SearchPropertiesTest {
 
     @Test
     fun testUpdateList() {
-        val res = dashboardRule.executeGetRequest("/property/list?applicationName=testApp", List::class.java)
-        res.size shouldBeEqualTo 1
+        dashboardRule.searchProperties(applicationName = "testApp").size shouldBeEqualTo 1
     }
 
     @Test
     fun testSearch() {
-        val byHost = dashboardRule.executeGetRequest("/property/search?hostName=srvd", List::class.java)
-        byHost.size shouldBeEqualTo 2
-
-        val byPropertyName = dashboardRule.executeGetRequest("/property/search?propertyName=prop", List::class.java)
-        byPropertyName.size shouldBeEqualTo 2
-
-        val byPropertyValue = dashboardRule.executeGetRequest("/property/search?propertyValue=234", List::class.java)
-        byPropertyValue.size shouldBeEqualTo 2
+        dashboardRule.searchProperties(hostName = "srvd").size shouldBeEqualTo 2
+        dashboardRule.searchProperties(propertyName = "prop").size shouldBeEqualTo 2
+        dashboardRule.searchProperties(propertyValue = "234").size shouldBeEqualTo 2
     }
 }
