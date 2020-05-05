@@ -83,7 +83,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 access.incrementAppVersion(app.id)
                 return@cb PersistResult(true, PropertyCreateResult.OK)
             } else if (property != null) {
-                if (property.version != version) {
+                if (!property.deleted && property.version != version) {
                     return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
                 } else {
                     access.updateProperty(property.id!!, value, app.lastVersion + 1, false, ct, app.id, propertyName, host.id)

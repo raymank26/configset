@@ -105,6 +105,18 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
+    fun testUpdateAfterDelete() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME)
+        dao.createHost(createRequestId(), TEST_HOST)
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.deleteProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", 1) shouldBeEqualTo DeletePropertyResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.searchProperties(SearchPropertyRequest(TEST_APP_NAME, "name", null, null)).first().version shouldBeEqualTo 3
+
+    }
+
+    @Test
     fun listProperties() {
         dao.createApplication(createRequestId(), TEST_APP_NAME) shouldBeEqualTo CreateApplicationResult.OK
         dao.createApplication(createRequestId(), "test-app2") shouldBeEqualTo CreateApplicationResult.OK
@@ -154,5 +166,4 @@ abstract class AbstractConfigurationDaoTest {
         call.invoke()
         call.invoke()
     }
-
 }

@@ -102,7 +102,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
             val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
             if (foundProperty != null) {
-                if (foundProperty.version != version) {
+                if (foundProperty is PropertyItem.Updated && foundProperty.version != version) {
                     return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
                 } else {
                     properties.remove(foundProperty)

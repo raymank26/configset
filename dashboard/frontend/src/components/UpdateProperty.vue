@@ -98,7 +98,7 @@ import {UpdateResult} from "@/service/PropertyService";
     propertyNotFound: boolean = false;
 
     created() {
-      if (this.$router.currentRoute.query) {
+      if (Object.keys(this.$router.currentRoute.query).length !== 0) {
         let query = this.$router.currentRoute.query as any;
         this.appName = query.applicationName;
         this.propertyName = query.propertyName;
