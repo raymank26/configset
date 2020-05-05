@@ -24,26 +24,28 @@
               {{ propertyName }}
             </td>
             <td class="property-content">
-              <table class="property-content-table mb-2" v-show="byName.showEnabled">
-                <thead>
-                <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">Host</th>
-                  <th scope="col">Value</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="(property, host) in byName.byHost">
-                  <td>
-                    <button class="btn btn-success mr-1" v-on:click="updateProperty(property.prop)">Update</button>
-                    <button class="btn btn-danger" v-on:click="deleteProperty(property.prop)">Delete</button>
-                  </td>
-                  <td>{{ property.prop.hostName }}</td>
-                  <td>{{ property.prop.propertyValue }}</td>
-                </tr>
-                </tbody>
-              </table>
-              <router-link class="btn btn-success" v-bind:to="{path: '/updateProperty', query: {applicationName: appName, propertyName: propertyName}}">Add new property</router-link>
+              <div v-if="byName.showEnabled">
+                <table class="property-content-table mb-2">
+                  <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Host</th>
+                    <th scope="col">Value</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr v-for="(property, host) in byName.byHost">
+                    <td>
+                      <button class="btn btn-info mr-1" v-on:click="updateProperty(property.prop)">Update</button>
+                      <button class="btn btn-danger" v-on:click="deleteProperty(property.prop)">Delete</button>
+                    </td>
+                    <td>{{ property.prop.hostName }}</td>
+                    <td class="property-value-content">{{ property.prop.propertyValue }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+                <router-link class="btn btn-success" v-bind:to="{path: '/updateProperty', query: {applicationName: appName, propertyName: propertyName}}">Add value for new host</router-link>
+              </div>
             </td>
           </tr>
           </tbody>
@@ -82,7 +84,7 @@
       if (this.searchRequest) {
         propertyService.searchProperties(this.searchRequest!!).then(properties => {
           let newProps: Record<string, PropByApp> = {};
-          let showEnabled = properties.length == 1;
+          let showEnabled = isSingleName(properties);
           for (let prop of properties) {
             let propByApp = getOrCreate(newProps, prop.applicationName, () => new PropByApp(prop.applicationName));
             let propByName = getOrCreate(propByApp.byName, prop.propertyName, () => new PropByName(prop.propertyName, showEnabled));
@@ -92,6 +94,18 @@
         });
       } else {
         this.properties = {};
+      }
+
+      function isSingleName(properties: ShowPropertyItem[]) {
+        let propName = null;
+        for (let property of properties) {
+          if (propName != null && propName != property.propertyName) {
+            return false;
+          } else {
+            propName = property.propertyName
+          }
+        }
+        return true;
       }
     }
 
@@ -170,10 +184,14 @@
 
 <style scoped>
   .property-content {
-    width: 700px;
+    width: 900px;
   }
 
   .property-content-table {
     width: 100%;
+  }
+
+  .property-value-content {
+    max-width: 600px;
   }
 </style>

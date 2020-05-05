@@ -136,7 +136,7 @@ import {UpdateResult} from "@/service/PropertyService";
             case UpdateResult.OK:
               searchService.searchPush({
                 searchApplicationName: this.appName,
-                searchHost: this.hostName,
+                searchHost: null,
                 searchPropertyName: this.propertyName,
                 searchPropertyValue: null
               });

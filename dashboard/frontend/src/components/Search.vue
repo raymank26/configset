@@ -3,28 +3,28 @@
     <div class="row mb-4">
       <div class="col-9">
         <form onsubmit="return false;">
-          <div class="form-row">
-            <div class="col">
+          <div class="form-row align-items-center">
+            <div class="col-auto">
               <label class="mr-sm-2 sr-only" for="appSelect">Application</label>
               <select class="custom-select" id="appSelect" v-model="searchApplicationName">
                 <option selected value="">Select application</option>
                 <option v-for="app in applications">{{ app }}</option>
               </select>
             </div>
-            <div class="col">
+            <div class="col-auto">
               <input class="form-control" placeholder="Host name" type="text" v-model="searchHost">
             </div>
-            <div class="col">
+            <div class="col-auto">
               <input class="form-control" placeholder="Property name" type="text" v-model="searchPropertyName">
             </div>
-            <div class="col">
+            <div class="col-auto">
               <input class="form-control" placeholder="Property value" type="text" v-model="searchPropertyValue">
             </div>
-            <div class="col">
-              <button class="btn btn-info" v-on:click="showProperties">Search properties</button>
+            <div class="col-auto">
+              <button class="form-control btn btn-info" v-on:click="showProperties">Search properties</button>
             </div>
-            <div class="col">
-              <router-link class="btn btn-primary" v-bind:to="{path: '/updateProperty', query: {applicationName: searchApplicationName}}">Add new property</router-link>
+            <div class="col-auto">
+              <router-link class="form-control btn btn-primary" v-bind:to="{path: '/updateProperty', query: {applicationName: searchApplicationName}}">Add new property</router-link>
             </div>
           </div>
         </form>
