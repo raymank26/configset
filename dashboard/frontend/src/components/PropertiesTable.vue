@@ -58,6 +58,7 @@
   import {propertyService} from "@/service/services";
   import ShowPropertyItem from "@/model/ShowPropertyItem";
   import {Location} from "vue-router";
+  import {DeleteResult} from "@/service/PropertyService";
 
   @Component
   export default class PropertiesTable extends Vue {
@@ -109,8 +110,15 @@
       let toDelete = confirm("Delete property?");
       if (toDelete) {
         propertyService.deleteProperty(property.applicationName, property.hostName, property.propertyName, property.version)
-          .then(() => {
-            this.$router.go(0)
+          .then(response => {
+            switch (response) {
+              case DeleteResult.OK:
+                this.$router.go(0);
+                break;
+              case DeleteResult.CONFLICT:
+                alert("Property was changed (you tried to delete stale property). Please update the page manually to see the changes.");
+                break;
+            }
           })
       }
     }

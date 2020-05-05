@@ -55,7 +55,7 @@ export default class PropertyService {
     });
   }
 
-  deleteProperty(applicationName: string, hostName: string, propertyName: string, version: number): Promise<any> {
+  deleteProperty(applicationName: string, hostName: string, propertyName: string, version: number): Promise<DeleteResult> {
     let request = {
       "applicationName": applicationName,
       "hostName": hostName,
@@ -65,6 +65,17 @@ export default class PropertyService {
     } as any;
 
     return Axios.post("/api/property/delete", qs.stringify(request))
+      .then(() => DeleteResult.OK)
+      .catch(reason => {
+        let code = reason.response.data.code;
+        switch (reason.response.data.code) {
+          case "delete.conflict":
+            return DeleteResult.CONFLICT;
+          default:
+            throw Error("Unhandled code = " + code)
+        }
+      })
+
   }
 }
 
@@ -76,5 +87,9 @@ export enum UpdateResult {
   OK,
   CONFLICT,
   APPLICATION_NOT_FOUND,
+}
 
+export enum DeleteResult {
+  OK,
+  CONFLICT
 }
