@@ -36,7 +36,7 @@
                 <tr v-for="(property, host) in byName.byHost">
                   <td>
                     <button class="btn btn-success mr-1" v-on:click="updateProperty(property.prop)">Update</button>
-                    <button class="btn btn-danger">Delete</button>
+                    <button class="btn btn-danger" v-on:click="deleteProperty(property.prop)">Delete</button>
                   </td>
                   <td>{{ property.prop.hostName }}</td>
                   <td>{{ property.prop.propertyValue }}</td>
@@ -103,6 +103,16 @@
           propertyName: property.propertyName,
         }
       } as Location)
+    }
+
+    deleteProperty(property: ShowPropertyItem) {
+      let toDelete = confirm("Delete property?");
+      if (toDelete) {
+        propertyService.deleteProperty(property.applicationName, property.hostName, property.propertyName, property.version)
+          .then(() => {
+            this.$router.go(0)
+          })
+      }
     }
   }
 

@@ -88,13 +88,20 @@ abstract class AbstractConfigurationDaoTest {
     fun testDeleteProperty() {
         dao.createApplication(createRequestId(), TEST_APP_NAME)
         dao.createHost(createRequestId(), TEST_HOST)
-        val updateRequest = createRequestId()
-        dao.updateProperty(updateRequest, TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
 
-        val requestId = createRequestId()
-        testIdempotent {
-            dao.deleteProperty(requestId, TEST_APP_NAME, TEST_HOST, "name") shouldBeEqualTo DeletePropertyResult.OK
-        }
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.deleteProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", 1) shouldBeEqualTo DeletePropertyResult.OK
+        dao.listProperties(TEST_APP_NAME) shouldBeEqualTo listOf()
+    }
+
+    @Test
+    fun testDeleteConflict() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME)
+        dao.createHost(createRequestId(), TEST_HOST)
+
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.deleteProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", 1123) shouldBeEqualTo DeletePropertyResult.DeleteConflict
+        dao.listProperties(TEST_APP_NAME).size shouldBeEqualTo 1
     }
 
     @Test

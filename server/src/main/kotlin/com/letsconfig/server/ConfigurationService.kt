@@ -30,9 +30,9 @@ class ConfigurationService(
         return configurationDao.updateProperty(requestId, appName, hostName, propertyName, value, version)
     }
 
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
         checkRequestId(requestId)
-        return configurationDao.deleteProperty(requestId, appName, hostName, propertyName)
+        return configurationDao.deleteProperty(requestId, appName, hostName, propertyName, version)
     }
 
     fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
@@ -118,6 +118,7 @@ sealed class PropertyCreateResult {
 
 sealed class DeletePropertyResult {
     object OK : DeletePropertyResult()
+    object DeleteConflict : DeletePropertyResult()
     object PropertyNotFound : DeletePropertyResult()
 }
 

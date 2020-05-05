@@ -54,6 +54,18 @@ export default class PropertyService {
       }
     });
   }
+
+  deleteProperty(applicationName: string, hostName: string, propertyName: string, version: number): Promise<any> {
+    let request = {
+      "applicationName": applicationName,
+      "hostName": hostName,
+      "propertyName": propertyName,
+      "version": version,
+      "requestId": uuidv4()
+    } as any;
+
+    return Axios.post("/api/property/delete", qs.stringify(request))
+  }
 }
 
 export interface ReadPropertyResult {

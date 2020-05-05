@@ -109,15 +109,18 @@ class ServiceRule : ExternalResource() {
         Assert.assertEquals(UpdatePropertyResponse.Type.OK, res.type)
     }
 
-    fun deleteProperty(appName: String, hostName: String, propertyName: String) {
+    fun deleteProperty(appName: String, hostName: String, propertyName: String, version: Long,
+                       expectedType: DeletePropertyResponse.Type = DeletePropertyResponse.Type.OK) {
+
         val res: DeletePropertyResponse = blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
                 .setRequestId(createRequestId())
                 .setApplicationName(appName)
                 .setHostName(hostName)
                 .setPropertyName(propertyName)
+                .setVersion(version)
                 .build()
         )
-        Assert.assertEquals(res.type, DeletePropertyResponse.Type.OK)
+        Assert.assertEquals(expectedType, res.type)
     }
 
     fun subscribeTestApplication(lastKnownVersion: Long?) {

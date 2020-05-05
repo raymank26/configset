@@ -78,6 +78,7 @@ message DeletePropertyRequest {
     string hostName = 2;
     string propertyName = 3;
     string requestId = 4;
+    int64 version = 5;
 }
 
 message DeletePropertyResponse {
@@ -86,6 +87,7 @@ message DeletePropertyResponse {
     enum Type {
         OK = 0;
         PROPERTY_NOT_FOUND = 1;
+        DELETE_CONFLICT = 2;
     }
 }
 

@@ -110,7 +110,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
         return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) cb@{ _, access ->
             val app = access.getApplicationByName(appName)
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
@@ -118,9 +118,12 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             val property = access.getProperty(propertyName, host.id!!, app.id!!)
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
+            if (property.version != version) {
+                return@cb PersistResult(false, DeletePropertyResult.DeleteConflict)
+            }
             access.markPropertyAsDeleted(property.id!!)
             access.incrementAppVersion(app.id)
-            PersistResult(false, DeletePropertyResult.OK)
+            PersistResult(true, DeletePropertyResult.OK)
         }
     }
 

@@ -119,7 +119,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult {
+    override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
         return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) cb@{
             val lastVersion = getLastVersionInApp(appName)
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
@@ -128,6 +128,9 @@ class InMemoryConfigurationDao : ConfigurationDao {
             }
             val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
+            if (foundProperty.version != version) {
+                return@cb PersistResult(false, DeletePropertyResult.DeleteConflict)
+            }
 
             properties.remove(foundProperty)
             val newVersion = lastVersion + 1

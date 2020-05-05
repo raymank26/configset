@@ -1,7 +1,7 @@
 package com.letsconfig.dashboard
 
 import com.letsconfig.dashboard.application.ApplicationController
-import com.letsconfig.dashboard.property.CreatePropertyService
+import com.letsconfig.dashboard.property.CrudPropertyService
 import com.letsconfig.dashboard.property.ListPropertiesService
 import com.letsconfig.dashboard.property.PropertyController
 import com.letsconfig.dashboard.util.ExceptionMapper
@@ -36,7 +36,7 @@ val mainModule = module {
     }
 
     single {
-        CreatePropertyService(get(), get())
+        CrudPropertyService(get(), get())
     }
 
     single {

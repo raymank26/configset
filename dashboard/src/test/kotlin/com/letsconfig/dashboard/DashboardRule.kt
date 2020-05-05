@@ -6,6 +6,7 @@ import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
+import org.junit.Assert
 import org.junit.rules.ExternalResource
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
@@ -70,6 +71,10 @@ class DashboardRule : ExternalResource() {
         val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint")
                 .post(formBody.build())
                 .build()).execute()
+        if (response.code != 200) {
+            LOG.error("Body = " + response.body?.string())
+            Assert.fail()
+        }
         response.code shouldBeEqualTo 200
         if (response.body?.contentLength() == 0L) {
             return null

@@ -36,7 +36,7 @@ class GrpcWatchTest {
                 PropertyItem.newBuilder().setApplicationName("test-app").setPropertyName("name2").setPropertyValue("value2").setVersion(2).build()
         ), receivedItems)
 
-        serviceRule.deleteProperty("test-app", "srvd1", "name")
+        serviceRule.deleteProperty("test-app", "srvd1", "name", 1)
 
         serviceRule.watchForChanges(1, 5000)
     }

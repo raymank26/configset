@@ -16,7 +16,7 @@ interface ConfigurationDao {
     fun createHost(requestId: String, hostName: String): HostCreateResult
     fun listHosts(): List<HostED>
     fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String): DeletePropertyResult
+    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult
     fun getConfigurationSnapshotList(): List<PropertyItem>
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated>
     fun listProperties(applicationName: String): List<String>

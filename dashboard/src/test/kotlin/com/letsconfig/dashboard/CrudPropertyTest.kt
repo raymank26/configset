@@ -4,7 +4,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class UpdatePropertyTest {
+class CrudPropertyTest {
 
     @Rule
     @JvmField
@@ -28,6 +28,23 @@ class UpdatePropertyTest {
         }
         update.invoke()
         update.invoke()
+    }
+
+    @Test
+    fun testDelete() {
+        dashboardRule.executePostRequest("/property/update", mapOf(
+                Pair("applicationName", "testApp"),
+                Pair("hostName", "srvd1"),
+                Pair("propertyName", "propertyName"),
+                Pair("propertyValue", "234")
+        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+
+        dashboardRule.executePostRequest("/property/delete", mapOf(
+                Pair("applicationName", "testApp"),
+                Pair("hostName", "srvd1"),
+                Pair("propertyName", "propertyName"),
+                Pair("version", "1")
+        ), Map::class.java, requestId = "1239")
     }
 
     @Test

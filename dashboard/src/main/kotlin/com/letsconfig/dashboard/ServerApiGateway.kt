@@ -6,6 +6,8 @@ import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
 import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.CreateHostResponse
+import com.letsconfig.sdk.proto.DeletePropertyRequest
+import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
@@ -119,6 +121,23 @@ class ServerApiGateway(
         }
     }
 
+    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): PropertyDeleteResult {
+        val response = blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .setVersion(version)
+                .build()
+        )
+        return when (response.type) {
+            DeletePropertyResponse.Type.OK -> PropertyDeleteResult.OK
+            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> PropertyDeleteResult.OK
+            DeletePropertyResponse.Type.DELETE_CONFLICT -> PropertyDeleteResult.DeleteConflict
+            else -> throw RuntimeException("Unrecognized type for msg = $response")
+        }
+    }
+
     fun stop() {
         channel.shutdown()
     }
@@ -145,6 +164,11 @@ sealed class PropertyCreateResult {
     object OK : PropertyCreateResult()
     object ApplicationNotFound : PropertyCreateResult()
     object UpdateConflict : PropertyCreateResult()
+}
+
+sealed class PropertyDeleteResult {
+    object OK : PropertyDeleteResult()
+    object DeleteConflict : PropertyDeleteResult()
 }
 
 data class ShowPropertyItem(val applicationName: String, val hostName: String, val propertyName: String,

@@ -1,6 +1,7 @@
 package com.letsconfig.dashboard.property
 
 import com.letsconfig.dashboard.PropertyCreateResult
+import com.letsconfig.dashboard.PropertyDeleteResult
 import com.letsconfig.dashboard.SearchPropertiesRequest
 import com.letsconfig.dashboard.util.BadRequest
 import com.letsconfig.dashboard.util.formParamSafe
@@ -10,7 +11,7 @@ import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
 class PropertyController(
-        private val createPropertyService: CreatePropertyService,
+        private val crudPropertyService: CrudPropertyService,
         private val listPropertiesService: ListPropertiesService
 ) {
 
@@ -23,12 +24,26 @@ class PropertyController(
             val version = ctx.formParam("version")?.toLong()
             val requestId = ctx.requestId()
 
-            when (createPropertyService.updateProperty(requestId, appName, hostName, propertyName, propertyValue, version)) {
+            when (crudPropertyService.updateProperty(requestId, appName, hostName, propertyName, propertyValue, version)) {
                 PropertyCreateResult.OK -> Unit
                 PropertyCreateResult.ApplicationNotFound -> throw BadRequest("application.not.found")
                 PropertyCreateResult.UpdateConflict -> throw BadRequest("update.conflict")
             }
         }
+
+        post("delete") { ctx ->
+            val appName = ctx.formParamSafe("applicationName")
+            val hostName = ctx.formParamSafe("hostName")
+            val propertyName = ctx.formParamSafe("propertyName")
+            val version = ctx.formParamSafe("version").toLong()
+            val requestId = ctx.requestId()
+
+            when (crudPropertyService.deleteProperty(requestId, appName, hostName, propertyName, version)) {
+                PropertyDeleteResult.OK -> Unit
+                PropertyDeleteResult.DeleteConflict -> throw BadRequest("delete.conflict")
+            }
+        }
+
         get("list") { ctx ->
             val appName = ctx.queryParamSafe("applicationName")
             ctx.json(listPropertiesService.list(appName))

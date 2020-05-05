@@ -6,9 +6,11 @@ import com.letsconfig.sdk.proto.CreateHostRequest
 import com.letsconfig.sdk.proto.DeletePropertyRequest
 import com.letsconfig.sdk.proto.DeletePropertyResponse
 import com.letsconfig.sdk.proto.EmptyRequest
+import com.letsconfig.sdk.proto.SearchPropertiesRequest
 import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import org.amshove.kluent.shouldBe
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -40,6 +42,32 @@ class GrpcCrudTest {
     }
 
     @Test
+    fun testDelete() {
+        serviceRule.createApplication(TEST_APP_NAME)
+        serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, null, "test", "value")
+        serviceRule.deleteProperty(TEST_APP_NAME, TEST_HOST, "test", 1)
+        val res = serviceRule.blockingClient.searchProperties(SearchPropertiesRequest.newBuilder()
+                .setApplicationName(TEST_APP_NAME)
+                .setHostName(TEST_HOST)
+                .setPropertyName("test")
+                .build())
+        res.itemsCount shouldBeEqualTo 0
+    }
+
+    @Test
+    fun testDeleteConflict() {
+        serviceRule.createApplication(TEST_APP_NAME)
+        serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, null, "test", "value")
+        serviceRule.deleteProperty(TEST_APP_NAME, TEST_HOST, "test", 1123, DeletePropertyResponse.Type.DELETE_CONFLICT)
+        val res = serviceRule.blockingClient.searchProperties(SearchPropertiesRequest.newBuilder()
+                .setApplicationName(TEST_APP_NAME)
+                .setHostName(TEST_HOST)
+                .setPropertyName("test")
+                .build())
+        res.itemsCount shouldBeEqualTo 1
+    }
+
+    @Test
     fun testAddPropertyNoApplication() {
         val result = serviceRule.blockingClient.updateProperty(UpdatePropertyRequest.newBuilder()
                 .setRequestId(serviceRule.createRequestId())
@@ -67,6 +95,7 @@ class GrpcCrudTest {
                 .setApplicationName("test-app")
                 .setPropertyName("Prop")
                 .setHostName("host")
+                .setVersion(1)
                 .build())
         Assert.assertEquals(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND, res.type)
     }
