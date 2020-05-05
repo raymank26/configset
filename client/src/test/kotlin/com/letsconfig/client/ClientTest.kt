@@ -30,7 +30,7 @@ class ClientTest {
             confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate
         }
 
-        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName)
+        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName, 1)
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo null

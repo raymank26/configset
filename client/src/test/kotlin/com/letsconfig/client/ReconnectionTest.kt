@@ -57,7 +57,7 @@ class ReconnectionTest {
 
         Thread.sleep(5000) // waiting for connection loss
 
-        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName)
+        serverRule.deleteProperty(APP_NAME, HOST_NAME, propertyName, 1)
 
         Thread.sleep(5000) // waiting more
 

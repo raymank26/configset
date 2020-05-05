@@ -99,12 +99,13 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
         Assert.assertEquals(UpdatePropertyResponse.Type.OK, res.type)
     }
 
-    fun deleteProperty(appName: String, hostName: String, propertyName: String) {
+    fun deleteProperty(appName: String, hostName: String, propertyName: String, version: Long) {
         val res: DeletePropertyResponse = crudClient.deleteProperty(DeletePropertyRequest.newBuilder()
                 .setRequestId(createRequestId())
                 .setApplicationName(appName)
                 .setHostName(hostName)
                 .setPropertyName(propertyName)
+                .setVersion(version)
                 .build()
         )
         Assert.assertEquals(res.type, DeletePropertyResponse.Type.OK)
