@@ -46,6 +46,9 @@
                 </table>
                 <router-link class="btn btn-success" v-bind:to="{path: '/updateProperty', query: {applicationName: appName, propertyName: propertyName}}">Add value for new host</router-link>
               </div>
+              <div v-else>
+                {{ Object.keys(byName.byHost).length }} variation(s).
+              </div>
             </td>
           </tr>
           </tbody>
