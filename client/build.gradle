@@ -1,3 +1,7 @@
+plugins {
+    id 'maven-publish'
+}
+
 dependencies {
     compile project(':sdk')
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.1'
@@ -22,3 +26,27 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'com.letsconfig'
+            artifactId = 'client'
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            url mavenUrl
+            credentials {
+                username mavenLogin
+                password mavenPassword
+            }
+        }
+    }
+}
