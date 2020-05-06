@@ -40,6 +40,9 @@ protobuf {
     }
 }
 
+targetCompatibility = "1.8"
+sourceCompatibility = "1.8"
+
 java {
     withJavadocJar()
     withSourcesJar()
@@ -65,5 +68,5 @@ publishing {
     }
 }
 
-version = 0.1
+version = "0.0.1"
 
