@@ -1,6 +1,9 @@
 plugins {
     id 'com.bmuschko.docker-java-application' version '6.4.0'
+    id 'com.bmuschko.docker-remote-api' version '6.4.0'
 }
+
+import com.bmuschko.gradle.docker.tasks.image.*
 
 apply plugin: 'application'
 
@@ -41,12 +44,66 @@ run {
 
 version = "0.0.1"
 
-docker {
-    javaApplication {
-        baseImage = 'openjdk:12'
-        ports = [8188]
-        images = ["letsconfig-dashboard:${version}", 'letsconfig-dashboard:latest']
+//dev
+task createDevDockerfile(type: Dockerfile) {
+    destFile = project.file("$buildDir/docker-dev/Dockerfile")
+    from 'openjdk:12'
+    addFile("dashboard", "/dashboard")
+    entryPoint "/dashboard/bin/dashboard"
+    exposePort(8188)
+}
+
+task dockerPrepareDevCtx(type: Copy) {
+    dependsOn ("installDist", "createDevDockerfile")
+    from "$buildDir/install/dashboard"
+    into "$buildDir/docker-dev/dashboard"
+}
+
+task dockerBuildDevImage(type: DockerBuildImage) {
+    inputDir = project.file("$buildDir/docker-dev")
+    dependsOn ("dockerPrepareDevCtx")
+    images.set(["letsconfig-dashboard-dev:${version}", 'letsconfig-dashboard-dev:latest'])
+}
+
+// default
+task dockerCreateDefaulfile(type: Dockerfile) {
+    destFile = project.file("$buildDir/docker-default/Dockerfile")
+    from 'openjdk:12'
+    addFile("dashboard", "/dashboard")
+    entryPoint "/dashboard/bin/dashboard"
+    exposePort(8188)
+    environmentVariable("serve.static", "true")
+}
+
+task buildFrontend {
+    doLast {
+        exec {
+            workingDir "frontend"
+            commandLine = ["npm", "run", "build"]
+        }
     }
+}
+
+task dockerPrepareDefaultCtx {
+    dependsOn ("dockerCreateDefaulfile", "installDist", "buildFrontend")
+    doLast {
+        project.copy {
+            from "$buildDir/install/dashboard"
+            into "$buildDir/docker-default/dashboard"
+        }
+    }
+    doLast {
+        project.copy {
+            from "frontend/dist"
+            into "$buildDir/docker-default/dashboard/frontend"
+        }
+    }
+}
+
+task dockerBuildDefaultImage(type: DockerBuildImage) {
+    inputDir = project.file("$buildDir/docker-default")
+    dependsOn "dockerPrepareDefaultCtx"
+    images.set(["letsconfig-dashboard:${version}", 'letsconfig-dashboard:latest'])
 }
 
 test.dependsOn (":server:dockerBuildImage")

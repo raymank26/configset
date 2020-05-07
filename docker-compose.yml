@@ -10,7 +10,7 @@ services:
       - "DB_TYPE=POSTGRES"
       - "JDBC_URL=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
   dashboard:
-    image: "letsconfig-dashboard"
+    image: "letsconfig-dashboard-dev"
     ports:
       - "8188:8188"
     environment:

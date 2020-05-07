@@ -14,7 +14,7 @@ import org.koin.dsl.module
 val mainModule = module {
 
     single {
-        val server = JavalinServer(get(), getProperty("dashboard.port"), get(), get())
+        val server = JavalinServer(get(), getProperty("dashboard.port"), get(), get(), getProperty("serve.static"))
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {

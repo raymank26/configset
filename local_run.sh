@@ -1,3 +1,3 @@
 ./gradlew server:dockerBuildImage &&
-  ./gradlew dashboard:dockerBuildImage &&
+  ./gradlew dashboard:dockerBuildDevImage &&
   docker-compose up
