@@ -18,6 +18,7 @@ class WatchObserver(
 
     override fun onNext(value: PropertiesChangesResponse) {
         val updates: MutableList<PropertyItem> = ArrayList()
+        val lastVersion = value.lastVersion
         for (propertyItemProto in value.itemsList) {
             if (propertyItemProto.updateType == com.letsconfig.sdk.proto.PropertyItem.UpdateType.DELETE) {
                 updates.add(PropertyItem.Deleted(propertyItemProto.applicationName,
@@ -27,7 +28,7 @@ class WatchObserver(
                         propertyItemProto.propertyName, propertyItemProto.version, propertyItemProto.propertyValue))
             }
         }
-        onUpdate.invoke(value.applicationName, updates, updates.maxBy { it.version }?.version ?: 0)
+        onUpdate.invoke(value.applicationName, updates, lastVersion)
     }
 
     override fun onError(t: Throwable?) {

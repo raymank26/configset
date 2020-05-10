@@ -5,4 +5,4 @@
 #mavenLogin=
 #mavenPassword=
 
-/gradlew sdk:publish && /gradlew client:publish
+./gradlew sdk:publish && ./gradlew client:publish

@@ -41,15 +41,15 @@ class GrpcConfigurationRepository(
 
     @Synchronized
     override fun start() {
-        channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
-                .usePlaintext()
-                .build()
-        asyncClient = ConfigurationServiceGrpc.newStub(channel)
-        blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
-
         watchObserver = WatchObserver(
                 onUpdate = { appName, updates, lastVersion ->
                     val watchState: WatchState = appWatchMappers[appName]!!
+                    if (lastVersion <= watchState.lastVersion) {
+                        log.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
+                                "received = ${lastVersion}," +
+                                "applicationName = $appName")
+                        return@WatchObserver
+                    }
                     val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
                     if (filteredUpdates.size != updates.size) {
                         log.debug("Some updates where filtered (they are obsolete)" +
@@ -69,15 +69,26 @@ class GrpcConfigurationRepository(
                 onEnd = {
                     thread {
                         log.info("Resubscribe started, waiting for 2 seconds")
+                        try {
+                            channel.shutdownNow()
+                        } catch (e: Exception) {
+                            log.warn("Exception during shutdown", e)
+                        }
                         Thread.sleep(2000)
-                        subscribe()
+                        initialize()
                     }
                 })
-        subscribe()
+        initialize()
     }
 
     @Synchronized
-    private fun subscribe() {
+    private fun initialize() {
+        channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
+                .usePlaintext()
+                .build()
+        asyncClient = ConfigurationServiceGrpc.newStub(channel)
+        blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
+
         subscribeObserver = asyncClient.watchChanges(watchObserver)
         for (watchState in appWatchMappers) {
             val subscribeRequest = SubscribeApplicationRequest
