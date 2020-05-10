@@ -6,10 +6,7 @@
           <div class="form-row align-items-center">
             <div class="col-auto">
               <label class="mr-sm-2 sr-only" for="appSelect">Application</label>
-              <select class="custom-select" id="appSelect" v-model="searchApplicationName">
-                <option selected value="">Select application</option>
-                <option v-for="app in applications">{{ app }}</option>
-              </select>
+              <application-select :always-show-options="true" id="appSelect" v-model="searchApplicationName"/>
             </div>
             <div class="col-auto">
               <input class="form-control" placeholder="Host name" type="text" v-model="searchHost">
@@ -45,10 +42,11 @@
   import {Component, Prop, Vue} from 'vue-property-decorator'
   import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
   import PropertiesTable from "@/components/PropertiesTable.vue";
-  import {applicationService, searchService} from "@/service/services";
+  import {searchService} from "@/service/services";
+  import ApplicationSelect from "@/components/ApplicationSelect.vue";
 
   @Component({
-      components: {PropertiesTable}
+      components: {ApplicationSelect, PropertiesTable}
     }
   )
   export default class Search extends Vue {
@@ -56,8 +54,6 @@
     @Prop() private propSearchHost!: string | null;
     @Prop() private propSearchPropertyName!: string | null;
     @Prop() private propSearchPropertyValue!: string | null;
-
-    private applications: string[] = [];
 
     private searchApplicationName: string | null = "";
     private searchHost: string | null = null;
@@ -71,10 +67,6 @@
       this.searchHost = this.propSearchHost;
       this.searchPropertyName = this.propSearchPropertyName;
       this.searchPropertyValue = this.propSearchPropertyValue;
-
-      applicationService.listApplications().then(apps => {
-        this.applications = apps;
-      });
 
       this.showProperties()
     }

@@ -20,14 +20,18 @@
     value?: string | null;
 
     @Prop()
-    invalid?: boolean;
+    invalid: boolean;
+
+    @Prop()
+    alwaysShowOptions: boolean;
 
     created() {
-      if (this.value) {
+      console.log(this.alwaysShowOptions);
+      if (this.value && !this.alwaysShowOptions) {
         this.appName = this.value;
         this.applications = [this.value];
       } else {
-        this.appName = "";
+        this.appName = this.value || "";
         applicationService.listApplications().then(apps => {
           this.applications = apps;
         });

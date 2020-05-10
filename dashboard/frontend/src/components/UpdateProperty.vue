@@ -12,10 +12,7 @@ import {UpdateResult} from "@/service/PropertyService";
           <form @submit="submitApp" novalidate ref="appForm">
             <div class="form-group">
               <label for="appName">Application name</label>
-              <select class="custom-select" id="appName" required v-model="appName">
-                <option value="">Select application</option>
-                <option v-for="app in applications">{{ app }}</option>
-              </select>
+              <application-select :always-show-options="true" id="appName" v-model="appName"/>
               <div class="invalid-feedback">
                 Application is not selected
               </div>
@@ -79,13 +76,14 @@ import {UpdateResult} from "@/service/PropertyService";
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator'
-  import {applicationService, propertyService, searchService} from "@/service/services";
+  import {propertyService, searchService} from "@/service/services";
   import {UpdateResult} from "@/service/PropertyService";
+  import ApplicationSelect from "@/components/ApplicationSelect.vue";
 
-  @Component
+  @Component({
+    components: {ApplicationSelect}
+  })
   export default class UpdateProperty extends Vue {
-    applications: string[] = [];
-
     appName: string = "";
     propertyName: string = "";
     hostName: string = "";
@@ -103,7 +101,6 @@ import {UpdateResult} from "@/service/PropertyService";
         this.appName = query.applicationName;
         this.propertyName = query.propertyName;
         this.hostName = query.hostName;
-        this.applications = [this.appName];
 
         if (this.appName && this.hostName && this.propertyName) {
           propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(result => {
@@ -118,11 +115,6 @@ import {UpdateResult} from "@/service/PropertyService";
         } else {
           this.loading = false;
         }
-      } else {
-        applicationService.listApplications().then(apps => {
-          this.applications = apps;
-          this.loading = false;
-        });
       }
     }
 
