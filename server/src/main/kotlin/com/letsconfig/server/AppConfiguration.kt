@@ -11,18 +11,18 @@ class AppConfiguration {
     }
 
     fun getDaoType(): DaoType {
-        return when (readFromEnv("DB_TYPE", "MEMORY")) {
-            "POSTGRES" -> DaoType.POSTGRES
+        return when (readFromEnv("db_type", "memory")) {
+            "postgres" -> DaoType.POSTGRES
             else -> DaoType.IN_MEMORY
         }
     }
 
     fun getJdbcUrl(): String {
-        return readFromEnv("JDBC_URL")
+        return readFromEnv("jdbc_url")
     }
 
     fun getUpdateDelayMs(): Long {
-        return readFromEnv("UPDATE_DELAY_MS", "4000").toLong()
+        return readFromEnv("update_delay_ms", "4000").toLong()
     }
 
     fun grpcPort(): Int {

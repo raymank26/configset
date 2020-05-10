@@ -165,6 +165,22 @@ abstract class AbstractConfigurationDaoTest {
                 applicationName = TEST_APP_NAME, name = "name", value = "value3", version = 3)
     }
 
+    @Test
+    fun getSnapshot() {
+        dao.createApplication(createRequestId(), TEST_APP_NAME) shouldBeEqualTo CreateApplicationResult.OK
+        dao.createHost(createRequestId(), TEST_HOST) shouldBeEqualTo HostCreateResult.OK
+        dao.createHost(createRequestId(), "srvd2") shouldBeEqualTo HostCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name2", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+        dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd2", "name", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
+
+        dao.getConfigurationSnapshotList().sortedBy { it.name }.sortedBy { it.hostName } shouldBeEqualTo listOf(
+                PropertyItem.Updated(TEST_APP_NAME, "name", TEST_HOST, 1, "value"),
+                PropertyItem.Updated(TEST_APP_NAME, "name2", TEST_HOST, 2, "value2"),
+                PropertyItem.Updated(TEST_APP_NAME, "name", "srvd2", 3, "value2")
+        )
+    }
+
     private fun testIdempotent(call: () -> Unit) {
         call.invoke()
         call.invoke()

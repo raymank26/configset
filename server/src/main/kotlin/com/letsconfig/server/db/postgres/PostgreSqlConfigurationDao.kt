@@ -147,7 +147,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 val propertyItem = if (property.deleted) {
                     PropertyItem.Deleted(app.name, property.name, host.name, property.version)
                 } else {
-                    PropertyItem.Updated(app.name, property.name, property.value, property.version, host.name)
+                    PropertyItem.Updated(app.name, property.name, host.name, property.version, property.value)
                 }
                 res.add(propertyItem)
             }

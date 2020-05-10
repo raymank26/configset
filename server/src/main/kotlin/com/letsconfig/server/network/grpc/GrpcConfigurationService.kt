@@ -180,7 +180,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                     WatchRequest.Type.SUBSCRIBE_APPLICATION -> {
                         val subscribeRequest = value.subscribeApplicationRequest
                         log.debug("Subscriber with id = $subscriberId call subscribe for app = ${subscribeRequest.applicationName}" +
-                                " and lastVersion = ${subscribeRequest.lastKnownVersion}")
+                                ", lastVersion = ${subscribeRequest.lastKnownVersion}" +
+                                ", hostName = ${subscribeRequest.hostName}")
                         val changesToPush = configurationService.subscribeApplication(subscriberId, subscribeRequest.defaultApplicationName, subscribeRequest.hostName,
                                 subscribeRequest.applicationName, subscribeRequest.lastKnownVersion)
                         if (!subscribed) {

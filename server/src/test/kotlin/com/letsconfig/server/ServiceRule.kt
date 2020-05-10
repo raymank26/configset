@@ -22,6 +22,7 @@ import com.letsconfig.server.network.grpc.GrpcConfigurationService
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.stub.StreamObserver
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
 import org.junit.rules.ExternalResource
 import java.util.*
@@ -29,6 +30,7 @@ import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
 
 const val TEST_APP_NAME = "test-app"
+const val TEST_DEFAULT_APP_NAME = "my-app"
 const val TEST_HOST = "srvd1"
 
 
@@ -65,10 +67,14 @@ class ServiceRule : ExternalResource() {
 
     private fun startServer() {
         grpcConfServer.start()
-        val res = blockingClient.createHost(CreateHostRequest.newBuilder()
+        blockingClient.createHost(CreateHostRequest.newBuilder()
                 .setRequestId(createRequestId())
-                .setHostName(TEST_HOST).build())
-        Assert.assertEquals(CreateHostResponse.Type.OK, res.type)
+                .setHostName(TEST_HOST).build()).type shouldBeEqualTo CreateHostResponse.Type.OK
+
+        blockingClient.createHost(CreateHostRequest.newBuilder()
+                .setRequestId(createRequestId())
+                .setHostName("host-$TEST_DEFAULT_APP_NAME").build()).type shouldBeEqualTo CreateHostResponse.Type.OK
+
         subscribeStream = asyncClient.watchChanges(object : StreamObserver<PropertiesChangesResponse> {
             override fun onNext(value: PropertiesChangesResponse) {
                 changesQueue.add(value)
@@ -130,7 +136,7 @@ class ServiceRule : ExternalResource() {
                 .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
                 .setSubscribeApplicationRequest(SubscribeApplicationRequest.newBuilder()
                         .setApplicationName(TEST_APP_NAME)
-                        .setDefaultApplicationName("my-app")
+                        .setDefaultApplicationName(TEST_DEFAULT_APP_NAME)
                         .setHostName(TEST_HOST)
                         .setLastKnownVersion(lastKnownVersion ?: 0)
                         .build())

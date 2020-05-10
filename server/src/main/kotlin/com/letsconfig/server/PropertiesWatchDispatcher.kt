@@ -1,9 +1,11 @@
 package com.letsconfig.server
 
-import com.letsconfig.sdk.extension.createLogger
+import com.letsconfig.sdk.extension.createLoggerStatic
 import com.letsconfig.server.db.ConfigurationApplication
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.ConfigurationProperty
+
+private val LOG = createLoggerStatic<PropertiesWatchDispatcher>()
 
 class PropertiesWatchDispatcher(
         private val configurationDao: ConfigurationDao,
@@ -15,7 +17,6 @@ class PropertiesWatchDispatcher(
     private val subscriptions: MutableMap<SubscriberId, ObserverState> = mutableMapOf()
 
     private var configurationSnapshot: Map<String, ConfigurationApplication> = mapOf()
-    private val log = createLogger()
 
     fun start() {
         scheduler.scheduleWithFixedDelay(updateDelayMs, updateDelayMs) {
@@ -28,20 +29,19 @@ class PropertiesWatchDispatcher(
     fun subscribeApplication(subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
                              lastKnownVersion: Long?): PropertiesChanges? {
 
-        val defaultHostName = toDefaultHostname(defaultApplication)
         val changes = configurationResolver.getChanges(configurationSnapshot, applicationName, hostName,
                 defaultApplication, lastKnownVersion)
 
         subscriptions.compute(subscriberId) { _, value ->
             val newAppState = ApplicationState(applicationName, lastKnownVersion)
             if (value == null) {
-                ObserverState(hostName = hostName, defaultHostName = defaultHostName, applications = setOf(newAppState),
+                ObserverState(hostName = hostName, defaultApplicationName = defaultApplication, applications = setOf(newAppState),
                         watchSubscriber = null)
             } else {
                 require(hostName == value.hostName)
-                require(defaultApplication == value.defaultHostName)
+                require(defaultApplication == value.defaultApplicationName)
                 val updatedApps = value.applications.filter { it.appName != applicationName }.plus(newAppState).toSet()
-                ObserverState(hostName = hostName, defaultHostName = defaultApplication, applications = updatedApps,
+                ObserverState(hostName = hostName, defaultApplicationName = defaultApplication, applications = updatedApps,
                         watchSubscriber = null)
             }
         }
@@ -56,7 +56,7 @@ class PropertiesWatchDispatcher(
             value.watchSubscriber = subscriber
             value
         }
-        log.info("Subscriber with id = ${subscriber.getId()} is connected to watch")
+        LOG.info("Subscriber with id = ${subscriber.getId()} is connected to watch")
     }
 
     @Synchronized
@@ -66,11 +66,14 @@ class PropertiesWatchDispatcher(
 
     @Synchronized
     private fun update() {
-        configurationSnapshot = listToMapping(configurationDao.getConfigurationSnapshotList())
+        val properties = configurationDao.getConfigurationSnapshotList()
+        LOG.debug("Properties size in memory = ${properties.size}")
+        configurationSnapshot = listToMapping(properties)
         pushToClients()
     }
 
     private fun listToMapping(properties: List<PropertyItem>): Map<String, ConfigurationApplication> {
+        LOG.debug("Properties = $properties")
         return properties
                 .groupBy { it.applicationName }
                 .mapValues { entry ->
@@ -89,40 +92,38 @@ class PropertiesWatchDispatcher(
 
             for (appState: ApplicationState in observerState.applications) {
                 val changes = configurationResolver.getChanges(configurationSnapshot, appState.appName,
-                        observerState.hostName, observerState.defaultHostName, appState.lastVersion)
+                        observerState.hostName, observerState.defaultApplicationName, appState.lastVersion)
                 if (changes != null && changes.propertyItems.isNotEmpty()) {
-                    log.debug("Found changes with size = ${changes.propertyItems.size}" +
-                            " and lastVersion = ${changes.lastVersion}" +
-                            ", subscriberId = ${watchSubscriber.getId()}" +
-                            ", prevVersion = ${appState.lastVersion}")
+                    if (LOG.isDebugEnabled) {
+                        LOG.debug("Found changes with size = ${changes.propertyItems.size}" +
+                                " and lastVersion = ${changes.lastVersion}" +
+                                ", subscriberId = ${watchSubscriber.getId()}" +
+                                ", prevVersion = ${appState.lastVersion}")
+                    }
                     watchSubscriber.pushChanges(appState.appName, changes)
                 }
             }
         }
     }
 
-    private fun toDefaultHostname(defaultApplicationName: String): String {
-        return "host-$defaultApplicationName"
-    }
-
     @Synchronized
     fun updateVersion(subscriberId: String, applicationName: String, version: Long) {
         val subscription = subscriptions[subscriberId]
         if (subscription == null) {
-            log.warn("Unable to find subscription for subscriber = $subscriberId")
+            LOG.warn("Unable to find subscription for subscriber = $subscriberId")
             return
         }
         val appSubscription = subscription.applications.find { it.appName == applicationName }
         if (appSubscription == null) {
-            log.warn("Unable to find app subscription for subscriber = $subscriberId, app = $applicationName")
+            LOG.warn("Unable to find app subscription for subscriber = $subscriberId, app = $applicationName")
             return
         }
         if (appSubscription.lastVersion != null && version <= appSubscription.lastVersion!!) {
-            log.debug("Incoming version is obsolete for subscriber = $subscriberId, app = $applicationName")
+            LOG.debug("Incoming version is obsolete for subscriber = $subscriberId, app = $applicationName")
             return
         }
         appSubscription.lastVersion = version
-        log.debug("Version updated for for subscriber = $subscriberId, app = $applicationName")
+        LOG.debug("Version updated for for subscriber = $subscriberId, app = $applicationName")
     }
 }
 
@@ -130,7 +131,7 @@ private typealias SubscriberId = String
 
 private data class ObserverState(
         val hostName: String,
-        val defaultHostName: String,
+        val defaultApplicationName: String,
         val applications: Set<ApplicationState>,
         var watchSubscriber: WatchSubscriber?
 )
