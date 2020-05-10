@@ -41,6 +41,10 @@ run {
     jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5004"]
 }
 
+application {
+    applicationDefaultJvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5555"]
+}
+
 
 version = "0.0.1"
 
