@@ -11,7 +11,7 @@ export default class SearchService {
 
   searchPush(searchParams: SearchParams) {
     router.push({
-      path: "/search",
+      path: "search",
       query: this.prepareParams(searchParams)
     })
   }

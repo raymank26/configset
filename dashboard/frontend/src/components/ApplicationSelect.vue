@@ -20,10 +20,10 @@
     value?: string | null;
 
     @Prop()
-    invalid: boolean;
+    invalid!: boolean;
 
     @Prop()
-    alwaysShowOptions: boolean;
+    alwaysShowOptions!: boolean;
 
     created() {
       console.log(this.alwaysShowOptions);

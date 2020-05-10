@@ -9,7 +9,7 @@ import {UpdateResult} from "@/service/PropertyService";
     <div v-if="!loading">
       <div class="row">
         <div class="col-4">
-          <form @submit="submitApp" novalidate ref="appForm">
+          <form @submit.prevent="submitApp" novalidate ref="appForm">
             <div class="form-group">
               <label for="appName">Application name</label>
               <application-select :always-show-options="true" id="appName" v-model="appName"/>

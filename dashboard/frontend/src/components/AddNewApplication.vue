@@ -7,7 +7,7 @@
     </div>
     <div class="row">
       <div class="col-4">
-        <form @submit="submitApp" novalidate ref="appForm">
+        <form @submit.prevent="submitApp" novalidate ref="appForm">
           <div class="form-group">
             <label for="appName">Application name</label>
             <input class="form-control" id="appName" pattern="[A-Za-z-]+" required type="text" v-model="appName">
@@ -33,7 +33,7 @@
 
     appName: string | null = null;
 
-    submitApp(e: any) {
+    submitApp() {
       let form = this.$refs['appForm'] as HTMLFormElement;
       let isValid = form.checkValidity();
       form.classList.add('was-validated');
@@ -41,10 +41,8 @@
       if (isValid) {
         applicationService.createApplication(this.appName!)
           .then(() => {
-            this.$router.push("/applications");
+            this.$router.push("applications");
           });
-      } else {
-        e.preventDefault();
       }
     }
   }

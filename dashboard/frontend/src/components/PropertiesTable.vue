@@ -118,7 +118,7 @@
 
     updateProperty(property: ShowPropertyItem) {
       this.$router.push({
-        path: "/updateProperty",
+        path: "updateProperty",
         query: {
           applicationName: property.applicationName,
           hostName: property.hostName,
