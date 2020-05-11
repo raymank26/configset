@@ -119,7 +119,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             if (property.version != version) {
                 return@cb PersistResult(false, DeletePropertyResult.DeleteConflict)
             }
-            access.markPropertyAsDeleted(property.id!!)
+            access.markPropertyAsDeleted(property.id!!, app.lastVersion + 1)
             access.incrementAppVersion(app.id)
             PersistResult(true, DeletePropertyResult.OK)
         }
@@ -246,8 +246,8 @@ private interface JdbiAccess {
                        @Bind("deleted") deleted: Boolean, @Bind("modifiedMs") modifiedMs: Long, @Bind("appId") appId: Long,
                        @Bind("name") name: String, @Bind("hostId") hostId: Long)
 
-    @SqlUpdate("update ConfigurationProperty SET deleted = true where id = :id")
-    fun markPropertyAsDeleted(@Bind("id") id: Long)
+    @SqlUpdate("update ConfigurationProperty SET deleted = true, version = :version where id = :id")
+    fun markPropertyAsDeleted(@Bind("id") id: Long, @Bind("version") version: Long)
 
     @SqlQuery("select * from ConfigurationProperty")
     fun selectAllProperties(): List<PropertyItemED>

@@ -67,13 +67,13 @@ class PropertiesWatchDispatcher(
     @Synchronized
     private fun update() {
         val properties = configurationDao.getConfigurationSnapshotList()
-        LOG.debug("Properties size in memory = ${properties.size}")
+        LOG.trace("Properties size in memory = ${properties.size}")
         configurationSnapshot = listToMapping(properties)
         pushToClients()
     }
 
     private fun listToMapping(properties: List<PropertyItem>): Map<String, ConfigurationApplication> {
-        LOG.debug("Properties = $properties")
+        LOG.trace("Properties = $properties")
         return properties
                 .groupBy { it.applicationName }
                 .mapValues { entry ->

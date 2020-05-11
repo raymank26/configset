@@ -9,6 +9,7 @@ import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.TEST_APP_NAME
 import com.letsconfig.server.TEST_HOST
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeInstanceOf
 import org.junit.Before
 import org.junit.Test
 import java.util.*
@@ -91,6 +92,13 @@ abstract class AbstractConfigurationDaoTest {
         dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", "value", null) shouldBeEqualTo PropertyCreateResult.OK
         dao.deleteProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name", 1) shouldBeEqualTo DeletePropertyResult.OK
         dao.listProperties(TEST_APP_NAME) shouldBeEqualTo listOf()
+
+        val snapshot = dao.getConfigurationSnapshotList()
+        snapshot.size shouldBeEqualTo 1
+
+        val first = snapshot.first()
+        first shouldBeInstanceOf PropertyItem.Deleted::class.java
+        first.version shouldBeEqualTo 2
     }
 
     @Test

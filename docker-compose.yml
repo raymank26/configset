@@ -9,6 +9,7 @@ services:
     environment:
       - "db_type=postgres"
       - "jdbc_url=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
+      - "log.level=DEBUG"
   dashboard:
     image: "letsconfig-dashboard-dev"
     ports:
