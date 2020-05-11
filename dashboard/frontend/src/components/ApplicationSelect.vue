@@ -26,14 +26,22 @@
     alwaysShowOptions!: boolean;
 
     created() {
-      console.log(this.alwaysShowOptions);
       if (this.value && !this.alwaysShowOptions) {
         this.appName = this.value;
         this.applications = [this.value];
       } else {
-        this.appName = this.value || "";
         applicationService.listApplications().then(apps => {
           this.applications = apps;
+          if (this.value) {
+            this.appName = this.value;
+          } else if (apps.length == 1) {
+            this.appName = apps[0];
+          } else {
+            this.appName = "";
+          }
+          if (this.appName) {
+            this.$emit("input", this.appName);
+          }
         });
       }
     }
