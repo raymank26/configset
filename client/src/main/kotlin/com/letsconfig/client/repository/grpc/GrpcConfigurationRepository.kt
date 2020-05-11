@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
 
 private const val INITIAL_TIMEOUT_SEC: Long = 10L
+private const val UNKNOWN_VERSION: Long = -1
 
 class GrpcConfigurationRepository(
         private val applicationHostname: String,
@@ -109,7 +110,7 @@ class GrpcConfigurationRepository(
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
         synchronized(this) {
-            appWatchMappers[appName] = WatchState(appName, 0, currentObservable)
+            appWatchMappers[appName] = WatchState(appName, UNKNOWN_VERSION, currentObservable)
             val subscribeRequest = SubscribeApplicationRequest
                     .newBuilder()
                     .setApplicationName(appName)

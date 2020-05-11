@@ -55,12 +55,14 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
 
         proxy = toxiproxyContainer?.getProxy(container, INTERNAL_PORT)
         val backendHost = proxy?.containerIpAddress ?: "localhost"
-        val backendPort = proxy?.proxyPort ?: container.getMappedPort(INTERNAL_PORT)
+        val mappedPort = container.getMappedPort(INTERNAL_PORT)
+
+        val backendPort = proxy?.proxyPort ?: mappedPort
         metrics = TestMetrics()
         registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOST_NAME,
                 DEFAULT_APP_NAME, backendHost, backendPort, metrics))
 
-        crudChannel = ManagedChannelBuilder.forAddress("localhost", container.getMappedPort(INTERNAL_PORT))
+        crudChannel = ManagedChannelBuilder.forAddress("localhost", mappedPort)
                 .usePlaintext()
                 .build()
         crudClient = ConfigurationServiceGrpc.newBlockingStub(crudChannel)
