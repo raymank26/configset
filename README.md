@@ -1,3 +1,5 @@
+![CI](https://github.com/letsconfig/letsconfig/workflows/CI/badge.svg)
+
 # Overview
 
 The project aims to bring the feature of runtime configuration to masses. 
