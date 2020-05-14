@@ -46,7 +46,8 @@ class DashboardRule : ExternalResource() {
         }.properties(mapOf(
                 Pair("config_server.hostname", "localhost"),
                 Pair("config_server.port", configServiceContainer.getMappedPort(INTERNAL_PORT)),
-                Pair("dashboard.port", 9299)
+                Pair("dashboard.port", 9299),
+                Pair("serve.static", false)
         ))
         val server = koinApp.koin.get<JavalinServer>()
         server.start()

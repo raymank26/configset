@@ -1,12 +1,21 @@
 buildscript {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+    def localProperties = {
+        Properties properties = new Properties()
+        def file = project.rootProject.file('local.properties')
+        if (file.exists()) {
+            properties.load(file.newDataInputStream())
+        } else {
+            logger.info("Unable to find file 'local.properties' in project directory")
+        }
+        properties
+    }()
 
     ext {
         kotlin_version = '1.3.72'
-        mavenUrl = properties.getProperty("mavenUrl")
-        mavenLogin = properties.getProperty("mavenLogin")
-        mavenPassword = properties.getProperty("mavenPassword")
+        mavenUrl = localProperties.getProperty("mavenUrl")
+        mavenLogin = localProperties.getProperty("mavenLogin")
+        mavenPassword = localProperties.getProperty("mavenPassword")
     }
     repositories {
         mavenCentral()
