@@ -6,7 +6,6 @@
 /dashboard/dist/
 /.idea
 *.swp*
-/gradle
 /.gradle
 /out
 node_modules/
