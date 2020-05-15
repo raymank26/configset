@@ -195,6 +195,7 @@
   }
 
   .property-value-content {
+    white-space: pre-line;
     max-width: 600px;
   }
 </style>

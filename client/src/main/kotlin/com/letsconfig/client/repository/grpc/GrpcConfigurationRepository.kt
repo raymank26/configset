@@ -34,7 +34,6 @@ class GrpcConfigurationRepository(
 
     private val log = createLogger()
     private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
-    private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     private lateinit var channel: ManagedChannel
     private lateinit var subscribeObserver: StreamObserver<WatchRequest>
     private lateinit var watchObserver: WatchObserver
@@ -88,9 +87,9 @@ class GrpcConfigurationRepository(
                 .usePlaintext()
                 .build()
         asyncClient = ConfigurationServiceGrpc.newStub(channel)
-        blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
 
-        subscribeObserver = asyncClient.watchChanges(watchObserver)
+        subscribeObserver = asyncClient
+                .watchChanges(watchObserver)
         for (watchState in appWatchMappers) {
             val subscribeRequest = SubscribeApplicationRequest
                     .newBuilder()
