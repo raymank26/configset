@@ -1,6 +1,5 @@
 package com.letsconfig.dashboard
 
-import com.letsconfig.sdk.extension.createLoggerStatic
 import com.letsconfig.sdk.proto.ApplicationCreateRequest
 import com.letsconfig.sdk.proto.ApplicationCreatedResponse
 import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
@@ -15,12 +14,12 @@ import com.letsconfig.sdk.proto.UpdatePropertyRequest
 import com.letsconfig.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
-
-private val LOG = createLoggerStatic<ServerApiGateway>()
+import java.util.concurrent.TimeUnit
 
 class ServerApiGateway(
         private val serverHostname: String,
-        private val serverPort: Int) {
+        private val serverPort: Int,
+        private val networkTimeout: Long) {
 
     private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     private lateinit var channel: ManagedChannel
@@ -33,7 +32,7 @@ class ServerApiGateway(
     }
 
     fun createApplication(requestId: String, appName: String): CreateApplicationResult {
-        val res = blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+        val res = withDeadline().createApplication(ApplicationCreateRequest.newBuilder()
                 .setRequestId(requestId)
                 .setApplicationName(appName)
                 .build()
@@ -47,18 +46,18 @@ class ServerApiGateway(
     }
 
     fun listApplications(): List<String> {
-        val response = blockingClient.listApplications(EmptyRequest.getDefaultInstance())
+        val response = withDeadline().listApplications(EmptyRequest.getDefaultInstance())
         return response.applicationsList.map { it }
     }
 
     fun listHosts(): List<String> {
-        return blockingClient.listHosts(EmptyRequest.getDefaultInstance())
+        return withDeadline().listHosts(EmptyRequest.getDefaultInstance())
                 .hostNamesList
                 .map { it }
     }
 
     fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
-        val response = blockingClient.searchProperties(com.letsconfig.sdk.proto.SearchPropertiesRequest
+        val response = withDeadline().searchProperties(com.letsconfig.sdk.proto.SearchPropertiesRequest
                 .newBuilder()
                 .apply {
                     if (searchPropertiesRequest.applicationName != null) {
@@ -93,7 +92,7 @@ class ServerApiGateway(
     }
 
     fun createHost(requestId: String, hostName: String): CreateHostResult {
-        val response = blockingClient.createHost(CreateHostRequest.newBuilder()
+        val response = withDeadline().createHost(CreateHostRequest.newBuilder()
                 .setRequestId(requestId)
                 .setHostName(hostName)
                 .build())
@@ -105,7 +104,7 @@ class ServerApiGateway(
     }
 
     fun readProperty(appName: String, hostName: String, propertyName: String): PropertyItem? {
-        val response = blockingClient.readProperty(ReadPropertyRequest.newBuilder()
+        val response = withDeadline().readProperty(ReadPropertyRequest.newBuilder()
                 .setApplicationName(appName)
                 .setHostName(hostName)
                 .setPropertyName(propertyName)
@@ -118,7 +117,7 @@ class ServerApiGateway(
     }
 
     fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, propertyValue: String, version: Long?): PropertyCreateResult {
-        val response = blockingClient.updateProperty(UpdatePropertyRequest.newBuilder()
+        val response = withDeadline().updateProperty(UpdatePropertyRequest.newBuilder()
                 .setRequestId(requestId)
                 .setApplicationName(appName)
                 .setHostName(hostName)
@@ -137,7 +136,7 @@ class ServerApiGateway(
     }
 
     fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): PropertyDeleteResult {
-        val response = blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+        val response = withDeadline().deleteProperty(DeletePropertyRequest.newBuilder()
                 .setRequestId(requestId)
                 .setApplicationName(appName)
                 .setHostName(hostName)
@@ -151,6 +150,10 @@ class ServerApiGateway(
             DeletePropertyResponse.Type.DELETE_CONFLICT -> PropertyDeleteResult.DeleteConflict
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
+    }
+
+    private fun withDeadline(): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
+        return blockingClient.withDeadlineAfter(networkTimeout, TimeUnit.MILLISECONDS)
     }
 
     fun stop() {
