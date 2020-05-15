@@ -71,9 +71,7 @@ class ServiceRule : ExternalResource() {
                 .setRequestId(createRequestId())
                 .setHostName(TEST_HOST).build()).type shouldBeEqualTo CreateHostResponse.Type.OK
 
-        blockingClient.createHost(CreateHostRequest.newBuilder()
-                .setRequestId(createRequestId())
-                .setHostName("host-$TEST_DEFAULT_APP_NAME").build()).type shouldBeEqualTo CreateHostResponse.Type.OK
+        createHost("host-$TEST_DEFAULT_APP_NAME")
 
         subscribeStream = asyncClient.watchChanges(object : StreamObserver<PropertiesChangesResponse> {
             override fun onNext(value: PropertiesChangesResponse) {
@@ -103,6 +101,12 @@ class ServiceRule : ExternalResource() {
                 .setApplicationName(app)
                 .build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, res.type)
+    }
+
+    fun createHost(hostName: String) {
+        blockingClient.createHost(CreateHostRequest.newBuilder()
+                .setRequestId(createRequestId())
+                .setHostName(hostName).build()).type shouldBeEqualTo CreateHostResponse.Type.OK
     }
 
     fun updateProperty(appName: String, hostName: String, version: Long?, propertyName: String, propertyValue: String) {

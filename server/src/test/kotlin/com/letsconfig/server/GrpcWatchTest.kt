@@ -32,9 +32,11 @@ class GrpcWatchTest {
         serviceRule.subscribeTestApplication(lastKnownVersion = null)
 
         serviceRule.createApplication(TEST_APP_NAME)
+        serviceRule.createHost("srvd2")
 
         serviceRule.updateProperty(TEST_APP_NAME, "srvd1", 1, "name", "value")
-        serviceRule.updateProperty(TEST_APP_NAME, "srvd1", 2, "name2", "value2")
+        serviceRule.updateProperty(TEST_APP_NAME, "host-$TEST_DEFAULT_APP_NAME", 2, "name2", "value2")
+        serviceRule.updateProperty(TEST_APP_NAME, "srvd2", 3, "name3", "value3") // should be skipped
 
         val receivedItems = serviceRule.watchForChanges(1, 5000).first().itemsList
         receivedItems.size shouldBeEqualTo 2
