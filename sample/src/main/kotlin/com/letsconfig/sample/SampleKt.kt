@@ -6,10 +6,15 @@ import com.letsconfig.client.ConfigurationRegistry
 import com.letsconfig.client.ConfigurationRegistryFactory
 import com.letsconfig.client.ConfigurationTransport
 import com.letsconfig.client.converter.Converters
+import com.letsconfig.sdk.extension.createLoggerStatic
 import java.util.concurrent.Semaphore
 
 private const val BILLING_APP = "billing"
 private const val DEFAULT_PRICE = 10
+
+object SampleKt
+
+private val LOG = createLoggerStatic<SampleKt>()
 
 fun main() {
     val semaphore = Semaphore(0)
@@ -24,10 +29,10 @@ fun main() {
 
     val priceProperty: ConfProperty<Int> = sampleAppConfiguration.getConfProperty("app.price.usd", Converters.INTEGER, DEFAULT_PRICE)
 
-    println("Initial price value = ${priceProperty.getValue()}")
+    LOG.info("Initial price value = ${priceProperty.getValue()}")
 
     priceProperty.subscribe { newPrice ->
-        println("New price = $newPrice")
+        LOG.info("New price = $newPrice")
     }
 
     semaphore.acquire()
