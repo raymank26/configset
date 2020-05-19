@@ -8,7 +8,7 @@ sealed class ConfigurationTransport {
     abstract val libraryMetrics: LibraryMetrics
 
     data class RemoteGrpc(
-            val applicationHostName: String,
+            val hostName: String,
             val defaultApplicationName: String,
             val backendHost: String,
             val backendPort: Int,

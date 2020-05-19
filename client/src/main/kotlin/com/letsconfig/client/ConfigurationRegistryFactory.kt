@@ -17,7 +17,7 @@ object ConfigurationRegistryFactory {
     }
 
     private fun createGrpcConfiguration(transport: ConfigurationTransport.RemoteGrpc): ConfigurationRepository {
-        return GrpcConfigurationRepository(transport.applicationHostName, transport.defaultApplicationName,
+        return GrpcConfigurationRepository(transport.hostName, transport.defaultApplicationName,
                 transport.backendHost, transport.backendPort, transport.libraryMetrics)
     }
 
