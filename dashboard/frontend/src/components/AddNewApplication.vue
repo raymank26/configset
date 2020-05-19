@@ -41,7 +41,9 @@
       if (isValid) {
         applicationService.createApplication(this.appName!)
           .then(() => {
-            this.$router.push("applications");
+            this.$router.push({
+              path: "/applications"
+            });
           });
       }
     }

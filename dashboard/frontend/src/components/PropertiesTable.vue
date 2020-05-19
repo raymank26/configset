@@ -15,7 +15,7 @@
           <tbody>
           <tr v-for="(byName, propertyName) in byApp.byName">
             <td>
-              <button class="btn btn-info" v-on:click="enableShow(byName)">Select</button>
+              <button class="btn btn-primary" v-on:click="enableShow(byName)">Select</button>
             </td>
             <td>
               {{ appName }}
@@ -36,7 +36,7 @@
                   <tbody>
                   <tr v-for="(property, host) in byName.byHost">
                     <td>
-                      <button class="btn btn-info mr-1" v-on:click="updateProperty(property.prop)">Update</button>
+                      <button class="btn btn-primary mr-1" v-on:click="updateProperty(property.prop)">Update</button>
                       <button class="btn btn-danger" v-on:click="deleteProperty(property.prop)">Delete</button>
                     </td>
                     <td>{{ property.prop.hostName }}</td>
