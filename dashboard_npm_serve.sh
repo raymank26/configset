@@ -1,0 +1,1 @@
+sh -c 'cd dashboard/frontend/ && npm run serve'
