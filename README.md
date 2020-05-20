@@ -23,6 +23,18 @@ There are four parts: a client library, a server application and an CRUD-like UI
 handles outgoing streams to connected clients. At every point of time it knows which client is looking for which configuration.
 3. CRUD-like UI to apply changes to the system.
 
-# Sample
+# Usage example
 
 [Sample project](https://github.com/letsconfig/letsconfig/tree/master/sample)
+
+To run the sample (docker-compose is required) execute locally ```./sample_run.sh```. Dashboard is available at ```http://localhost:8080/```
+
+# Development
+
+1. ```./local_run.sh``` - starts db/dashboard/server in docker-compose locally.
+2. ```./dashboard_npm_serve.sh``` - starts development dashboard at ```http://localhost:8080/```
+3. ```./gradlew test``` - runs tests across the project.
+
+# License
+
+Apache-2.0
