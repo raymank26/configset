@@ -2,6 +2,8 @@
 
 # Overview
 
+![diagram](https://i.imgur.com/OEo5xik.png)
+
 The project aims to bring the feature of runtime configuration to masses. 
 
 Basically the approach is here: there are many **config applications**. Every **config application** 
@@ -21,7 +23,6 @@ There are four parts: a client library, a server application and an CRUD-like UI
 handles outgoing streams to connected clients. At every point of time it knows which client is looking for which configuration.
 3. CRUD-like UI to apply changes to the system.
 
-# Code sample
+# Sample
 
-TODO() // see tests
-
+[Sample project](https://github.com/letsconfig/letsconfig/tree/master/sample)
