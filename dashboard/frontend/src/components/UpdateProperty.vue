@@ -8,7 +8,7 @@ import {UpdateResult} from "@/service/PropertyService";
     </div>
     <div v-if="!loading">
       <div class="row">
-        <div class="col-4">
+        <div class="col-6">
           <form @submit.prevent="submitApp" novalidate ref="appForm">
             <div class="form-group">
               <label for="appName">Application name</label>
