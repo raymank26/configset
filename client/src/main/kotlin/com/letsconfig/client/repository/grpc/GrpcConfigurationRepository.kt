@@ -85,6 +85,7 @@ class GrpcConfigurationRepository(
     private fun initialize() {
         channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
                 .usePlaintext()
+                .keepAliveTime(5000, TimeUnit.MILLISECONDS)
                 .build()
         asyncClient = ConfigurationServiceGrpc.newStub(channel)
 
