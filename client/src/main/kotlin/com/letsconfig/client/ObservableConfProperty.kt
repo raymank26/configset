@@ -44,7 +44,7 @@ class ObservableConfProperty<T>(
             if (value == null) {
                 return defaultValue
             } else {
-                converter.convert(value) ?: return defaultValue
+                converter.convert(value)
             }
         } catch (e: Exception) {
             LOG.warn("For propertyName = $name unable to convert value = $value")
