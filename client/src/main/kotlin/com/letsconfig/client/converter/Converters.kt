@@ -6,6 +6,7 @@ object Converters {
     val STRING = GenericConverter { it }
     val LONG = GenericConverter { it.toLong() }
     val INTEGER = GenericConverter { it.toInt() }
+    val BOOLEAN = GenericConverter { it.toBoolean() }
     val CHAR = GenericConverter { str ->
         require(str.length == 1)
         str.first()
