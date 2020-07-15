@@ -52,7 +52,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             groupId = 'com.letsconfig'
-            artifactId = 'sdk'
+            artifactId = 'letsconfig-sdk'
             from components.java
         }
     }
