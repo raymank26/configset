@@ -35,6 +35,21 @@ class ConvertersTest {
             bazz=a,b,c,d
         """.trimIndent()) shouldBeEqualTo PojoExample("someValue", 123L, listOf("a", "b", "c", "d"))
     }
+
+    @Test
+    fun testEnumConverter() {
+        EnumConverter(EnumExample::class.java).convert("FOO") shouldBeEqualTo EnumExample.FOO
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testEnumFail() {
+        EnumConverter(EnumExample::class.java).convert("RANDOM")
+    }
 }
 
 private data class PojoExample(val foo: String, val bar: Long, val bazz: List<String>)
+
+private enum class EnumExample {
+    FOO,
+    BAR
+}
