@@ -13,6 +13,7 @@ class LocalConfigurationRegistryTest {
         val someAppConfiguration = registry.getConfiguration("someApp")
         someAppConfiguration.getConfProperty("billingUrl", Converters.STRING).getValue() shouldBeEqualTo "https://billingurl.com"
         someAppConfiguration.getConfProperty("targetPrice", Converters.STRING).getValue() shouldBeEqualTo "5"
+        someAppConfiguration.getConfProperty("service.updateTime", Converters.STRING).getValue() shouldBeEqualTo "10ms"
 
         registry.getConfiguration("someOtherApp").getConfProperty("retriesCount", Converters.INTEGER).getValue() shouldBeEqualTo 3
     }

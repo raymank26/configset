@@ -22,7 +22,7 @@ class LocalConfigurationRepository(private val readerProvider: () -> Reader) : C
         val appValue: MutableList<PropertyItem.Updated> = mutableListOf()
         for (propertyName in properties.stringPropertyNames()) {
             if (propertyName.startsWith(appName)) {
-                val nameParts = propertyName.split(".")
+                val nameParts = propertyName.split(".", limit = 2)
                 appValue.add(PropertyItem.Updated(appName, nameParts[1], 0L, properties.getProperty(propertyName)))
             }
         }
