@@ -66,4 +66,4 @@ class PostgresqlTestRule : ExternalResource() {
     }
 }
 
-class KPostgreSQLContainer : PostgreSQLContainer<KPostgreSQLContainer>()
+class KPostgreSQLContainer : PostgreSQLContainer<KPostgreSQLContainer>("postgres:13")
