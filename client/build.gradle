@@ -15,7 +15,7 @@ dependencies {
     testCompile group: 'io.mockk', name: 'mockk', version: '1.9.3'
 }
 
-version = "0.0.4"
+version = "0.0.5"
 
 test.dependsOn (":server:dockerBuildImage")
 

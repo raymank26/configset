@@ -37,6 +37,11 @@ class ConvertersTest {
     }
 
     @Test
+    fun testCollectionConverter() {
+        Converters.LIST_LONG.convert("") shouldBeEqualTo emptyList()
+    }
+
+    @Test
     fun testEnumConverter() {
         EnumConverter(EnumExample::class.java).convert("FOO") shouldBeEqualTo EnumExample.FOO
     }
