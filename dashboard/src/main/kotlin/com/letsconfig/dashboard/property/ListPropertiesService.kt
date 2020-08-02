@@ -14,4 +14,10 @@ class ListPropertiesService(
     fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
         return apiGateway.searchProperties(searchPropertiesRequest)
     }
+
+    fun getProperty(appName: String, hostName: String, propertyName: String): ShowPropertyItem? {
+        return apiGateway.readProperty(appName, hostName, propertyName)?.let {
+            ShowPropertyItem(appName, hostName, propertyName, it.propertyValue, it.version)
+        }
+    }
 }

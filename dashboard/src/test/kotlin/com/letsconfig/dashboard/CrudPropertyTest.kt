@@ -1,6 +1,7 @@
 package com.letsconfig.dashboard
 
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterThan
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,25 +21,25 @@ class CrudPropertyTest {
     @Test
     fun testIdempotentUpdate() {
         val update = {
-            dashboardRule.executePostRequest("/property/update", mapOf(
-                    Pair("applicationName", "testApp"),
-                    Pair("hostName", "srvd1"),
-                    Pair("propertyName", "propertyName"),
-                    Pair("propertyValue", "234")
-            ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+            insertProperty()
         }
         update.invoke()
         update.invoke()
     }
 
     @Test
-    fun testDelete() {
-        dashboardRule.executePostRequest("/property/update", mapOf(
+    fun testReadProperty() {
+        insertProperty()
+        dashboardRule.executeGetRequest("/property/get", Map::class.java, mapOf(
                 Pair("applicationName", "testApp"),
                 Pair("hostName", "srvd1"),
-                Pair("propertyName", "propertyName"),
-                Pair("propertyValue", "234")
-        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+                Pair("propertyName", "propertyName")
+        )).size shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun testDelete() {
+        insertProperty()
 
         dashboardRule.executePostRequest("/property/delete", mapOf(
                 Pair("applicationName", "testApp"),
@@ -46,6 +47,15 @@ class CrudPropertyTest {
                 Pair("propertyName", "propertyName"),
                 Pair("version", "1")
         ), Map::class.java, requestId = "1239")
+    }
+
+    private fun insertProperty(): Map<*, *>? {
+        return dashboardRule.executePostRequest("/property/update", mapOf(
+                Pair("applicationName", "testApp"),
+                Pair("hostName", "srvd1"),
+                Pair("propertyName", "propertyName"),
+                Pair("propertyValue", "234")
+        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 
     @Test

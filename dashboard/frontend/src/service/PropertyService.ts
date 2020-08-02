@@ -45,14 +45,15 @@ export default class PropertyService {
     }).then(response => response.data)
   }
 
-  readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ReadPropertyResult> {
-    return this.searchProperties(new SearchPropertiesRequest(applicationName, hostName, propertyName, null)).then(response => {
-      if (response.length == 1 && response[0].applicationName === applicationName && response[0].hostName === hostName && response[0].propertyName === propertyName) {
-        return {property: response[0]}
-      } else {
-        return {property: null}
-      }
-    });
+  readProperty(applicationName: string, hostName: string, propertyName: string): Promise<ShowPropertyItem | null> {
+    let request = {
+      "applicationName": applicationName,
+      "hostName": hostName,
+      "propertyName": propertyName,
+    };
+    return Axios.get("api/property/get", {
+      params: request
+    }).then(response => response.data);
   }
 
   deleteProperty(applicationName: string, hostName: string, propertyName: string, version: number): Promise<DeleteResult> {

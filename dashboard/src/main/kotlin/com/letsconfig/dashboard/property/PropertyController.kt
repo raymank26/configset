@@ -69,5 +69,17 @@ class PropertyController(
 
             ctx.json(listPropertiesService.searchProperties(SearchPropertiesRequest(appName, hostName, propertyName, propertyValue)))
         }
+
+        get("get") { ctx ->
+            val appName = ctx.queryParamSafe("applicationName")
+            val hostName = ctx.queryParamSafe("hostName")
+            val propertyName = ctx.queryParamSafe("propertyName")
+            val property = listPropertiesService.getProperty(appName, hostName, propertyName)
+            if (property == null) {
+                ctx.contentType("application/json").result("null")
+            } else {
+                ctx.json(property)
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.letsconfig.dashboard
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.letsconfig.sdk.extension.createLoggerStatic
 import okhttp3.FormBody
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
@@ -56,8 +57,19 @@ class DashboardRule : ExternalResource() {
         okHttp = OkHttpClient()
     }
 
-    fun <T> executeGetRequest(endpoint: String, responseClass: Class<T>): T {
-        val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint").build()).execute()
+    fun <T> executeGetRequest(endpoint: String, responseClass: Class<T>, queryParams: Map<String, String> = emptyMap()): T {
+        val urlBuilder = HttpUrl.Builder()
+                .scheme("http")
+                .host("localhost")
+                .port(9299)
+                .addPathSegments("api$endpoint")
+        for ((key, value) in queryParams) {
+            urlBuilder.addQueryParameter(key, value)
+        }
+        val response = okHttp.newCall(Request.Builder()
+                .url(urlBuilder.build())
+                .build())
+                .execute()
         response.code shouldBeEqualTo 200
         return response.body?.byteStream().use {
             OBJECT_MAPPER.readValue(it, responseClass)
@@ -96,23 +108,20 @@ class DashboardRule : ExternalResource() {
 
     fun searchProperties(applicationName: String? = null, hostName: String? = null, propertyName: String? = null,
                          propertyValue: String? = null): List<ShowPropertyItem> {
-        val query = StringBuilder()
+        val queryParams = mutableMapOf<String, String>()
         if (applicationName != null) {
-            query.append("applicationName=$applicationName")
+            queryParams["applicationName"] = applicationName
         }
         if (hostName != null) {
-            query.append("hostName=$hostName")
+            queryParams["hostName"] = hostName
         }
         if (propertyName != null) {
-            query.append("propertyName=$propertyName")
+            queryParams["propertyName"] = propertyName
         }
         if (propertyValue != null) {
-            query.append("propertyValue=$propertyValue")
+            queryParams["propertyValue"] = propertyValue
         }
-        if (query.isEmpty()){
-            throw RuntimeException("Query is empty")
-        }
-        return executeGetRequest("/property/search?$query", List::class.java).map {
+        return executeGetRequest("/property/search", List::class.java, queryParams).map {
             @Suppress("UNCHECKED_CAST")
             val mapping = it as Map<String, Any>
             ShowPropertyItem(mapping.getValue("applicationName").toString(), mapping.getValue("hostName").toString(),
