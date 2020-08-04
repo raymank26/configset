@@ -11,6 +11,7 @@ import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
+import com.letsconfig.server.db.common.containsLowerCase
 import org.jdbi.v3.core.Handle
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
@@ -159,6 +160,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         return dbi.withExtension<List<PropertyItem.Updated>, JdbiAccess, java.lang.Exception>(JdbiAccess::class.java) { access ->
             val hosts = access.listHosts().associateBy { it.id }
             val apps = access.listApplications().associateBy { it.id }
+
             access.selectAllProperties()
                     .filter { !it.deleted }
                     .mapNotNull { property ->
@@ -167,13 +169,13 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         if (searchPropertyRequest.applicationName != null && appName != searchPropertyRequest.applicationName) {
                             return@mapNotNull null
                         }
-                        if (searchPropertyRequest.hostNameQuery != null && !hostName.contains(searchPropertyRequest.hostNameQuery)) {
+                        if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(hostName, searchPropertyRequest.hostNameQuery)) {
                             return@mapNotNull null
                         }
-                        if (searchPropertyRequest.propertyNameQuery != null && !property.name.contains(searchPropertyRequest.propertyNameQuery)) {
+                        if (searchPropertyRequest.propertyNameQuery != null && !containsLowerCase(property.name, searchPropertyRequest.propertyNameQuery)) {
                             return@mapNotNull null
                         }
-                        if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
+                        if (searchPropertyRequest.propertyValueQuery != null && !containsLowerCase(property.value, searchPropertyRequest.propertyValueQuery)) {
                             return@mapNotNull null
                         }
                         PropertyItem.Updated(appName, property.name, hostName, property.version, property.value)

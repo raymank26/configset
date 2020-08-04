@@ -148,7 +148,7 @@ abstract class AbstractConfigurationDaoTest {
         dao.updateProperty(createRequestId(), TEST_APP_NAME, TEST_HOST, "name2", "value2", null) shouldBeEqualTo PropertyCreateResult.OK
         dao.updateProperty(createRequestId(), TEST_APP_NAME, "srvd2", "name1", "value", null) shouldBeEqualTo PropertyCreateResult.OK
 
-        dao.searchProperties(SearchPropertyRequest(null, "nam", "val", "srvd1")).map { it.name } shouldBeEqualTo listOf("name", "name2")
+        dao.searchProperties(SearchPropertyRequest(null, "Nam", "Val", "SRVD1")).map { it.name } shouldBeEqualTo listOf("name", "name2")
         dao.searchProperties(SearchPropertyRequest(null, "nam", "val", "srvd")).map { it.name } shouldBeEqualTo listOf("name", "name2", "name1")
     }
 

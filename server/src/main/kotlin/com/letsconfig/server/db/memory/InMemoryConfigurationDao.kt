@@ -10,6 +10,7 @@ import com.letsconfig.server.PropertyItem
 import com.letsconfig.server.SearchPropertyRequest
 import com.letsconfig.server.db.ConfigurationDao
 import com.letsconfig.server.db.common.PersistResult
+import com.letsconfig.server.db.common.containsLowerCase
 
 class InMemoryConfigurationDao : ConfigurationDao {
 
@@ -66,13 +67,13 @@ class InMemoryConfigurationDao : ConfigurationDao {
             if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
                 return@mapNotNull null
             }
-            if (searchPropertyRequest.hostNameQuery != null && !property.hostName.contains(searchPropertyRequest.hostNameQuery)) {
+            if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(property.hostName, searchPropertyRequest.hostNameQuery)) {
                 return@mapNotNull null
             }
-            if (searchPropertyRequest.propertyNameQuery != null && !property.name.contains(searchPropertyRequest.propertyNameQuery)) {
+            if (searchPropertyRequest.propertyNameQuery != null && !containsLowerCase(property.name, searchPropertyRequest.propertyNameQuery)) {
                 return@mapNotNull null
             }
-            if (searchPropertyRequest.propertyValueQuery != null && !property.value.contains(searchPropertyRequest.propertyValueQuery)) {
+            if (searchPropertyRequest.propertyValueQuery != null && !containsLowerCase(property.value, searchPropertyRequest.propertyValueQuery)) {
                 return@mapNotNull null
             }
             property
