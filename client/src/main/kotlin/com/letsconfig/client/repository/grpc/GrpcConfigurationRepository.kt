@@ -45,9 +45,10 @@ class GrpcConfigurationRepository(
                 onUpdate = { appName, updates, lastVersion ->
                     val watchState: WatchState = appWatchMappers[appName]!!
                     if (lastVersion <= watchState.lastVersion) {
-                        log.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
-                                "received = ${lastVersion}," +
-                                "applicationName = $appName")
+                        if (updates.isNotEmpty()) {
+                            log.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
+                                    "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}")
+                        }
                         return@WatchObserver
                     }
                     val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
