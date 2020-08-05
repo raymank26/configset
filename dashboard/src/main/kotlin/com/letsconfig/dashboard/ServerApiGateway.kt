@@ -27,6 +27,7 @@ class ServerApiGateway(
     fun start() {
         channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
                 .usePlaintext()
+                .keepAliveTime(5000, TimeUnit.MILLISECONDS)
                 .build()
         blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
     }
