@@ -1,4 +1,4 @@
-rootProject.name = 'letsconfig'
+rootProject.name = 'configset'
 
 include 'server'
 include 'client'

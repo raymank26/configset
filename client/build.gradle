@@ -37,8 +37,8 @@ java {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'com.letsconfig'
-            artifactId = 'letsconfig-client'
+            groupId = 'com.configset'
+            artifactId = 'configset-client'
             from components.java
         }
     }

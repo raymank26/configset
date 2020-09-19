@@ -1,7 +1,7 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.letsconfig.sdk.extension.createLoggerStatic
+import com.configset.sdk.extension.createLoggerStatic
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -23,7 +23,7 @@ val OBJECT_MAPPER = ObjectMapper()
 class DashboardRule : ExternalResource() {
 
     private lateinit var koinApp: KoinApplication
-    private lateinit var configServiceContainer: KLetsconfigBackend
+    private lateinit var configServiceContainer: KconfigsetBackend
 
     private lateinit var okHttp: OkHttpClient
 
@@ -34,7 +34,7 @@ class DashboardRule : ExternalResource() {
 
     private fun startConfigService() {
         val logConsumer = Slf4jLogConsumer(LOG)
-        configServiceContainer = KLetsconfigBackend("letsconfig-backend:latest")
+        configServiceContainer = KconfigsetBackend("configset-backend:latest")
                 .withExposedPorts(INTERNAL_PORT)
         configServiceContainer.start()
         configServiceContainer.followOutput(logConsumer)
@@ -136,4 +136,4 @@ class DashboardRule : ExternalResource() {
     }
 }
 
-private class KLetsconfigBackend(name: String) : GenericContainer<KLetsconfigBackend>(name)
+private class KconfigsetBackend(name: String) : GenericContainer<KconfigsetBackend>(name)

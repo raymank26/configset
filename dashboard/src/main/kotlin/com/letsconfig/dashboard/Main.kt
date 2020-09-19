@@ -1,6 +1,6 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
-import com.letsconfig.sdk.extension.createLoggerStatic
+import com.configset.sdk.extension.createLoggerStatic
 import org.koin.core.context.startKoin
 
 private val LOG = createLoggerStatic<Main>()

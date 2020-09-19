@@ -27,7 +27,7 @@ compileTestKotlin {
 docker {
     javaApplication {
         baseImage = 'openjdk:12'
-        images = ["letsconfig-sample:${version}", 'letsconfig-sample:latest']
+        images = ["configset-sample:${version}", 'configset-sample:latest']
         jvmArgs = ["-Xdebug", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5557"]
     }
 }

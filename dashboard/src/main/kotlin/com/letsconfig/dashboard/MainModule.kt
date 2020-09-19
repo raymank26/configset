@@ -1,12 +1,12 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
-import com.letsconfig.dashboard.application.ApplicationController
-import com.letsconfig.dashboard.property.CrudPropertyService
-import com.letsconfig.dashboard.property.ListPropertiesService
-import com.letsconfig.dashboard.property.PropertyController
-import com.letsconfig.dashboard.property.PropertyImportService
-import com.letsconfig.dashboard.util.ExceptionMapper
-import com.letsconfig.dashboard.util.RequestIdProducer
+import com.configset.dashboard.application.ApplicationController
+import com.configset.dashboard.property.CrudPropertyService
+import com.configset.dashboard.property.ListPropertiesService
+import com.configset.dashboard.property.PropertyController
+import com.configset.dashboard.property.PropertyImportService
+import com.configset.dashboard.util.ExceptionMapper
+import com.configset.dashboard.util.RequestIdProducer
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module

@@ -7,7 +7,7 @@ import com.bmuschko.gradle.docker.tasks.image.*
 
 apply plugin: 'application'
 
-mainClassName = "com.letsconfig.dashboard.Main"
+mainClassName = "com.configset.dashboard.Main"
 
 dependencies {
     compile project(':sdk')
@@ -66,7 +66,7 @@ task dockerPrepareDevCtx(type: Copy) {
 task dockerBuildDevImage(type: DockerBuildImage) {
     inputDir = project.file("$buildDir/docker-dev")
     dependsOn ("dockerPrepareDevCtx")
-    images.set(["letsconfig-dashboard-dev:${version}", 'letsconfig-dashboard-dev:latest'])
+    images.set(["configset-dashboard-dev:${version}", 'configset-dashboard-dev:latest'])
 }
 
 // default
@@ -107,7 +107,7 @@ task dockerPrepareDefaultCtx {
 task dockerBuildDefaultImage(type: DockerBuildImage) {
     inputDir = project.file("$buildDir/docker-default")
     dependsOn "dockerPrepareDefaultCtx"
-    images.set(["letsconfig-dashboard:${version}", 'letsconfig-dashboard:latest'])
+    images.set(["configset-dashboard:${version}", 'configset-dashboard:latest'])
 }
 
 test.dependsOn (":server:dockerBuildImage")

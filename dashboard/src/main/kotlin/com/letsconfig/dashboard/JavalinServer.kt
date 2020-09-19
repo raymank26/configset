@@ -1,9 +1,9 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
-import com.letsconfig.dashboard.application.ApplicationController
-import com.letsconfig.dashboard.property.PropertyController
-import com.letsconfig.dashboard.util.ExceptionMapper
-import com.letsconfig.sdk.extension.createLoggerStatic
+import com.configset.dashboard.application.ApplicationController
+import com.configset.dashboard.property.PropertyController
+import com.configset.dashboard.util.ExceptionMapper
+import com.configset.sdk.extension.createLoggerStatic
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.http.staticfiles.Location

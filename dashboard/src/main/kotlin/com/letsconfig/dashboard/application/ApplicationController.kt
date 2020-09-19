@@ -1,10 +1,10 @@
-package com.letsconfig.dashboard.application
+package com.configset.dashboard.application
 
-import com.letsconfig.dashboard.CreateApplicationResult
-import com.letsconfig.dashboard.ServerApiGateway
-import com.letsconfig.dashboard.util.BadRequest
-import com.letsconfig.dashboard.util.formParamSafe
-import com.letsconfig.dashboard.util.requestId
+import com.configset.dashboard.CreateApplicationResult
+import com.configset.dashboard.ServerApiGateway
+import com.configset.dashboard.util.BadRequest
+import com.configset.dashboard.util.formParamSafe
+import com.configset.dashboard.util.requestId
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 

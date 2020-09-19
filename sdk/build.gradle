@@ -51,8 +51,8 @@ java {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            groupId = 'com.letsconfig'
-            artifactId = 'letsconfig-sdk'
+            groupId = 'com.configset'
+            artifactId = 'configset-sdk'
             from components.java
         }
     }

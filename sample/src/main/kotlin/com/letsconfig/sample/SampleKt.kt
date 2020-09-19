@@ -1,12 +1,12 @@
-package com.letsconfig.sample
+package com.configset.sample
 
-import com.letsconfig.client.ConfProperty
-import com.letsconfig.client.Configuration
-import com.letsconfig.client.ConfigurationRegistry
-import com.letsconfig.client.ConfigurationRegistryFactory
-import com.letsconfig.client.ConfigurationTransport
-import com.letsconfig.client.converter.Converters
-import com.letsconfig.sdk.extension.createLoggerStatic
+import com.configset.client.ConfProperty
+import com.configset.client.Configuration
+import com.configset.client.ConfigurationRegistry
+import com.configset.client.ConfigurationRegistryFactory
+import com.configset.client.ConfigurationTransport
+import com.configset.client.converter.Converters
+import com.configset.sdk.extension.createLoggerStatic
 import java.util.concurrent.Semaphore
 
 private const val BILLING_APP = "billing"

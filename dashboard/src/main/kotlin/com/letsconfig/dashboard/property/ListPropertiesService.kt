@@ -1,8 +1,8 @@
-package com.letsconfig.dashboard.property
+package com.configset.dashboard.property
 
-import com.letsconfig.dashboard.SearchPropertiesRequest
-import com.letsconfig.dashboard.ServerApiGateway
-import com.letsconfig.dashboard.ShowPropertyItem
+import com.configset.dashboard.SearchPropertiesRequest
+import com.configset.dashboard.ServerApiGateway
+import com.configset.dashboard.ShowPropertyItem
 
 class ListPropertiesService(
         private val apiGateway: ServerApiGateway

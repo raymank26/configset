@@ -1,17 +1,17 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
-import com.letsconfig.sdk.proto.ApplicationCreateRequest
-import com.letsconfig.sdk.proto.ApplicationCreatedResponse
-import com.letsconfig.sdk.proto.ConfigurationServiceGrpc
-import com.letsconfig.sdk.proto.CreateHostRequest
-import com.letsconfig.sdk.proto.CreateHostResponse
-import com.letsconfig.sdk.proto.DeletePropertyRequest
-import com.letsconfig.sdk.proto.DeletePropertyResponse
-import com.letsconfig.sdk.proto.EmptyRequest
-import com.letsconfig.sdk.proto.PropertyItem
-import com.letsconfig.sdk.proto.ReadPropertyRequest
-import com.letsconfig.sdk.proto.UpdatePropertyRequest
-import com.letsconfig.sdk.proto.UpdatePropertyResponse
+import com.configset.sdk.proto.ApplicationCreateRequest
+import com.configset.sdk.proto.ApplicationCreatedResponse
+import com.configset.sdk.proto.ConfigurationServiceGrpc
+import com.configset.sdk.proto.CreateHostRequest
+import com.configset.sdk.proto.CreateHostResponse
+import com.configset.sdk.proto.DeletePropertyRequest
+import com.configset.sdk.proto.DeletePropertyResponse
+import com.configset.sdk.proto.EmptyRequest
+import com.configset.sdk.proto.PropertyItem
+import com.configset.sdk.proto.ReadPropertyRequest
+import com.configset.sdk.proto.UpdatePropertyRequest
+import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
@@ -58,7 +58,7 @@ class ServerApiGateway(
     }
 
     fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
-        val response = withDeadline().searchProperties(com.letsconfig.sdk.proto.SearchPropertiesRequest
+        val response = withDeadline().searchProperties(com.configset.sdk.proto.SearchPropertiesRequest
                 .newBuilder()
                 .apply {
                     if (searchPropertiesRequest.applicationName != null) {

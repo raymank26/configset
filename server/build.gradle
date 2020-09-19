@@ -4,7 +4,7 @@ plugins {
 
 apply plugin: 'application'
 
-mainClassName = "com.letsconfig.server.Main"
+mainClassName = "com.configset.server.Main"
 
 dependencies {
     compile project(':sdk')
@@ -43,7 +43,7 @@ docker {
     javaApplication {
         baseImage = 'openjdk:12'
         ports = [8080, 5554]
-        images = ["letsconfig-backend:${version}", 'letsconfig-backend:latest']
+        images = ["configset-backend:${version}", 'configset-backend:latest']
         jvmArgs = ["-Xdebug", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5554"]
     }
 }

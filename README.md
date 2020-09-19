@@ -1,11 +1,11 @@
-![CI](https://github.com/letsconfig/letsconfig/workflows/CI/badge.svg)
+![CI](https://github.com/configset/configset/workflows/CI/badge.svg)
 
 # Overview
 
 ![diagram](https://i.imgur.com/OEo5xik.png)
 
 The project aims to bring the feature of runtime configuration to the masses. The configuration is list of options
-helping you to control the behaviour of your applications. More precisely *letsconfig* provides following features:
+helping you to control the behaviour of your applications. More precisely *configset* provides following features:
 
 1. Manages the configuration in the single dedicated place.
 2. Distributes configuration across different physical servers/VMs/containers using language-specific SDK. Holds configuration state in memory.
@@ -31,7 +31,7 @@ handles outgoing streams to connected clients. At every point of time it knows w
 
 # Usage example
 
-[Sample project](https://github.com/letsconfig/letsconfig/tree/master/sample)
+[Sample project](https://github.com/configset/configset/tree/master/sample)
 
 To run the sample (docker-compose is required) execute locally ```./sample_run.sh```. Dashboard is available at ```http://localhost:8080/```
 
@@ -45,7 +45,7 @@ To run the sample (docker-compose is required) execute locally ```./sample_run.s
 
 1. Build images - `./gradlew server:dockerBuildImage && ./dashboard:dockerBuildImage`. And push them into the registry.
 2. Deploy (or use existed) one of the available storage backend. Buy now Postgresql is the only option. PRs are welcome!
-3. Deploy ```server``` and ```dashboard``` to your infrastructure using [compose file](https://github.com/letsconfig/letsconfig/blob/master/docker-compose.yml)
+3. Deploy ```server``` and ```dashboard``` to your infrastructure using [compose file](https://github.com/configset/configset/blob/master/docker-compose.yml)
 as an example.
 4. Publish Java SDK to your maven repository, add artifact to your project.
 

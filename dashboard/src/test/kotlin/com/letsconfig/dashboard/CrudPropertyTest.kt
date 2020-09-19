@@ -1,4 +1,4 @@
-package com.letsconfig.dashboard
+package com.configset.dashboard
 
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan

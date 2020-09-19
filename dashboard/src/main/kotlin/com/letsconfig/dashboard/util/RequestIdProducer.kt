@@ -1,4 +1,4 @@
-package com.letsconfig.dashboard.util
+package com.configset.dashboard.util
 
 import org.apache.commons.codec.digest.DigestUtils
 

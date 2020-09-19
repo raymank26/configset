@@ -11,7 +11,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.letsconfig" level="${DEFAULT_LOG_LEVEL}" additivity="false">
+    <logger name="com.configset" level="${DEFAULT_LOG_LEVEL}" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

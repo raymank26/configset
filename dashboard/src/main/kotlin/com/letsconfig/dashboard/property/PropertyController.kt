@@ -1,12 +1,12 @@
-package com.letsconfig.dashboard.property
+package com.configset.dashboard.property
 
-import com.letsconfig.dashboard.PropertyCreateResult
-import com.letsconfig.dashboard.PropertyDeleteResult
-import com.letsconfig.dashboard.SearchPropertiesRequest
-import com.letsconfig.dashboard.util.BadRequest
-import com.letsconfig.dashboard.util.formParamSafe
-import com.letsconfig.dashboard.util.queryParamSafe
-import com.letsconfig.dashboard.util.requestId
+import com.configset.dashboard.PropertyCreateResult
+import com.configset.dashboard.PropertyDeleteResult
+import com.configset.dashboard.SearchPropertiesRequest
+import com.configset.dashboard.util.BadRequest
+import com.configset.dashboard.util.formParamSafe
+import com.configset.dashboard.util.queryParamSafe
+import com.configset.dashboard.util.requestId
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
