@@ -1,4 +1,4 @@
-![CI](https://github.com/configset/configset/workflows/CI/badge.svg)
+![CI](https://github.com/raymank26/configset/workflows/CI/badge.svg)
 
 # Overview
 
