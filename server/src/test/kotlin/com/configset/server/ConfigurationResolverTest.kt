@@ -5,9 +5,17 @@ import org.junit.Test
 
 private const val defaultApp = "music"
 private const val targetApp = "web"
-private val properties = mapOf("srvd1" to 1, "host-music" to 2, "host-web" to 3, "test.group" to 4, "group" to 5)
 
 class ConfigurationResolverTest {
+
+    private val properties = mapOf(
+            "srvd1" to 1,
+            "host-music" to 2,
+            "host-web" to 3,
+            "test.group" to 4,
+            "group" to 5,
+            "anton.ermak" to 6
+    )
 
     @Test
     fun testExact() {
@@ -37,5 +45,10 @@ class ConfigurationResolverTest {
     @Test
     fun testSplit_Group() {
         resolveProperty(properties, "group", "anotherDefault", "anotherTarget") shouldBeEqualTo 5
+    }
+
+    @Test
+    fun testFull() {
+        resolveProperty(properties, "anton.ermak", "anotherDefault", "anotherTarget") shouldBeEqualTo 6
     }
 }
