@@ -7,7 +7,7 @@ import com.configset.client.Subscriber
 import com.configset.client.metrics.LibraryMetrics
 import com.configset.client.metrics.Metrics
 import com.configset.client.repository.ConfigurationRepository
-import com.configset.sdk.extension.createLogger
+import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.SubscribeApplicationRequest
 import com.configset.sdk.proto.UpdateReceived
@@ -23,6 +23,7 @@ import kotlin.concurrent.thread
 
 private const val INITIAL_TIMEOUT_SEC: Long = 10L
 private const val UNKNOWN_VERSION: Long = -1
+private val LOG = createLoggerStatic<GrpcConfigurationRepository>()
 
 class GrpcConfigurationRepository(
         private val applicationHostname: String,
@@ -32,7 +33,6 @@ class GrpcConfigurationRepository(
         private val libraryMetrics: LibraryMetrics
 ) : ConfigurationRepository {
 
-    private val log = createLogger()
     private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private lateinit var channel: ManagedChannel
     private lateinit var subscribeObserver: StreamObserver<WatchRequest>
@@ -46,14 +46,14 @@ class GrpcConfigurationRepository(
                     val watchState: WatchState = appWatchMappers[appName]!!
                     if (lastVersion <= watchState.lastVersion) {
                         if (updates.isNotEmpty()) {
-                            log.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
+                            LOG.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
                                     "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}")
                         }
                         return@WatchObserver
                     }
                     val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
                     if (filteredUpdates.size != updates.size) {
-                        log.debug("Some updates where filtered (they are obsolete)" +
+                        LOG.debug("Some updates where filtered (they are obsolete)" +
                                 ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
                         libraryMetrics.increment(Metrics.SKIPPED_OBSOLETE_UPDATES)
                     }
@@ -69,13 +69,13 @@ class GrpcConfigurationRepository(
                 },
                 onEnd = {
                     thread {
-                        log.info("Resubscribe started, waiting for 2 seconds")
+                        LOG.info("Resubscribe started, waiting for 2 seconds")
                         try {
                             channel.shutdownNow()
                         } catch (e: Exception) {
-                            log.warn("Exception during shutdown", e)
+                            LOG.warn("Exception during shutdown", e)
                         }
-                        Thread.sleep(2000)
+                        Thread.sleep(5000)
                         initialize()
                     }
                 })
@@ -103,9 +103,9 @@ class GrpcConfigurationRepository(
                     .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
                     .setSubscribeApplicationRequest(subscribeRequest)
                     .build())
-            log.info("Resubscribed to app = ${watchState.value.appName} and lastVersion = ${watchState.value.lastVersion}")
+            LOG.info("Resubscribed to app = ${watchState.value.appName} and lastVersion = ${watchState.value.lastVersion}")
         }
-        log.info("Watch subscription is (re)initialized")
+        LOG.info("Watch subscription is (re)initialized")
     }
 
     override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
@@ -139,10 +139,10 @@ class GrpcConfigurationRepository(
                 initialProperties = future.get(INITIAL_TIMEOUT_SEC, TimeUnit.SECONDS)
                 break
             } catch (e: TimeoutException) {
-                log.warn("Unable to get initial configuration for seconds = $INITIAL_TIMEOUT_SEC seconds, retrying..")
+                LOG.warn("Unable to get initial configuration for seconds = $INITIAL_TIMEOUT_SEC seconds, retrying..")
             }
         }
-        log.info("Initial properties for app = $appName received with size = ${initialProperties.size}")
+        LOG.info("Initial properties for app = $appName received with size = ${initialProperties.size}")
         return DynamicValue(initialProperties, currentObservable)
     }
 

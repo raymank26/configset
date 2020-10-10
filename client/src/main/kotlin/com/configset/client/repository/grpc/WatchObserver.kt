@@ -34,6 +34,8 @@ class WatchObserver(
     override fun onError(t: Throwable?) {
         if (!isStopped) {
             onEnd.invoke()
+        } else {
+            LOG.warn("Exception in connection", t)
         }
     }
 
