@@ -38,8 +38,7 @@ class AppConfiguration {
     }
 }
 
-class ConfigKeyRequired(val configKey: String) : RuntimeException() {
-}
+class ConfigKeyRequired(val configKey: String) : RuntimeException()
 
 enum class DaoType {
     IN_MEMORY,

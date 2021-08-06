@@ -10,6 +10,7 @@ import com.configset.server.PropertyItem
 import com.configset.server.SearchPropertyRequest
 
 interface ConfigurationDao {
+    fun initialize()
     fun listApplications(): List<ApplicationED>
     fun createApplication(requestId: String, appName: String): CreateApplicationResult
     fun createHost(requestId: String, hostName: String): HostCreateResult

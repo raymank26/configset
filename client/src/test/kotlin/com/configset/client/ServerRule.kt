@@ -35,7 +35,7 @@ class ServerRule(private val toxiproxyContainer: ToxiproxyContainer? = null) : E
         registry.getConfiguration(APP_NAME)
     }
 
-    lateinit var registry: ConfigurationRegistry
+    private lateinit var registry: ConfigurationRegistry
     lateinit var metrics: LibraryMetrics
 
     private lateinit var crudChannel: ManagedChannel

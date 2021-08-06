@@ -12,12 +12,12 @@ import org.testcontainers.containers.ToxiproxyContainer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-class ClientWithoutServerTest() {
+class ClientWithoutServerTest {
 
     @Rule
     @JvmField
     val toxiproxy = ToxiproxyContainer()
-            .withNetwork(Network.newNetwork())
+        .withNetwork(Network.newNetwork())
 
     @Rule
     @JvmField

@@ -27,7 +27,6 @@ class PostgresqlTestRule : ExternalResource() {
         dbi = getDataSource(container)
         dbi.installPlugin(SqlObjectPlugin())
         dbi.installPlugin(PostgresPlugin())
-        executeCreateSql()
         Runtime.getRuntime().addShutdownHook(Thread {
             teardown()
         })
@@ -37,15 +36,7 @@ class PostgresqlTestRule : ExternalResource() {
         getDBI().useHandle<Exception> {
             it.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public")
         }
-        executeCreateSql()
         LOG.info("Database is recreated")
-    }
-
-    private fun executeCreateSql() {
-        dbi.useHandle<Exception> {
-            it.createUpdate(PostgresqlTestRule::class.java.getResourceAsStream("/create.sql").bufferedReader().readText())
-                    .execute()
-        }
     }
 
     private fun getDataSource(container: KPostgreSQLContainer): Jdbi {

@@ -28,7 +28,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
     @Synchronized
     override fun createApplication(requestId: String, appName: String): CreateApplicationResult {
-        return processMutable<CreateApplicationResult>(requestId, CreateApplicationResult.OK) {
+        return processMutable(requestId, CreateApplicationResult.OK) {
             if (applications.find { it.name == appName } != null) {
                 PersistResult(false, CreateApplicationResult.ApplicationAlreadyExists)
             } else {
@@ -46,7 +46,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
     @Synchronized
     override fun createHost(requestId: String, hostName: String): HostCreateResult {
-        return processMutable<HostCreateResult>(requestId, HostCreateResult.OK) {
+        return processMutable(requestId, HostCreateResult.OK) {
             if (hosts.find { it.name == hostName } != null) {
                 PersistResult(false, HostCreateResult.HostAlreadyExists)
             } else {
@@ -90,14 +90,15 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
     @Synchronized
     override fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
-        return processMutable<PropertyCreateResult>(requestId, PropertyCreateResult.OK) cb@{
+        return processMutable(requestId, PropertyCreateResult.OK) cb@{
             val lastVersion = getLastVersionInApp(appName)
-                    ?: return@cb PersistResult(false, PropertyCreateResult.ApplicationNotFound)
+                ?: return@cb PersistResult(false, PropertyCreateResult.ApplicationNotFound)
             if (hosts.find { it.name == hostName } == null) {
                 return@cb PersistResult(false, PropertyCreateResult.HostNotFound)
             }
 
-            val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
+            val foundProperty =
+                properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
             if (foundProperty != null) {
                 if (foundProperty is PropertyItem.Updated && foundProperty.version != version) {
                     return@cb PersistResult(false, PropertyCreateResult.UpdateConflict)
@@ -117,13 +118,14 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
     @Synchronized
     override fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
-        return processMutable<DeletePropertyResult>(requestId, DeletePropertyResult.OK) cb@{
+        return processMutable(requestId, DeletePropertyResult.OK) cb@{
             val lastVersion = getLastVersionInApp(appName)
-                    ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
+                ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             if (hosts.find { it.name == hostName } == null) {
                 return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             }
-            val foundProperty = properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
+            val foundProperty =
+                properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
                     ?: return@cb PersistResult(false, DeletePropertyResult.PropertyNotFound)
             if (foundProperty.version != version) {
                 return@cb PersistResult(false, DeletePropertyResult.DeleteConflict)
@@ -138,6 +140,9 @@ class InMemoryConfigurationDao : ConfigurationDao {
             applications.add(app.copy(lastVersion = newVersion))
             return@cb PersistResult(true, DeletePropertyResult.OK)
         }
+    }
+
+    override fun initialize() {
     }
 
     private fun <T> processMutable(requestId: String, default: T, callback: () -> PersistResult<T>): T {

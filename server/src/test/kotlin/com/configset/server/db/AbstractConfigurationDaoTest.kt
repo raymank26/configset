@@ -23,6 +23,7 @@ abstract class AbstractConfigurationDaoTest {
     @Before
     fun setUpDao() {
         dao = getDao()
+        dao.initialize()
     }
 
     @Test

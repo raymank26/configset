@@ -11,7 +11,8 @@ class ApplicationRegistry(
 ) {
 
     private val propertiesSubscribers: MutableMap<String, ChangingObservable<String?>> = HashMap()
-    private val snapshot: MutableMap<String, String> = propertiesProvider.initial.map { it.name to it.value }.toMap().toMutableMap()
+    private val snapshot: MutableMap<String, String> =
+        propertiesProvider.initial.associate { it.name to it.value }.toMutableMap()
 
     fun start() {
         propertiesProvider.observable.onSubscribe(object : Subscriber<List<PropertyItem>> {

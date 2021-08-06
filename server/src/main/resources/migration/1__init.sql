@@ -1,12 +1,19 @@
-create table ConfigurationApplication (
-    id SERIAL PRIMARY KEY,
-    name varchar(100) UNIQUE NOT NULL,
-    version bigint NOT NULL,
-    createdms bigint NOT NULL,
-    modifiedms bigint NOT NULL
+create table TableMeta
+(
+    version bigint
 );
 
-create table ConfigurationHost (
+create table ConfigurationApplication
+(
+    id         SERIAL PRIMARY KEY,
+    name       varchar(100) UNIQUE NOT NULL,
+    version    bigint              NOT NULL,
+    createdms  bigint              NOT NULL,
+    modifiedms bigint              NOT NULL
+);
+
+create table ConfigurationHost
+(
     id SERIAL PRIMARY KEY,
     name varchar(100) UNIQUE NOT NULL,
     createdms bigint NOT NULL,

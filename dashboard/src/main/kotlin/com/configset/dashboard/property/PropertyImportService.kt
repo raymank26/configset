@@ -1,14 +1,14 @@
 package com.configset.dashboard.property
 
+import com.configset.dashboard.PropertyCreateResult
+import com.configset.dashboard.ServerApiGateway
+import com.configset.dashboard.util.RequestIdProducer
+import com.configset.sdk.extension.createLoggerStatic
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
-import com.configset.dashboard.PropertyCreateResult
-import com.configset.dashboard.ServerApiGateway
-import com.configset.dashboard.util.RequestIdProducer
-import com.configset.sdk.extension.createLoggerStatic
 
 private val xmlMapper = XmlMapper()
 private val LOG = createLoggerStatic<PropertyImportService>()
@@ -64,7 +64,7 @@ sealed class PropertiesImport {
 
 
 @JacksonXmlRootElement(localName = "properties")
-class PropertiesXml() {
+class PropertiesXml {
 
     @JacksonXmlProperty(localName = "property")
     @JacksonXmlElementWrapper(useWrapping = false)
@@ -72,7 +72,7 @@ class PropertiesXml() {
 
 }
 
-class PropertyXml() {
+class PropertyXml {
 
     @JsonProperty("host")
     lateinit var host: String

@@ -50,7 +50,7 @@ class ServiceRule : ExternalResource() {
     private lateinit var subscribeStream: StreamObserver<WatchRequest>
 
     val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
-    val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
+    private val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
 
     init {
         val channel: ManagedChannel = ManagedChannelBuilder.forAddress("localhost", 8080)
