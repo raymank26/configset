@@ -7,7 +7,6 @@ import org.awaitility.Awaitility
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
@@ -16,12 +15,7 @@ class ClientWithoutServerTest {
 
     @Rule
     @JvmField
-    val toxiproxy = ToxiproxyContainer()
-        .withNetwork(Network.newNetwork())
-
-    @Rule
-    @JvmField
-    val serverRule = ServerRule(toxiproxy)
+    val serverRule = ClientRule(true)
 
     private lateinit var proxy: ToxiproxyContainer.ContainerProxy
 

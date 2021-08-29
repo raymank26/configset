@@ -20,3 +20,14 @@ services:
     environment:
       - "config_server.hostname=backend"
       - "config_server.port=8080"
+      - "client.keycloackUrl=http://localhost:8077"
+      - "client.keycloackRealm=demo"
+      - "client.keycloackClientId=demo-clientId"
+  keycloack:
+    image: "quay.io/keycloak/keycloak:15.0.1"
+    ports:
+      - "8077:8080"
+    environment:
+      - "KEYCLOAK_USER=admin"
+      - "KEYCLOAK_PASSWORD=admin"
+

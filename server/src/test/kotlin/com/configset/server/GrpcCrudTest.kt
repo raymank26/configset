@@ -10,6 +10,9 @@ import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
+import com.configset.test.fixtures.CrudServiceRule
+import com.configset.test.fixtures.TEST_APP_NAME
+import com.configset.test.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
@@ -20,7 +23,7 @@ class GrpcCrudTest {
 
     @JvmField
     @Rule
-    val serviceRule = ServiceRule()
+    val serviceRule = CrudServiceRule()
 
     @Test
     fun testCreateHost() {

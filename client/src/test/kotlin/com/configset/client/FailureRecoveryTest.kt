@@ -13,7 +13,7 @@ class FailureRecoveryTest {
 
     @Rule
     @JvmField
-    val serverRule = ServerRule()
+    val serverRule = ClientRule()
 
     private val propertyName = "property.conf"
     private lateinit var confProperty: ConfProperty<Long>

@@ -1,10 +1,15 @@
 package com.configset.server
 
 import com.configset.server.db.ConfigurationDao
+import com.configset.server.db.DbHandleFactory
+import com.configset.server.db.RequestIdDao
+import com.configset.server.db.common.DbHandle
 
 class ConfigurationService(
-        private val configurationDao: ConfigurationDao,
-        private val propertiesWatchDispatcher: PropertiesWatchDispatcher
+    private val configurationDao: ConfigurationDao,
+    private val requestIdDao: RequestIdDao,
+    private val propertiesWatchDispatcher: PropertiesWatchDispatcher,
+    private val dbHandleFactory: DbHandleFactory,
 ) {
 
     fun listApplications(): List<ApplicationED> {
@@ -13,12 +18,16 @@ class ConfigurationService(
 
     fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         checkRequestId(requestId)
-        return configurationDao.createApplication(requestId, appName)
+        return executeMutable(requestId, CreateApplicationResult.OK) {
+            configurationDao.createApplication(it, appName)
+        }
     }
 
     fun createHost(requestId: String, hostName: String): HostCreateResult {
         checkRequestId(requestId)
-        return configurationDao.createHost(requestId, hostName)
+        return executeMutable(requestId, HostCreateResult.OK) {
+            configurationDao.createHost(it, hostName)
+        }
     }
 
     fun listHosts(): List<HostED> {
@@ -27,12 +36,16 @@ class ConfigurationService(
 
     fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
         checkRequestId(requestId)
-        return configurationDao.updateProperty(requestId, appName, hostName, propertyName, value, version)
+        return executeMutable(requestId, PropertyCreateResult.OK) {
+            configurationDao.updateProperty(it, appName, propertyName, value, version, hostName)
+        }
     }
 
     fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
         checkRequestId(requestId)
-        return configurationDao.deleteProperty(requestId, appName, hostName, propertyName, version)
+        return executeMutable(requestId, DeletePropertyResult.OK) {
+            configurationDao.deleteProperty(it, appName, hostName, propertyName, version)
+        }
     }
 
     fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
@@ -68,6 +81,20 @@ class ConfigurationService(
 
     fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
         return configurationDao.readProperty(applicationName, hostName, propertyName)
+    }
+
+    private fun <T> executeMutable(requestId: String, persistedValue: T, action: (DbHandle) -> T): T {
+        return dbHandleFactory.withHandle {
+            if (requestIdDao.exists(it, requestId)) {
+                persistedValue
+            } else {
+                val res = action(it)
+                if (res == persistedValue) {
+                    requestIdDao.persist(it, requestId)
+                }
+                res
+            }
+        }
     }
 }
 

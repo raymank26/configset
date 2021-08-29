@@ -8,15 +8,31 @@ import com.configset.server.HostED
 import com.configset.server.PropertyCreateResult
 import com.configset.server.PropertyItem
 import com.configset.server.SearchPropertyRequest
+import com.configset.server.db.common.DbHandle
 
 interface ConfigurationDao {
     fun initialize()
     fun listApplications(): List<ApplicationED>
-    fun createApplication(requestId: String, appName: String): CreateApplicationResult
-    fun createHost(requestId: String, hostName: String): HostCreateResult
+    fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult
+    fun createHost(handle: DbHandle, hostName: String): HostCreateResult
     fun listHosts(): List<HostED>
-    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult
+    fun updateProperty(
+        handle: DbHandle,
+        appName: String,
+        propertyName: String,
+        value: String,
+        version: Long?,
+        hostName: String,
+    ): PropertyCreateResult
+
+    fun deleteProperty(
+        handle: DbHandle,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
+    ): DeletePropertyResult
+
     fun getConfigurationSnapshotList(): List<PropertyItem>
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated>
     fun listProperties(applicationName: String): List<String>

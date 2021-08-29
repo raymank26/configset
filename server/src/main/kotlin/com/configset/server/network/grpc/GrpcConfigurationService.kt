@@ -30,25 +30,38 @@ import com.configset.server.PropertiesChanges
 import com.configset.server.PropertyCreateResult
 import com.configset.server.SearchPropertyRequest
 import com.configset.server.WatchSubscriber
+import com.configset.server.auth.Admin
+import com.configset.server.auth.ApplicationOwner
+import com.configset.server.auth.Role
+import com.configset.server.auth.UserRoleService
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import java.util.*
 
 
-class GrpcConfigurationService(private val configurationService: ConfigurationService) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
+class GrpcConfigurationService(
+    private val configurationService: ConfigurationService,
+    private val userRoleService: UserRoleService,
+) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
     private val log = createLogger()
 
-    override fun createApplication(request: ApplicationCreateRequest, responseObserver: StreamObserver<ApplicationCreatedResponse>) {
+    override fun createApplication(
+        request: ApplicationCreateRequest,
+        responseObserver: StreamObserver<ApplicationCreatedResponse>,
+    ) {
+        requireRole(Admin)
         when (configurationService.createApplication(request.requestId, request.applicationName)) {
             CreateApplicationResult.OK -> {
                 responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
-                        .setType(ApplicationCreatedResponse.Type.OK)
-                        .build())
+                    .setType(ApplicationCreatedResponse.Type.OK)
+                    .build())
             }
             CreateApplicationResult.ApplicationAlreadyExists -> {
                 responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
-                        .setType(ApplicationCreatedResponse.Type.ALREADY_EXISTS)
-                        .build())
+                    .setType(ApplicationCreatedResponse.Type.ALREADY_EXISTS)
+                    .build())
             }
         }
         responseObserver.onCompleted()
@@ -61,6 +74,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun createHost(request: CreateHostRequest, responseObserver: StreamObserver<CreateHostResponse>) {
+        requireRole(Admin)
         when (configurationService.createHost(request.requestId, request.hostName)) {
             HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
             HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
@@ -78,6 +92,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
+        requireRole(ApplicationOwner(request.applicationName))
         val version = if (request.version == 0L) null else request.version
         when (configurationService.updateProperty(request.requestId, request.applicationName, request.hostName, request.propertyName, request.propertyValue, version)) {
             PropertyCreateResult.OK -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.OK).build())
@@ -89,6 +104,7 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
     }
 
     override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
+        requireRole(ApplicationOwner(request.applicationName))
         when (configurationService.deleteProperty(request.requestId, request.applicationName, request.hostName, request.propertyName, request.version)) {
             DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
             DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND).build())
@@ -203,7 +219,8 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
             }
 
             override fun onError(t: Throwable?) {
-                log.warn("Error in incoming stream, the bidirectional stream will be closed, unsubscribe will be called", t)
+                log.warn("Error in incoming stream, the bidirectional stream will be closed, unsubscribe will be called",
+                    t)
                 configurationService.unsubscribe(subscriberId)
             }
 
@@ -211,6 +228,13 @@ class GrpcConfigurationService(private val configurationService: ConfigurationSe
                 configurationService.unsubscribe(subscriberId)
                 responseObserver.onCompleted()
             }
+        }
+    }
+
+    private fun requireRole(role: Role) {
+        val userInfo = userInfo()
+        if (!userRoleService.hasRole(userInfo, role)) {
+            throw StatusRuntimeException(Status.UNAUTHENTICATED.withDescription("Not enough permissions, user roles = ${userInfo.roles}"))
         }
     }
 }

@@ -1,8 +1,6 @@
 package com.configset.server
 
-class AppConfiguration {
-
-    private val env = System.getenv()
+class AppConfiguration(private val properties: Map<String, String>) {
 
     fun validate() {
         if (getDaoType() == DaoType.POSTGRES) {
@@ -11,37 +9,57 @@ class AppConfiguration {
     }
 
     fun getDaoType(): DaoType {
-        return when (readFromEnv("db_type", "memory")) {
+        return when (val type = readProperty("db_type", "memory")) {
             "postgres" -> DaoType.POSTGRES
-            else -> DaoType.IN_MEMORY
+            "memory" -> DaoType.IN_MEMORY
+            else -> error("unknown type $type")
+        }
+    }
+
+    fun getAuthenticatorConfig(): AuthenticatorConfig {
+        return when (val type = readProperty("authenticator_type")) {
+            "stub" -> {
+                val adminAccessToken = readProperty("auth_stub.admin_access_token")
+                StubAuthenticatorConfig(adminAccessToken)
+            }
+            "oauth" -> AuthConfiguration(
+                baseUrl = readProperty("oauth.url"),
+                timeoutMs = readProperty("oauth.timeoutMs", "2000").toLong())
+            else -> error("unknown type $type")
         }
     }
 
     fun getJdbcUrl(): String {
-        return readFromEnv("jdbc_url")
+        return readProperty("jdbc_url")
     }
 
     fun getUpdateDelayMs(): Long {
-        return readFromEnv("update_delay_ms", "4000").toLong()
+        return readProperty("update_delay_ms", "4000").toLong()
     }
 
     fun grpcPort(): Int {
-        return 8080
+        return readProperty("grpc_port", "8080").toInt()
     }
 
-    private fun readFromEnv(key: String, default: String): String {
-        return env[key] ?: default
+    private fun readProperty(key: String, default: String): String {
+        return properties[key] ?: default
     }
 
-    private fun readFromEnv(key: String): String {
-        return env[key] ?: throw ConfigKeyRequired(key)
+    private fun readProperty(key: String): String {
+        return properties[key] ?: throw ConfigKeyRequired(key)
     }
 }
 
-class ConfigKeyRequired(val configKey: String) : RuntimeException()
+class ConfigKeyRequired(val configKey: String) : RuntimeException("Configuration key not found '$configKey'")
 
 enum class DaoType {
     IN_MEMORY,
-    POSTGRES
+    POSTGRES,
     ;
 }
+
+
+sealed interface AuthenticatorConfig
+
+data class StubAuthenticatorConfig(val adminAccessToken: String) : AuthenticatorConfig
+data class AuthConfiguration(val baseUrl: String, val timeoutMs: Long) : AuthenticatorConfig

@@ -11,7 +11,7 @@ class ClientTest {
 
     @Rule
     @JvmField
-    val serverRule = ServerRule()
+    val serverRule = ClientRule()
 
     @Test
     fun `test subscribe update, delete routine`() {

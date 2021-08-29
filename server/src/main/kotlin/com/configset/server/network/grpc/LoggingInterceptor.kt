@@ -7,6 +7,7 @@ import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
 import io.grpc.ServerInterceptor
 import io.grpc.Status
+import io.grpc.StatusRuntimeException
 
 class LoggingInterceptor : ServerInterceptor {
     private val log = createLogger()
@@ -20,9 +21,13 @@ class LoggingInterceptor : ServerInterceptor {
                     super.onHalfClose()
                 } catch (e: Exception) {
                     log.warn("Exception occurred for method = ${call.methodDescriptor.fullMethodName}", e)
-                    call.close(Status.INTERNAL
+                    if (e is StatusRuntimeException) {
+                        call.close(e.status, Metadata())
+                    } else {
+                        call.close(Status.INTERNAL
                             .withCause(e)
-                            .withDescription("error message"), Metadata())
+                            .withDescription(e.toString()), Metadata())
+                    }
                 }
             }
         }

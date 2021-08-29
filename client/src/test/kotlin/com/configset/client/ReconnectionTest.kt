@@ -8,7 +8,6 @@ import org.awaitility.Awaitility
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.testcontainers.containers.Network
 import org.testcontainers.containers.ToxiproxyContainer
 
 
@@ -16,12 +15,7 @@ class ReconnectionTest {
 
     @Rule
     @JvmField
-    val toxiproxy = ToxiproxyContainer()
-            .withNetwork(Network.newNetwork())
-
-    @Rule
-    @JvmField
-    val serverRule = ServerRule(toxiproxy)
+    val serverRule = ClientRule(true)
 
     private lateinit var proxy: ToxiproxyContainer.ContainerProxy
 

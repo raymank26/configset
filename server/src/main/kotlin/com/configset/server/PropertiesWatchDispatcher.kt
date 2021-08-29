@@ -8,10 +8,10 @@ import com.configset.server.db.ConfigurationProperty
 private val LOG = createLoggerStatic<PropertiesWatchDispatcher>()
 
 class PropertiesWatchDispatcher(
-        private val configurationDao: ConfigurationDao,
-        private val configurationResolver: ConfigurationResolver,
-        private val scheduler: Scheduler,
-        private val updateDelayMs: Long
+    private val configurationDao: ConfigurationDao,
+    private val configurationResolver: ConfigurationResolver,
+    private val scheduler: Scheduler,
+    private val updateDelayMs: Long,
 ) {
 
     private val subscriptions: MutableMap<SubscriberId, ObserverState> = mutableMapOf()

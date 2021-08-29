@@ -11,10 +11,13 @@ import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
 
+const val CONFIG_KEY = "config"
+
 val mainModule = module {
 
+
     single {
-        val server = JavalinServer(get(), getProperty("dashboard.port"), get(), get(), getProperty("serve.static"))
+        val server = JavalinServer(get(), config(), get(), get())
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
@@ -53,8 +56,8 @@ val mainModule = module {
     }
 
     single {
-        val gateway = ServerApiGateway(getProperty("config_server.hostname"), getProperty("config_server.port"),
-                getProperty("config_server.timeout"))
+        val gateway = ServerApiGateway(config().hostname, config().port,
+                config().timeout)
         gateway.start()
 
         this.registerCallback(object : ScopeCallback {
@@ -65,3 +68,5 @@ val mainModule = module {
         gateway
     }
 }
+
+private fun Scope.config(): Config = getProperty(CONFIG_KEY)

@@ -1,6 +1,9 @@
 package com.configset.server
 
 import com.configset.sdk.proto.PropertyItem
+import com.configset.test.fixtures.CrudServiceRule
+import com.configset.test.fixtures.TEST_APP_NAME
+import com.configset.test.fixtures.TEST_DEFAULT_APP_NAME
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
 import org.junit.Rule
@@ -11,7 +14,7 @@ class GrpcWatchTest {
 
     @JvmField
     @Rule
-    val serviceRule = ServiceRule()
+    val serviceRule = CrudServiceRule()
 
     @JvmField
     @Rule
