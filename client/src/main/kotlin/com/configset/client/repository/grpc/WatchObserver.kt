@@ -3,8 +3,8 @@ package com.configset.client.repository.grpc
 import com.configset.client.PropertyItem
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.PropertiesChangesResponse
+import com.configset.sdk.proto.PropertyItem.UpdateType
 import io.grpc.stub.StreamObserver
-import java.util.*
 
 private val LOG = createLoggerStatic<WatchObserver>()
 
@@ -20,13 +20,10 @@ class WatchObserver(
         val updates: MutableList<PropertyItem> = ArrayList()
         val lastVersion = value.lastVersion
         for (propertyItemProto in value.itemsList) {
-            if (propertyItemProto.updateType == com.configset.sdk.proto.PropertyItem.UpdateType.DELETE) {
-                updates.add(PropertyItem.Deleted(propertyItemProto.applicationName,
-                        propertyItemProto.propertyName, propertyItemProto.version))
-            } else {
-                updates.add(PropertyItem.Updated(propertyItemProto.applicationName,
-                        propertyItemProto.propertyName, propertyItemProto.version, propertyItemProto.propertyValue))
-            }
+            val propValue =
+                if (propertyItemProto.updateType == UpdateType.DELETE) null else propertyItemProto.propertyValue
+            updates.add(PropertyItem(propertyItemProto.applicationName, propertyItemProto.propertyName,
+                propertyItemProto.version, propValue))
         }
         onUpdate.invoke(value.applicationName, updates, lastVersion)
     }

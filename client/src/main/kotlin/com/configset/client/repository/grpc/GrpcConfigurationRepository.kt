@@ -1,11 +1,11 @@
 package com.configset.client.repository.grpc
 
 import com.configset.client.ChangingObservable
-import com.configset.client.DynamicValue
 import com.configset.client.PropertyItem
 import com.configset.client.Subscriber
 import com.configset.client.metrics.LibraryMetrics
 import com.configset.client.metrics.Metrics
+import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
@@ -22,7 +22,6 @@ import java.util.concurrent.TimeoutException
 import kotlin.concurrent.thread
 
 private const val INITIAL_TIMEOUT_SEC: Long = 10L
-private const val UNKNOWN_VERSION: Long = -1
 private val LOG = createLoggerStatic<GrpcConfigurationRepository>()
 
 class GrpcConfigurationRepository(
@@ -93,31 +92,32 @@ class GrpcConfigurationRepository(
         subscribeObserver = asyncClient
                 .watchChanges(watchObserver)
         for (watchState in appWatchMappers) {
+            val appName = watchState.value.appName
             val subscribeRequest = SubscribeApplicationRequest
-                    .newBuilder()
-                    .setApplicationName(watchState.value.appName)
-                    .setHostName(applicationHostname)
-                    .setLastKnownVersion(watchState.value.lastVersion)
-                    .build()
+                .newBuilder()
+                .setApplicationName(appName)
+                .setHostName(applicationHostname)
+                .setLastKnownVersion(watchState.value.lastVersion)
+                .build()
             subscribeObserver.onNext(WatchRequest.newBuilder()
-                    .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                    .setSubscribeApplicationRequest(subscribeRequest)
-                    .build())
-            LOG.info("Resubscribed to app = ${watchState.value.appName} and lastVersion = ${watchState.value.lastVersion}")
+                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                .setSubscribeApplicationRequest(subscribeRequest)
+                .build())
+            LOG.info("Resubscribed to app = $appName and lastVersion = ${watchState.value.lastVersion}")
         }
         LOG.info("Watch subscription is (re)initialized")
     }
 
-    override fun subscribeToProperties(appName: String): DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>> {
+    override fun subscribeToProperties(appName: String): ConfigApplication {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
         synchronized(this) {
-            appWatchMappers[appName] = WatchState(appName, UNKNOWN_VERSION, currentObservable)
+            appWatchMappers[appName] = WatchState(appName, -1, currentObservable)
             val subscribeRequest = SubscribeApplicationRequest
-                    .newBuilder()
-                    .setApplicationName(appName)
-                    .setDefaultApplicationName(defaultApplicationName)
-                    .setHostName(applicationHostname)
-                    .build()
+                .newBuilder()
+                .setApplicationName(appName)
+                .setDefaultApplicationName(defaultApplicationName)
+                .setHostName(applicationHostname)
+                .build()
             subscribeObserver.onNext(WatchRequest.newBuilder()
                     .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
                     .setSubscribeApplicationRequest(subscribeRequest)
@@ -125,15 +125,13 @@ class GrpcConfigurationRepository(
 
         }
 
-        val future = CompletableFuture<List<PropertyItem.Updated>>()
+        val future = CompletableFuture<List<PropertyItem>>()
         currentObservable.onSubscribe(object : Subscriber<List<PropertyItem>> {
             override fun process(value: List<PropertyItem>) {
-                val snapshot = value.filterIsInstance<PropertyItem.Updated>()
-                        .map { PropertyItem.Updated(it.applicationName, it.name, it.version, it.value) }
-                future.complete(snapshot)
+                future.complete(value)
             }
         })
-        var initialProperties: List<PropertyItem.Updated>
+        var initialProperties: List<PropertyItem>
         while (true) {
             try {
                 initialProperties = future.get(INITIAL_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -143,7 +141,7 @@ class GrpcConfigurationRepository(
             }
         }
         LOG.info("Initial properties for app = $appName received with size = ${initialProperties.size}")
-        return DynamicValue(initialProperties, currentObservable)
+        return ConfigApplication(appName, initialProperties, currentObservable)
     }
 
     @Synchronized

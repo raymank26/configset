@@ -37,7 +37,7 @@ class ConfigurationRegistry(
             if (appState != null) {
                 appState
             } else {
-                val registry = ApplicationRegistry(appName, configurationRepository.subscribeToProperties(appName))
+                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName))
                 registry.start()
                 AppState(registry, ObservableConfiguration(appName, this))
             }

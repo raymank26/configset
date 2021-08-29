@@ -1,18 +1,17 @@
 package com.configset.client
 
 import com.configset.client.converter.Converter
+import com.configset.client.repository.ConfigApplication
 import com.configset.sdk.extension.createLoggerStatic
 
 private val LOG = createLoggerStatic<ApplicationRegistry>()
 
-class ApplicationRegistry(
-        private val appName: String,
-        private val propertiesProvider: DynamicValue<List<PropertyItem.Updated>, List<PropertyItem>>
-) {
+class ApplicationRegistry(private val propertiesProvider: ConfigApplication) {
 
+    private val appName = propertiesProvider.appName
     private val propertiesSubscribers: MutableMap<String, ChangingObservable<String?>> = HashMap()
     private val snapshot: MutableMap<String, String> =
-        propertiesProvider.initial.associate { it.name to it.value }.toMutableMap()
+        propertiesProvider.initial.associate { it.name to it.value!! }.toMutableMap()
 
     fun start() {
         propertiesProvider.observable.onSubscribe(object : Subscriber<List<PropertyItem>> {
@@ -26,16 +25,10 @@ class ApplicationRegistry(
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
             LOG.info("Update come for appName = ${appName}, property = $propertyItem")
-            val observable = propertiesSubscribers[propertyItem.name]
-            if (observable != null) {
-                when (propertyItem) {
-                    is PropertyItem.Updated -> observable.setValue(propertyItem.value)
-                    is PropertyItem.Deleted -> observable.setValue(null)
-                }
-            }
+            propertiesSubscribers[propertyItem.name]?.setValue(propertyItem.value)
         }
         for (propertyItem in value) {
-            if (propertyItem is PropertyItem.Updated) {
+            if (propertyItem.value != null) {
                 snapshot[propertyItem.name] = propertyItem.value
             }
         }
