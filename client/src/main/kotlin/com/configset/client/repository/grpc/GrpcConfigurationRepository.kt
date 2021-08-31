@@ -4,22 +4,14 @@ import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
 import com.configset.client.Subscriber
 import com.configset.client.metrics.LibraryMetrics
-import com.configset.client.metrics.Metrics
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.sdk.extension.createLoggerStatic
-import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.SubscribeApplicationRequest
-import com.configset.sdk.proto.UpdateReceived
 import com.configset.sdk.proto.WatchRequest
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
-import io.grpc.stub.StreamObserver
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
-import kotlin.concurrent.thread
 
 private const val INITIAL_TIMEOUT_SEC: Long = 10L
 private val LOG = createLoggerStatic<GrpcConfigurationRepository>()
@@ -32,97 +24,28 @@ class GrpcConfigurationRepository(
         private val libraryMetrics: LibraryMetrics
 ) : ConfigurationRepository {
 
-    private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
-    private lateinit var channel: ManagedChannel
-    private lateinit var subscribeObserver: StreamObserver<WatchRequest>
-    private lateinit var watchObserver: WatchObserver
-    private val appWatchMappers = ConcurrentHashMap<String, WatchState>()
+    private lateinit var grpcRemoteConnector: GrpcRemoteConnector
 
     @Synchronized
     override fun start() {
-        watchObserver = WatchObserver(
-                onUpdate = { appName, updates, lastVersion ->
-                    val watchState: WatchState = appWatchMappers[appName]!!
-                    if (lastVersion <= watchState.lastVersion) {
-                        if (updates.isNotEmpty()) {
-                            LOG.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
-                                    "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}")
-                        }
-                        return@WatchObserver
-                    }
-                    val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
-                    if (filteredUpdates.size != updates.size) {
-                        LOG.debug("Some updates where filtered (they are obsolete)" +
-                                ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
-                        libraryMetrics.increment(Metrics.SKIPPED_OBSOLETE_UPDATES)
-                    }
-                    watchState.observable.setValue(filteredUpdates)
-                    watchState.lastVersion = lastVersion
-                    subscribeObserver.onNext(WatchRequest.newBuilder()
-                            .setType(WatchRequest.Type.UPDATE_RECEIVED)
-                            .setUpdateReceived(UpdateReceived.newBuilder()
-                                    .setApplicationName(appName)
-                                    .setVersion(lastVersion)
-                                    .build())
-                            .build())
-                },
-                onEnd = {
-                    thread {
-                        LOG.info("Resubscribe started, waiting for 2 seconds")
-                        try {
-                            channel.shutdownNow()
-                        } catch (e: Exception) {
-                            LOG.warn("Exception during shutdown", e)
-                        }
-                        Thread.sleep(5000)
-                        initialize()
-                    }
-                })
-        initialize()
-    }
-
-    @Synchronized
-    private fun initialize() {
-        channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
-                .usePlaintext()
-                .keepAliveTime(5000, TimeUnit.MILLISECONDS)
-                .build()
-        asyncClient = ConfigurationServiceGrpc.newStub(channel)
-
-        subscribeObserver = asyncClient
-                .watchChanges(watchObserver)
-        for (watchState in appWatchMappers) {
-            val appName = watchState.value.appName
-            val subscribeRequest = SubscribeApplicationRequest
-                .newBuilder()
-                .setApplicationName(appName)
-                .setHostName(applicationHostname)
-                .setLastKnownVersion(watchState.value.lastVersion)
-                .build()
-            subscribeObserver.onNext(WatchRequest.newBuilder()
-                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                .setSubscribeApplicationRequest(subscribeRequest)
-                .build())
-            LOG.info("Resubscribed to app = $appName and lastVersion = ${watchState.value.lastVersion}")
-        }
-        LOG.info("Watch subscription is (re)initialized")
+        grpcRemoteConnector = GrpcRemoteConnector(libraryMetrics, applicationHostname, serverHostname, serverPort)
+        grpcRemoteConnector.init()
     }
 
     override fun subscribeToProperties(appName: String): ConfigApplication {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
         synchronized(this) {
-            appWatchMappers[appName] = WatchState(appName, -1, currentObservable)
+            grpcRemoteConnector.subscribeForChanges(appName, currentObservable)
             val subscribeRequest = SubscribeApplicationRequest
                 .newBuilder()
                 .setApplicationName(appName)
                 .setDefaultApplicationName(defaultApplicationName)
                 .setHostName(applicationHostname)
                 .build()
-            subscribeObserver.onNext(WatchRequest.newBuilder()
-                    .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                    .setSubscribeApplicationRequest(subscribeRequest)
-                    .build())
-
+            grpcRemoteConnector.sendRequest(WatchRequest.newBuilder()
+                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                .setSubscribeApplicationRequest(subscribeRequest)
+                .build())
         }
 
         val future = CompletableFuture<List<PropertyItem>>()
@@ -146,10 +69,12 @@ class GrpcConfigurationRepository(
 
     @Synchronized
     override fun stop() {
-        subscribeObserver.onCompleted()
-        watchObserver.isStopped = true
-        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
+        grpcRemoteConnector.stop()
     }
 }
 
-private data class WatchState(val appName: String, var lastVersion: Long, val observable: ChangingObservable<List<PropertyItem>>)
+data class WatchState(
+    val appName: String,
+    var lastVersion: Long,
+    val observable: ChangingObservable<List<PropertyItem>>,
+)
