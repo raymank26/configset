@@ -39,12 +39,13 @@ class ClientTest {
     }
 
     @Test
-    fun testDeleteCallback() {
+    fun `test delete callback`() {
         serverRule.createApplication(APP_NAME)
         serverRule.createHost(HOST_NAME)
 
         val propertyName = "configuration.property"
-        val confProperty: ConfProperty<String?> = serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
+        val confProperty: ConfProperty<String?> =
+            serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
         var deleteCaught = false
         var called = 0
@@ -65,5 +66,12 @@ class ClientTest {
 
         Awaitility.await().untilAsserted { deleteCaught shouldBe true }
         Awaitility.await().untilAsserted { called shouldBe 2 }
+    }
+
+    @Test
+    fun `test no application`() {
+        val confProperty: ConfProperty<String?> =
+            serverRule.defaultConfiguration.getConfProperty("foo", Converters.STRING)
+        confProperty.getValue() shouldBeEqualTo null
     }
 }

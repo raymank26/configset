@@ -19,8 +19,6 @@ dependencies {
 
 version = "0.0.5"
 
-test.dependsOn (":server:dockerBuildImage")
-
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }

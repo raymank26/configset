@@ -8,8 +8,10 @@ private val LOG = createLoggerStatic<ConfigurationResolver>()
 
 class ConfigurationResolver {
 
-    fun getChanges(snapshot: Map<String, ConfigurationApplication>, targetApplication: String, hostName: String,
-                   defaultApplication: String, lastVersion: Long?): PropertiesChanges? {
+    fun getChanges(
+        snapshot: Map<String, ConfigurationApplication>, targetApplication: String, hostName: String,
+        defaultApplication: String, lastVersion: Long,
+    ): PropertiesChanges? {
 
         val properties: ConfigurationApplication = snapshot[targetApplication] ?: return null
 
@@ -23,16 +25,12 @@ class ConfigurationResolver {
         var newLastVersion = lastVersion
         for (config: ConfigurationProperty in properties.config.values) {
             val propertyItem: PropertyItem? = resolveProperty(config.hosts, hostName, defaultApplication, targetApplication)
-            if (propertyItem != null && (lastVersion == null || lastVersion < propertyItem.version)) {
+            if (propertyItem != null && (lastVersion < propertyItem.version)) {
                 collectedProperties.add(propertyItem)
                 newLastVersion = propertyItem.version.coerceAtLeast(newLastVersion ?: -1)
             }
         }
-        val changes = if (newLastVersion == null) {
-            null
-        } else {
-            PropertiesChanges(newLastVersion, collectedProperties)
-        }
+        val changes = PropertiesChanges(newLastVersion, collectedProperties)
         if (LOG.isDebugEnabled) {
             LOG.debug("Result = $changes")
         }

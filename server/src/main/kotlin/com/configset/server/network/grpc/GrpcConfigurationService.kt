@@ -198,8 +198,9 @@ class GrpcConfigurationService(
                         log.debug("Subscriber with id = $subscriberId call subscribe for app = ${subscribeRequest.applicationName}" +
                                 ", lastVersion = ${subscribeRequest.lastKnownVersion}" +
                                 ", hostName = ${subscribeRequest.hostName}")
-                        val changesToPush = configurationService.subscribeApplication(subscriberId, subscribeRequest.defaultApplicationName, subscribeRequest.hostName,
-                                subscribeRequest.applicationName, subscribeRequest.lastKnownVersion)
+                        val changesToPush = configurationService.subscribeApplication(subscriberId,
+                            subscribeRequest.defaultApplicationName, subscribeRequest.hostName,
+                            subscribeRequest.applicationName, subscribeRequest.lastKnownVersion)
                         if (!subscribed) {
                             configurationService.watchChanges(object : WatchSubscriber {
                                 override fun getId(): String {

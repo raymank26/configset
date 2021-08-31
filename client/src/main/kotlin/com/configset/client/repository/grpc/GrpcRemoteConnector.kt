@@ -114,19 +114,18 @@ class GrpcRemoteConnector(
     }
 
     override fun onError(t: Throwable?) {
-        if (!isStopped) {
-            reconnect()
-        } else {
-            LOG.warn("Exception in connection", t)
-        }
+        LOG.warn("Exception on streaming data", t)
+        reconnect()
     }
 
     override fun onCompleted() {
-        // we forbid completing on server side
         reconnect()
     }
 
     private fun reconnect() {
+        if (isStopped) {
+            return
+        }
         thread {
             LOG.info("Resubscribe started, waiting for 5 seconds")
             try {

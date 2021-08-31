@@ -48,9 +48,15 @@ class ConfigurationService(
         }
     }
 
-    fun subscribeApplication(subscriberId: String, defaultApplicationName: String, hostName: String,
-                             applicationName: String, lastKnownVersion: Long?): PropertiesChanges? {
-        return propertiesWatchDispatcher.subscribeApplication(subscriberId, defaultApplicationName, hostName, applicationName, lastKnownVersion)
+    fun subscribeApplication(
+        subscriberId: String, defaultApplicationName: String, hostName: String,
+        applicationName: String, lastKnownVersion: Long,
+    ): PropertiesChanges? {
+        return propertiesWatchDispatcher.subscribeApplication(subscriberId,
+            defaultApplicationName,
+            hostName,
+            applicationName,
+            lastKnownVersion)
     }
 
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {

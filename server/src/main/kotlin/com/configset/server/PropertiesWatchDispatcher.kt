@@ -26,17 +26,21 @@ class PropertiesWatchDispatcher(
     }
 
     @Synchronized
-    fun subscribeApplication(subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
-                             lastKnownVersion: Long?): PropertiesChanges? {
+    fun subscribeApplication(
+        subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
+        lastKnownVersion: Long,
+    ): PropertiesChanges? {
 
         val changes = configurationResolver.getChanges(configurationSnapshot, applicationName, hostName,
-                defaultApplication, lastKnownVersion)
+            defaultApplication, lastKnownVersion)
 
         subscriptions.compute(subscriberId) { _, value ->
             val newAppState = ApplicationState(applicationName, lastKnownVersion)
             if (value == null) {
-                ObserverState(hostName = hostName, defaultApplicationName = defaultApplication, applications = setOf(newAppState),
-                        watchSubscriber = null)
+                ObserverState(hostName = hostName,
+                    defaultApplicationName = defaultApplication,
+                    applications = setOf(newAppState),
+                    watchSubscriber = null)
             } else {
                 require(hostName == value.hostName)
                 require(defaultApplication == value.defaultApplicationName)
@@ -118,12 +122,12 @@ class PropertiesWatchDispatcher(
             LOG.warn("Unable to find app subscription for subscriber = $subscriberId, app = $applicationName")
             return
         }
-        if (appSubscription.lastVersion != null && version <= appSubscription.lastVersion!!) {
+        if (version <= appSubscription.lastVersion && version != 0L) {
             LOG.debug("Incoming version is obsolete for subscriber = $subscriberId, app = $applicationName")
             return
         }
         appSubscription.lastVersion = version
-        LOG.debug("Version updated for for subscriber = $subscriberId, app = $applicationName")
+        LOG.debug("Version updated for for subscriber = $subscriberId, app = $applicationName, version = $version")
     }
 }
 
@@ -136,5 +140,5 @@ private data class ObserverState(
         var watchSubscriber: WatchSubscriber?
 )
 
-private data class ApplicationState(val appName: String, var lastVersion: Long?)
+private data class ApplicationState(val appName: String, var lastVersion: Long)
 

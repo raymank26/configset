@@ -36,11 +36,7 @@ class ApplicationRegistry(private val propertiesProvider: ConfigApplication) {
 
     @Synchronized
     fun <T> getConfProperty(name: String, converter: Converter<T>): ConfProperty<T?> {
-        val value = snapshot[name]
-        val observable = propertiesSubscribers.compute(name) { _, prev ->
-            prev ?: ChangingObservable()
-        }!!
-        return ObservableConfProperty(name, value?.let { converter.convert(it) }, converter, DynamicValue(value, observable))
+        return getConfProperty(name, converter, null)
     }
 
     @Synchronized
