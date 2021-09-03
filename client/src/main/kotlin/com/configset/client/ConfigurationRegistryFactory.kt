@@ -3,6 +3,7 @@ package com.configset.client
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
+import kotlin.concurrent.thread
 
 object ConfigurationRegistryFactory {
 
@@ -13,6 +14,9 @@ object ConfigurationRegistryFactory {
         }
         val registry = ConfigurationRegistry(repository)
         registry.start()
+        Runtime.getRuntime().addShutdownHook(thread {
+            registry.stop()
+        })
         return registry
     }
 
