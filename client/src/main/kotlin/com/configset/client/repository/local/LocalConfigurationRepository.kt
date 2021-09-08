@@ -29,6 +29,5 @@ class LocalConfigurationRepository(private val readerProvider: () -> Reader) : C
         return ConfigApplication(appName, appValue, ChangingObservable())
     }
 
-    override fun stop() {
-    }
+    override fun stop() = Unit
 }

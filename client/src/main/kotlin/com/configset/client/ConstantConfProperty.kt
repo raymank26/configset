@@ -1,8 +1,7 @@
 package com.configset.client
 
 private val EMPTY_SUBSCRIPTION = object : Subscription {
-    override fun unsubscribe() {
-    }
+    override fun unsubscribe() = Unit
 }
 
 class ConstantConfProperty<T>(private val value: T) : ConfProperty<T> {

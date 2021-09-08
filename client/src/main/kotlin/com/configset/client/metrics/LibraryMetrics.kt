@@ -6,12 +6,10 @@ interface LibraryMetrics {
 }
 
 object NoopMetrics : LibraryMetrics {
-    override fun increment(metricName: String) {
-    }
 
-    override fun get(metricName: String): Int {
-        return 0
-    }
+    override fun increment(metricName: String) = Unit
+
+    override fun get(metricName: String): Int = 0
 }
 
 object Metrics {
