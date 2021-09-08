@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 private typealias AppName = String
 
 class ConfigurationRegistry(
-        private val configurationRepository: ConfigurationRepository
+    private val configurationRepository: ConfigurationRepository,
 ) {
 
     private val appStates: MutableMap<AppName, AppState> = ConcurrentHashMap()
@@ -40,12 +40,10 @@ class ConfigurationRegistry(
                 appState
             } else {
                 val config = ObservableConfiguration(appName, this)
-                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName),
-                    object : PropertyFullResolver {
-                        override fun getConfProperty(appName: String, propertyName: String): ConfProperty<String?> {
-                            return getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
-                        }
-                    })
+                val registry =
+                    ApplicationRegistry(configurationRepository.subscribeToProperties(appName)) { appName, propertyName ->
+                        getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
+                    }
                 registry.start()
                 AppState(registry, config)
             }
