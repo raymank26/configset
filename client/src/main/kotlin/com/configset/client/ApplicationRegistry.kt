@@ -1,17 +1,22 @@
 package com.configset.client
 
 import com.configset.client.converter.Converter
+import com.configset.client.converter.Converters
 import com.configset.client.repository.ConfigApplication
 import com.configset.sdk.extension.createLoggerStatic
 
 private val LOG = createLoggerStatic<ApplicationRegistry>()
 
-class ApplicationRegistry(private val propertiesProvider: ConfigApplication) {
+class ApplicationRegistry(
+    private val propertiesProvider: ConfigApplication,
+    private val config: ObservableConfiguration,
+) {
 
     private val appName = propertiesProvider.appName
     private val propertiesSubscribers: MutableMap<String, ChangingObservable<String?>> = HashMap()
     private val snapshot: MutableMap<String, String> =
         propertiesProvider.initial.associate { it.name to it.value!! }.toMutableMap()
+    private val inProgressResolution = mutableSetOf<String>()
 
     fun start() {
         propertiesProvider.observable.onSubscribe(object : Subscriber<List<PropertyItem>> {
@@ -41,11 +46,25 @@ class ApplicationRegistry(private val propertiesProvider: ConfigApplication) {
 
     @Synchronized
     fun <T> getConfProperty(name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
+        if (inProgressResolution.contains(name)) {
+            error("Recursive resolution found")
+        }
+        inProgressResolution.add(name)
         val value = snapshot[name]
         val observable = propertiesSubscribers.compute(name) { _, prev ->
             prev ?: ChangingObservable()
         }!!
-        return ObservableConfProperty(name, value?.let { converter.convert(it) } ?: defaultValue, converter,
-                DynamicValue(value, observable))
+        val res = ObservableConfProperty(
+            configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
+            valueDependencyResolver = { appName, propertyName ->
+                config.getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
+            },
+            name = name,
+            defaultValue = value?.let { converter.convert(it) } ?: defaultValue,
+            converter = converter,
+            dynamicValue = DynamicValue(value, observable)
+        )
+        inProgressResolution.remove(name)
+        return res
     }
 }

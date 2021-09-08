@@ -25,7 +25,8 @@ class ConfigurationRegistry(
     }
 
     fun <T> getConfProperty(appName: String, name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
-        return getApplicationRegistry(appName).applicationRegistry.getConfProperty(name, converter, defaultValue)
+        val applicationRegistry = getApplicationRegistry(appName)
+        return applicationRegistry.applicationRegistry.getConfProperty(name, converter, defaultValue)
     }
 
     fun stop() {
@@ -37,9 +38,10 @@ class ConfigurationRegistry(
             if (appState != null) {
                 appState
             } else {
-                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName))
+                val config = ObservableConfiguration(appName, this)
+                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName), config)
                 registry.start()
-                AppState(registry, ObservableConfiguration(appName, this))
+                AppState(registry, config)
             }
         }!!
     }
