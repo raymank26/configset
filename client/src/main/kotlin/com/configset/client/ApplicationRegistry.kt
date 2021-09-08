@@ -1,7 +1,6 @@
 package com.configset.client
 
 import com.configset.client.converter.Converter
-import com.configset.client.converter.Converters
 import com.configset.client.repository.ConfigApplication
 import com.configset.sdk.extension.createLoggerStatic
 
@@ -9,7 +8,7 @@ private val LOG = createLoggerStatic<ApplicationRegistry>()
 
 class ApplicationRegistry(
     private val propertiesProvider: ConfigApplication,
-    private val config: ObservableConfiguration,
+    private val propertyResolver: PropertyFullResolver,
 ) {
 
     private val appName = propertiesProvider.appName
@@ -56,9 +55,7 @@ class ApplicationRegistry(
         }!!
         val res = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
-            valueDependencyResolver = { appName, propertyName ->
-                config.getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
-            },
+            valueDependencyResolver = propertyResolver,
             name = name,
             defaultValue = value?.let { converter.convert(it) } ?: defaultValue,
             converter = converter,
@@ -67,4 +64,8 @@ class ApplicationRegistry(
         inProgressResolution.remove(name)
         return res
     }
+}
+
+fun interface PropertyFullResolver {
+    fun getConfProperty(appName: String, propertyName: String): ConfProperty<String?>
 }

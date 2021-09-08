@@ -10,7 +10,7 @@ private typealias Listener<T> = (T) -> Unit
 
 class ObservableConfProperty<T>(
     private val configPropertyLinkProcessor: ConfigPropertyLinkProcessor,
-    private val valueDependencyResolver: ValueDependencyResolver,
+    private val valueDependencyResolver: PropertyFullResolver,
     private val name: String,
     private val defaultValue: T,
     private val converter: Converter<T>,
@@ -45,7 +45,7 @@ class ObservableConfProperty<T>(
             val tokensNode = configPropertyLinkProcessor.parse(value)
             for (token in tokensNode.tokens) {
                 if (token is Link) {
-                    val sub = valueDependencyResolver.resolve(token.appName, token.propertyName).subscribe {
+                    val sub = valueDependencyResolver.getConfProperty(token.appName, token.propertyName).subscribe {
                         evaluate(value)
                     }
                     depSubscriptions.add(sub)
@@ -90,10 +90,6 @@ class ObservableConfProperty<T>(
             }
         }
     }
-}
-
-fun interface ValueDependencyResolver {
-    fun resolve(appName: String, propertyName: String): ConfProperty<String?>
 }
 
 data class PropertyState<T>(val value: T, val dependencySubscriptions: List<Subscription>)

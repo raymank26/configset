@@ -62,9 +62,9 @@ class ConfigPropertyLinkProcessor {
         return TokenList(tokens)
     }
 
-    fun evaluate(token: ValueToken, resolver: ValueDependencyResolver): String {
+    fun evaluate(token: ValueToken, resolver: PropertyFullResolver): String {
         return when (token) {
-            is Link -> resolver.resolve(token.appName, token.propertyName).getValue()
+            is Link -> resolver.getConfProperty(token.appName, token.propertyName).getValue()
                 ?: error("Dependency property is not found during resolving for token = $token")
             is Text -> token.str
             is TokenList -> token.tokens.joinToString("") { evaluate(it, resolver) }

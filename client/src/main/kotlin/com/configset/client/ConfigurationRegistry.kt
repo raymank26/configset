@@ -1,6 +1,7 @@
 package com.configset.client
 
 import com.configset.client.converter.Converter
+import com.configset.client.converter.Converters
 import com.configset.client.repository.ConfigurationRepository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,7 +40,12 @@ class ConfigurationRegistry(
                 appState
             } else {
                 val config = ObservableConfiguration(appName, this)
-                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName), config)
+                val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName),
+                    object : PropertyFullResolver {
+                        override fun getConfProperty(appName: String, propertyName: String): ConfProperty<String?> {
+                            return getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
+                        }
+                    })
                 registry.start()
                 AppState(registry, config)
             }
