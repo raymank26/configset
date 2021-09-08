@@ -82,7 +82,7 @@ class ObservableConfPropertyTest {
 private class UpdatableConfProperty<T>(value: T) : ConfProperty<T> {
 
     private var currentValue = value
-    private var listeners: MutableSet<(T) -> Unit> = Collections.newSetFromMap(IdentityHashMap())
+    private var listeners: MutableSet<Subscriber<T>> = Collections.newSetFromMap(IdentityHashMap())
 
     override fun getValue(): T {
         return currentValue
@@ -91,11 +91,11 @@ private class UpdatableConfProperty<T>(value: T) : ConfProperty<T> {
     fun setValue(value: T) {
         currentValue = value
         for (listener in listeners) {
-            listener(value)
+            listener.process(value)
         }
     }
 
-    override fun subscribe(listener: (T) -> Unit): Subscription {
+    override fun subscribe(listener: Subscriber<T>): Subscription {
         listeners.add(listener)
         return object : Subscription {
             override fun unsubscribe() {

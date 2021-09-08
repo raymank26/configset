@@ -6,8 +6,6 @@ import java.util.*
 
 private val LOG = createLoggerStatic<ObservableConfProperty<*>>()
 
-private typealias Listener<T> = (T) -> Unit
-
 class ObservableConfProperty<T>(
     private val configPropertyLinkProcessor: ConfigPropertyLinkProcessor,
     private val valueDependencyResolver: PropertyFullResolver,
@@ -19,8 +17,7 @@ class ObservableConfProperty<T>(
 
     @Volatile
     private lateinit var state: PropertyState<T>
-    private val listeners: MutableSet<Listener<T>> =
-        Collections.synchronizedSet(Collections.newSetFromMap(IdentityHashMap()))
+    private val listeners: MutableSet<Subscriber<T>> = Collections.newSetFromMap(IdentityHashMap())
 
     init {
         evaluate(dynamicValue.value)
@@ -59,7 +56,8 @@ class ObservableConfProperty<T>(
         fireListeners(state.value)
     }
 
-    override fun subscribe(listener: (T) -> Unit): Subscription {
+    @Synchronized
+    override fun subscribe(listener: Subscriber<T>): Subscription {
         listeners.add(listener)
         return object : Subscription {
             override fun unsubscribe() {
@@ -84,7 +82,7 @@ class ObservableConfProperty<T>(
     private fun fireListeners(value: T) {
         for (listener in listeners) {
             try {
-                listener.invoke(value)
+                listener.process(value)
             } catch (e: Exception) {
                 LOG.warn("For propertyName = $name unable to call listener for value = $value", e)
             }

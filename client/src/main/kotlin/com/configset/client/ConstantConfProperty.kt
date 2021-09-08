@@ -11,7 +11,7 @@ class ConstantConfProperty<T>(private val value: T) : ConfProperty<T> {
         return value
     }
 
-    override fun subscribe(listener: (T) -> Unit): Subscription {
+    override fun subscribe(listener: Subscriber<T>): Subscription {
         return EMPTY_SUBSCRIPTION
     }
 }
