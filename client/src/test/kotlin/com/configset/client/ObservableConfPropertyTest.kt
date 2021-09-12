@@ -57,10 +57,16 @@ class ObservableConfPropertyTest {
             dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable()))
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
 
+        var subscriberInvocations = 0
+        property.subscribe {
+            subscriberInvocations++
+        }
+
         linkedProperty.setValue("link updated")
 
         property.getValue() shouldBeEqualTo "some value link updated suffix"
 
+        subscriberInvocations shouldBeEqualTo 1
     }
 
     @Test

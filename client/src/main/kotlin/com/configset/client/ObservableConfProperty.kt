@@ -21,11 +21,7 @@ class ObservableConfProperty<T>(
 
     init {
         evaluate(dynamicValue.value)
-        val subscriber = object : Subscriber<String?> {
-            override fun process(value: String?) {
-                evaluate(value)
-            }
-        }
+        val subscriber = Subscriber<String?> { value -> evaluate(value) }
         dynamicValue.observable.onSubscribe(subscriber)
     }
 

@@ -18,11 +18,7 @@ class ApplicationRegistry(
     private val inProgressResolution = mutableSetOf<String>()
 
     fun start() {
-        propertiesProvider.observable.onSubscribe(object : Subscriber<List<PropertyItem>> {
-            override fun process(value: List<PropertyItem>) {
-                updateState(value)
-            }
-        })
+        propertiesProvider.observable.onSubscribe { value -> updateState(value) }
     }
 
     @Synchronized
