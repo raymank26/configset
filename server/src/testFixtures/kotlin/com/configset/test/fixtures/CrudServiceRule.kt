@@ -14,8 +14,6 @@ import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import com.configset.sdk.proto.UpdateReceived
 import com.configset.sdk.proto.WatchRequest
-import io.grpc.Metadata
-import io.grpc.stub.MetadataUtils
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
 import org.junit.rules.ExternalResource
@@ -51,14 +49,10 @@ class CrudServiceRule : ExternalResource() {
     }
 
     fun createApplication(app: String, requestId: String = createRequestId()) {
-        val meta = Metadata()
-        meta.put(Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER), "123")
-        MetadataUtils.attachHeaders(blockingClient, meta)
-        val res =
-            MetadataUtils.attachHeaders(blockingClient, meta).createApplication(ApplicationCreateRequest.newBuilder()
-                .setRequestId(requestId)
-                .setApplicationName(app)
-                .build())
+        val res = blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+            .setRequestId(requestId)
+            .setApplicationName(app)
+            .build())
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, res.type)
     }
 

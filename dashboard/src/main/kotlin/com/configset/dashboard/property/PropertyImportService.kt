@@ -18,22 +18,29 @@ class PropertyImportService(
         private val requestIdProducer: RequestIdProducer
 ) {
 
-    fun import(requestId: String, appName: String, properties: String): PropertiesImport {
+    fun import(requestId: String, appName: String, properties: String, accessToken: String): PropertiesImport {
         try {
             val root = xmlMapper.readValue(properties, PropertiesXml::class.java)
             var curRequestId = requestId
-            val hosts = serverApiGateway.listHosts().toSet()
+            val hosts = serverApiGateway.listHosts(accessToken).toSet()
             for (property in root.properties) {
                 if (!hosts.contains(property.host)) {
-                    serverApiGateway.createHost(curRequestId, property.host)
+                    serverApiGateway.createHost(curRequestId, property.host, accessToken)
                     curRequestId = requestIdProducer.nextRequestId(curRequestId)
                 }
 
                 var retired = false
                 loop@ while (true) {
-                    val alreadyCreatedProperty = serverApiGateway.readProperty(appName, property.host, property.name)
+                    val alreadyCreatedProperty = serverApiGateway.readProperty(appName, property.host, property.name,
+                        accessToken)
                     val version = alreadyCreatedProperty?.version
-                    when (serverApiGateway.updateProperty(curRequestId, appName, property.host, property.name, property.value, version)) {
+                    when (serverApiGateway.updateProperty(curRequestId,
+                        appName,
+                        property.host,
+                        property.name,
+                        property.value,
+                        version,
+                        accessToken)) {
                         PropertyCreateResult.OK -> Unit
                         PropertyCreateResult.ApplicationNotFound -> return PropertiesImport.ApplicationNotFound
                         PropertyCreateResult.UpdateConflict -> if (retired) {

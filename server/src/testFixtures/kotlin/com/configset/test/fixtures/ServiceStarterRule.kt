@@ -15,14 +15,16 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import java.util.concurrent.LinkedBlockingDeque
 
+const val SERVER_PORT = 8080
+
+const val ACCESS_TOKEN = "access-token"
+
 class ServiceStarterRule : ExternalResource() {
     lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     lateinit var nonAuthBlockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
 
     lateinit var subscribeStream: StreamObserver<WatchRequest>
     lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
-
-    val accessToken = "access-token"
 
     val changesQueue = LinkedBlockingDeque<PropertiesChangesResponse>()
     private val log = createLogger()
@@ -35,15 +37,15 @@ class ServiceStarterRule : ExternalResource() {
             "grpc_port" to "8080",
 
             "authenticator_type" to "stub",
-            "auth_stub.admin_access_token" to accessToken
+            "auth_stub.admin_access_token" to ACCESS_TOKEN
         )))
         koinApp = startKoin {
             modules(mainModules)
         }
         koinApp.koin.get<GrpcConfigurationServer>().start()
 
-        val configSetClient = ConfigSetClient("localhost", 8080)
-        blockingClient = configSetClient.getAuthBlockingClient(accessToken)
+        val configSetClient = ConfigSetClient("localhost", SERVER_PORT)
+        blockingClient = configSetClient.getAuthBlockingClient(ACCESS_TOKEN)
         nonAuthBlockingClient = configSetClient.blockingClient
         asyncClient = configSetClient.asyncClient
 

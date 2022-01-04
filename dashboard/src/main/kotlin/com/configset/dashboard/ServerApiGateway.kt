@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
@@ -12,31 +13,23 @@ import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
-import java.util.concurrent.TimeUnit
 
 class ServerApiGateway(
-        private val serverHostname: String,
-        private val serverPort: Int,
-        private val networkTimeout: Long) {
+    private val serverHostname: String,
+    private val serverPort: Int,
+) {
 
-    private lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
-    private lateinit var channel: ManagedChannel
+    private lateinit var configSetClient: ConfigSetClient
 
     fun start() {
-        channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
-                .usePlaintext()
-                .keepAliveTime(5000, TimeUnit.MILLISECONDS)
-                .build()
-        blockingClient = ConfigurationServiceGrpc.newBlockingStub(channel)
+        configSetClient = ConfigSetClient(serverHostname, serverPort)
     }
 
-    fun createApplication(requestId: String, appName: String): CreateApplicationResult {
-        val res = withDeadline().createApplication(ApplicationCreateRequest.newBuilder()
-                .setRequestId(requestId)
-                .setApplicationName(appName)
-                .build()
+    fun createApplication(requestId: String, appName: String, accessToken: String): CreateApplicationResult {
+        val res = withClient(accessToken).createApplication(ApplicationCreateRequest.newBuilder()
+            .setRequestId(requestId)
+            .setApplicationName(appName)
+            .build()
         )
 
         return when (res.type) {
@@ -46,57 +39,60 @@ class ServerApiGateway(
         }
     }
 
-    fun listApplications(): List<String> {
-        val response = withDeadline().listApplications(EmptyRequest.getDefaultInstance())
+    fun listApplications(accessToken: String): List<String> {
+        val response = withClient(accessToken).listApplications(EmptyRequest.getDefaultInstance())
         return response.applicationsList.map { it }
     }
 
-    fun listHosts(): List<String> {
-        return withDeadline().listHosts(EmptyRequest.getDefaultInstance())
-                .hostNamesList
-                .map { it }
+    fun listHosts(accessToken: String): List<String> {
+        return withClient(accessToken).listHosts(EmptyRequest.getDefaultInstance())
+            .hostNamesList
+            .map { it }
     }
 
-    fun searchProperties(searchPropertiesRequest: SearchPropertiesRequest): List<ShowPropertyItem> {
-        val response = withDeadline().searchProperties(com.configset.sdk.proto.SearchPropertiesRequest
-                .newBuilder()
-                .apply {
-                    if (searchPropertiesRequest.applicationName != null) {
-                        applicationName = searchPropertiesRequest.applicationName
-                    }
-                    if (searchPropertiesRequest.hostNameQuery != null) {
-                        hostName = searchPropertiesRequest.hostNameQuery
-                    }
-                    if (searchPropertiesRequest.propertyNameQuery != null) {
-                        propertyName = searchPropertiesRequest.propertyNameQuery
+    fun searchProperties(
+        searchPropertiesRequest: SearchPropertiesRequest,
+        accessToken: String,
+    ): List<ShowPropertyItem> {
+        val response = withClient(accessToken).searchProperties(com.configset.sdk.proto.SearchPropertiesRequest
+            .newBuilder()
+            .apply {
+                if (searchPropertiesRequest.applicationName != null) {
+                    applicationName = searchPropertiesRequest.applicationName
+                }
+                if (searchPropertiesRequest.hostNameQuery != null) {
+                    hostName = searchPropertiesRequest.hostNameQuery
+                }
+                if (searchPropertiesRequest.propertyNameQuery != null) {
+                    propertyName = searchPropertiesRequest.propertyNameQuery
                     }
                     if (searchPropertiesRequest.propertyValueQuery != null) {
                         propertyValue = searchPropertiesRequest.propertyValueQuery
                     }
-                }
-                .build())
+            }
+            .build())
 
         return response.itemsList.map { item ->
             ShowPropertyItem(item.applicationName, item.hostName, item.propertyName, item.propertyValue, item.version)
         }
     }
 
-    fun listProperties(appName: String): List<String> {
-        return searchProperties(SearchPropertiesRequest(appName, null, null, null))
-                .mapNotNull {
-                    if (it.applicationName == appName) {
-                        it.propertyName
-                    } else {
-                        null
-                    }
+    fun listProperties(appName: String, accessToken: String): List<String> {
+        return searchProperties(SearchPropertiesRequest(appName, null, null, null), accessToken)
+            .mapNotNull {
+                if (it.applicationName == appName) {
+                    it.propertyName
+                } else {
+                    null
                 }
+            }
     }
 
-    fun createHost(requestId: String, hostName: String): CreateHostResult {
-        val response = withDeadline().createHost(CreateHostRequest.newBuilder()
-                .setRequestId(requestId)
-                .setHostName(hostName)
-                .build())
+    fun createHost(requestId: String, hostName: String, accessToken: String): CreateHostResult {
+        val response = withClient(accessToken).createHost(CreateHostRequest.newBuilder()
+            .setRequestId(requestId)
+            .setHostName(hostName)
+            .build())
         return when (response.type) {
             CreateHostResponse.Type.OK -> CreateHostResult.OK
             CreateHostResponse.Type.HOST_ALREADY_EXISTS -> CreateHostResult.HostAlreadyExists
@@ -104,12 +100,12 @@ class ServerApiGateway(
         }
     }
 
-    fun readProperty(appName: String, hostName: String, propertyName: String): PropertyItem? {
-        val response = withDeadline().readProperty(ReadPropertyRequest.newBuilder()
-                .setApplicationName(appName)
-                .setHostName(hostName)
-                .setPropertyName(propertyName)
-                .build())
+    fun readProperty(appName: String, hostName: String, propertyName: String, accessToken: String): PropertyItem? {
+        val response = withClient(accessToken).readProperty(ReadPropertyRequest.newBuilder()
+            .setApplicationName(appName)
+            .setHostName(hostName)
+            .setPropertyName(propertyName)
+            .build())
         return if (response.hasItem) {
             response.item
         } else {
@@ -117,15 +113,23 @@ class ServerApiGateway(
         }
     }
 
-    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, propertyValue: String, version: Long?): PropertyCreateResult {
-        val response = withDeadline().updateProperty(UpdatePropertyRequest.newBuilder()
-                .setRequestId(requestId)
-                .setApplicationName(appName)
-                .setHostName(hostName)
-                .setPropertyName(propertyName)
-                .setPropertyValue(propertyValue)
-                .setVersion(version ?: 0)
-                .build())
+    fun updateProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        propertyValue: String,
+        version: Long?,
+        accessToken: String,
+    ): PropertyCreateResult {
+        val response = withClient(accessToken).updateProperty(UpdatePropertyRequest.newBuilder()
+            .setRequestId(requestId)
+            .setApplicationName(appName)
+            .setHostName(hostName)
+            .setPropertyName(propertyName)
+            .setPropertyValue(propertyValue)
+            .setVersion(version ?: 0)
+            .build())
 
         return when (response.type) {
             UpdatePropertyResponse.Type.OK -> PropertyCreateResult.OK
@@ -136,14 +140,21 @@ class ServerApiGateway(
         }
     }
 
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): PropertyDeleteResult {
-        val response = withDeadline().deleteProperty(DeletePropertyRequest.newBuilder()
-                .setRequestId(requestId)
-                .setApplicationName(appName)
-                .setHostName(hostName)
-                .setPropertyName(propertyName)
-                .setVersion(version)
-                .build()
+    fun deleteProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
+        accessToken: String,
+    ): PropertyDeleteResult {
+        val response = withClient(accessToken).deleteProperty(DeletePropertyRequest.newBuilder()
+            .setRequestId(requestId)
+            .setApplicationName(appName)
+            .setHostName(hostName)
+            .setPropertyName(propertyName)
+            .setVersion(version)
+            .build()
         )
         return when (response.type) {
             DeletePropertyResponse.Type.OK -> PropertyDeleteResult.OK
@@ -153,12 +164,12 @@ class ServerApiGateway(
         }
     }
 
-    private fun withDeadline(): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
-        return blockingClient.withDeadlineAfter(networkTimeout, TimeUnit.MILLISECONDS)
+    private fun withClient(accessToken: String): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
+        return configSetClient.getAuthBlockingClient(accessToken)
     }
 
     fun stop() {
-        channel.shutdown()
+        configSetClient.stop()
     }
 }
 

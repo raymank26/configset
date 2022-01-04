@@ -31,9 +31,9 @@ class CrudPropertyTest {
     fun testReadProperty() {
         insertProperty()
         dashboardRule.executeGetRequest("/property/get", Map::class.java, mapOf(
-                Pair("applicationName", "testApp"),
-                Pair("hostName", "srvd1"),
-                Pair("propertyName", "propertyName")
+            Pair("applicationName", "testApp"),
+            Pair("hostName", "srvd1"),
+            Pair("propertyName", "propertyName")
         )).size shouldBeGreaterThan 0
     }
 
@@ -42,49 +42,49 @@ class CrudPropertyTest {
         insertProperty()
 
         dashboardRule.executePostRequest("/property/delete", mapOf(
-                Pair("applicationName", "testApp"),
-                Pair("hostName", "srvd1"),
-                Pair("propertyName", "propertyName"),
-                Pair("version", "1")
+            Pair("applicationName", "testApp"),
+            Pair("hostName", "srvd1"),
+            Pair("propertyName", "propertyName"),
+            Pair("version", "1")
         ), Map::class.java, requestId = "1239")
     }
 
     private fun insertProperty(): Map<*, *>? {
         return dashboardRule.executePostRequest("/property/update", mapOf(
-                Pair("applicationName", "testApp"),
-                Pair("hostName", "srvd1"),
-                Pair("propertyName", "propertyName"),
-                Pair("propertyValue", "234")
+            Pair("applicationName", "testApp"),
+            Pair("hostName", "srvd1"),
+            Pair("propertyName", "propertyName"),
+            Pair("propertyValue", "234")
         ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 
     @Test
     fun testIdempotentUpdateDifferentRequests() {
         dashboardRule.updateProperty(
-                applicationName = "testApp",
-                hostName = "srvd1",
-                propertyName = "propertyName",
-                propertyValue = "234",
-                requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8"
+            applicationName = "testApp",
+            hostName = "srvd1",
+            propertyName = "propertyName",
+            propertyValue = "234",
+            requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8"
         )
 
         dashboardRule.updateProperty(
-                applicationName = "testApp",
-                hostName = "srvd1",
-                propertyName = "propertyName",
-                propertyValue = "235",
-                requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8"
+            applicationName = "testApp",
+            hostName = "srvd1",
+            propertyName = "propertyName",
+            propertyValue = "235",
+            requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8"
         )
     }
 
     @Test
     fun testImportProperties() {
         dashboardRule.updateProperty(applicationName = "testApp", hostName = "srvd1", propertyName = "foobar",
-                propertyValue = "val", requestId = "1238913")
+            propertyValue = "val", requestId = "1238913")
 
         dashboardRule.executePostRequest("/property/import", mapOf(
-                Pair("applicationName", "testApp"),
-                Pair("properties", """
+            Pair("applicationName", "testApp"),
+            Pair("properties", """
                     <properties>
                         <property>
                             <host>srvd2</host>
@@ -118,9 +118,12 @@ class CrudPropertyTest {
     @Test
     fun testImportIllegalFormat() {
         @Suppress("UNCHECKED_CAST")
-        val response: Map<String, Any> = dashboardRule.executePostRequest("/property/import", mapOf(
+        val response: Map<String, Any> = dashboardRule.executePostRequest("/property/import",
+            mapOf(
                 Pair("applicationName", "testApp"),
-                Pair("properties", """123""".trimIndent())), Map::class.java, expectedResponseCode = 400) as Map<String, Any>
+                Pair("properties", """123""".trimIndent())),
+            Map::class.java,
+            expectedResponseCode = 400) as Map<String, Any>
         response.getValue("code") shouldBeEqualTo "illegal.format"
         println(response)
     }

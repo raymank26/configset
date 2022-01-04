@@ -56,8 +56,7 @@ val mainModule = module {
     }
 
     single {
-        val gateway = ServerApiGateway(config().hostname, config().port,
-                config().timeout)
+        val gateway = ServerApiGateway(config().hostname, config().port)
         gateway.start()
 
         this.registerCallback(object : ScopeCallback {

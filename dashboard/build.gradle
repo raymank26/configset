@@ -25,6 +25,7 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.5.0"
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.14'
 
+    testImplementation(testFixtures(project(":server")))
     testImplementation 'org.awaitility:awaitility:4.0.2'
     testImplementation 'junit:junit:4.12'
     testImplementation group: 'io.mockk', name: 'mockk', version: '1.9.3'

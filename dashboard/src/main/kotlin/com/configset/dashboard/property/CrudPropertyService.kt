@@ -10,23 +10,43 @@ class CrudPropertyService(
         private val requestIdProducer: RequestIdProducer
 ) {
 
-    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, propertyValue: String, version: Long?): PropertyCreateResult {
-        val apps = serverApiGateway.listApplications()
+    fun updateProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        propertyValue: String,
+        version: Long?,
+        accessToken: String,
+    ): PropertyCreateResult {
+        val apps = serverApiGateway.listApplications(accessToken)
         if (!apps.contains(appName)) {
             return PropertyCreateResult.ApplicationNotFound
         }
         if (version == null) {
-            val hosts = serverApiGateway.listHosts()
+            val hosts = serverApiGateway.listHosts(accessToken)
             if (!hosts.contains(hostName)) {
-                serverApiGateway.createHost(requestId, hostName)
+                serverApiGateway.createHost(requestId, hostName, accessToken)
             }
         }
 
         val updatePropertyRequestId = requestIdProducer.nextRequestId(requestId)
-        return serverApiGateway.updateProperty(updatePropertyRequestId, appName, hostName, propertyName, propertyValue, version)
+        return serverApiGateway.updateProperty(updatePropertyRequestId,
+            appName,
+            hostName,
+            propertyName,
+            propertyValue,
+            version, accessToken)
     }
 
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): PropertyDeleteResult {
-        return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version)
+    fun deleteProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
+        accessToken: String,
+    ): PropertyDeleteResult {
+        return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, accessToken)
     }
 }
