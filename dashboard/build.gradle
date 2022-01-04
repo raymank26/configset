@@ -108,5 +108,3 @@ task dockerBuildDefaultImage(type: DockerBuildImage) {
     images.set(["configset-dashboard:${version}", 'configset-dashboard:latest'])
 }
 
-test.dependsOn (":server:dockerBuildImage")
-
