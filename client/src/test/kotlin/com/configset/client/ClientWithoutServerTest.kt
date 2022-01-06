@@ -15,13 +15,13 @@ class ClientWithoutServerTest {
 
     @Rule
     @JvmField
-    val serverRule = ClientRule(true)
+    val clientRule = ClientRule(true)
 
     private lateinit var proxy: ToxiproxyContainer.ContainerProxy
 
     @Before
     fun setUp() {
-        proxy = serverRule.proxy!!
+        proxy = clientRule.proxy!!
     }
 
     @Test
@@ -36,14 +36,15 @@ class ClientWithoutServerTest {
         val setCalled = AtomicBoolean(false)
 
         thread {
-            serverRule.createApplication(APP_NAME)
-            serverRule.createHost(HOST_NAME)
-            serverRule.updateProperty(APP_NAME, HOST_NAME, null, propertyName, expectedValue)
+            clientRule.createApplication(APP_NAME)
+            clientRule.createHost(HOST_NAME)
+            clientRule.updateProperty(APP_NAME, HOST_NAME, null, propertyName, expectedValue)
             setCalled.set(true)
             proxy.toxics()["timeout"].remove()
         }
 
-        val confProperty: ConfProperty<String?> = serverRule.defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
+        val confProperty: ConfProperty<String?> = clientRule.defaultConfiguration.getConfProperty(propertyName,
+            Converters.STRING)
 
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo expectedValue

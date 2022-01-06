@@ -67,7 +67,11 @@ class GrpcRemoteConnector(
         appWatchMappers[appName] = WatchState(appName, -1, currentObservable)
     }
 
+    @Synchronized
     fun stop() {
+        if (isStopped) {
+            return
+        }
         isStopped = true
         watchMethodApi.onCompleted()
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS)

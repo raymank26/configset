@@ -27,7 +27,7 @@ class ConfigurationResolver {
             val propertyItem: PropertyItem? = resolveProperty(config.hosts, hostName, defaultApplication, targetApplication)
             if (propertyItem != null && (lastVersion < propertyItem.version)) {
                 collectedProperties.add(propertyItem)
-                newLastVersion = propertyItem.version.coerceAtLeast(newLastVersion ?: -1)
+                newLastVersion = propertyItem.version.coerceAtLeast(newLastVersion)
             }
         }
         val changes = PropertiesChanges(newLastVersion, collectedProperties)

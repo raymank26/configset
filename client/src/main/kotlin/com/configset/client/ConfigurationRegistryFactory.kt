@@ -13,9 +13,6 @@ object ConfigurationRegistryFactory {
         }
         val registry = ConfigurationRegistry(repository)
         registry.start()
-        Runtime.getRuntime().addShutdownHook(Thread {
-            registry.stop()
-        })
         return registry
     }
 
