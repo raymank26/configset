@@ -10,17 +10,17 @@ import io.grpc.MethodDescriptor
 import java.util.concurrent.TimeUnit
 
 class DeadlineInterceptor(private val deadlineMs: Long) : ClientInterceptor {
-    override fun <ReqT : Any?, RespT : Any?> interceptCall(
-        method: MethodDescriptor<ReqT, RespT>?,
-        callOptions: CallOptions?,
-        next: Channel?,
+    override fun <ReqT : Any, RespT : Any> interceptCall(
+        method: MethodDescriptor<ReqT, RespT>,
+        callOptions: CallOptions,
+        next: Channel,
     ): ClientCall<ReqT, RespT> {
-        val co = if (callOptions!!.deadline == null && Context.current().deadline == null) {
+        val co = if (callOptions.deadline == null && Context.current().deadline == null) {
             callOptions.withDeadlineAfter(deadlineMs, TimeUnit.MILLISECONDS)
         } else {
             callOptions
         }
-        return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next!!.newCall(method, co)) {}
+        return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, co)) {}
     }
 
 }

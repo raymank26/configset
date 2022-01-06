@@ -17,7 +17,7 @@ import org.koin.dsl.koinApplication
 import java.util.*
 
 private val LOG = createLoggerStatic<DashboardRule>()
-val OBJECT_MAPPER = ObjectMapper()
+private val OBJECT_MAPPER = ObjectMapper()
 
 class DashboardRule : ExternalResource() {
 

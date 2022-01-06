@@ -20,6 +20,7 @@ const val SERVER_PORT = 8080
 const val ACCESS_TOKEN = "access-token"
 
 class ServiceStarterRule : ExternalResource() {
+
     lateinit var blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
     lateinit var nonAuthBlockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub
 
@@ -27,9 +28,12 @@ class ServiceStarterRule : ExternalResource() {
     lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
 
     val changesQueue = LinkedBlockingDeque<PropertiesChangesResponse>()
+
     private val log = createLogger()
 
     private lateinit var koinApp: KoinApplication
+
+    private val configSetClient: ConfigSetClient = ConfigSetClient("localhost", SERVER_PORT)
 
     public override fun before() {
         val mainModules = createAppModules(AppConfiguration(mapOf(
@@ -44,7 +48,6 @@ class ServiceStarterRule : ExternalResource() {
         }
         koinApp.koin.get<GrpcConfigurationServer>().start()
 
-        val configSetClient = ConfigSetClient("localhost", SERVER_PORT)
         blockingClient = configSetClient.getAuthBlockingClient(ACCESS_TOKEN)
         nonAuthBlockingClient = configSetClient.blockingClient
         asyncClient = configSetClient.asyncClient
@@ -64,6 +67,7 @@ class ServiceStarterRule : ExternalResource() {
     }
 
     public override fun after() {
+        configSetClient.stop()
         stopKoin()
     }
 }

@@ -12,7 +12,7 @@ buildscript {
     }()
 
     ext {
-        kotlin_version = '1.5.20'
+        kotlin_version = '1.6.10'
         mavenUrl = localProperties.getProperty("mavenUrl")
         mavenLogin = localProperties.getProperty("mavenLogin")
         mavenPassword = localProperties.getProperty("mavenPassword")

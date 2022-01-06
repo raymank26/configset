@@ -235,7 +235,8 @@ class GrpcConfigurationService(
     private fun requireRole(role: Role) {
         val userInfo = userInfo()
         if (!userRoleService.hasRole(userInfo, role)) {
-            throw StatusRuntimeException(Status.UNAUTHENTICATED.withDescription("Not enough permissions, user roles = ${userInfo.roles}"))
+            throw StatusRuntimeException(Status.UNAUTHENTICATED
+                .withDescription("Not enough permissions, user roles = ${userInfo.roles}"))
         }
     }
 }
