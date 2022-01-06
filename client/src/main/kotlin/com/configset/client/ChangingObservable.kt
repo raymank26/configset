@@ -10,7 +10,7 @@ class ChangingObservable<T> : Observable<T> {
         subscribers.add(subscriber)
     }
 
-    fun setValue(value: T) {
+    override fun push(value: T) {
         subscribers.forEach {
             it.process(value)
         }

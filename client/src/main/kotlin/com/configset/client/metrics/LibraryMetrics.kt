@@ -1,18 +1,19 @@
 package com.configset.client.metrics
 
-interface LibraryMetrics {
-    fun increment(metricName: String)
-    fun get(metricName: String): Int
+import com.configset.client.Observable
+import com.configset.client.Subscriber
+
+typealias LibraryMetrics = Observable<MetricKey>
+
+sealed class MetricKey {
+    object SkippedObsoleteUpdate : MetricKey()
+    object ConnectionEstablished : MetricKey()
 }
 
-object NoopMetrics : LibraryMetrics {
+object NoopLibraryMetrics : LibraryMetrics {
+    override fun onSubscribe(subscriber: Subscriber<MetricKey>) {
+    }
 
-    override fun increment(metricName: String) = Unit
-
-    override fun get(metricName: String): Int = 0
+    override fun push(value: MetricKey) {
+    }
 }
-
-object Metrics {
-    const val SKIPPED_OBSOLETE_UPDATES = "SKIPPED_OBSOLETE_UPDATES"
-}
-

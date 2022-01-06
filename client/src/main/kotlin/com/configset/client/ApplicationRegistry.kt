@@ -25,7 +25,7 @@ class ApplicationRegistry(
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
             LOG.info("Update come for appName = ${appName}, property = $propertyItem")
-            propertiesSubscribers[propertyItem.name]?.setValue(propertyItem.value)
+            propertiesSubscribers[propertyItem.name]?.push(propertyItem.value)
         }
         for (propertyItem in value) {
             if (propertyItem.value != null) {

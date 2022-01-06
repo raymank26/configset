@@ -1,7 +1,7 @@
 package com.configset.dashboard
 
 import com.configset.sdk.extension.createLoggerStatic
-import org.koin.core.context.startKoin
+import org.koin.dsl.koinApplication
 
 private val LOG = createLoggerStatic<Main>()
 
@@ -10,7 +10,7 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         val config = Config(System.getenv())
-        val koinApp = startKoin {
+        val koinApp = koinApplication {
             modules(mainModule)
         }.properties(mapOf(CONFIG_KEY to config))
         Runtime.getRuntime().addShutdownHook(Thread {

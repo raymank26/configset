@@ -1,6 +1,8 @@
 package com.configset.client
 
 import com.configset.client.metrics.LibraryMetrics
+import com.configset.client.metrics.MetricKey
+import com.configset.sdk.extension.createLogger
 import com.configset.test.fixtures.CrudServiceRule
 import org.junit.rules.ExternalResource
 import org.testcontainers.Testcontainers
@@ -17,13 +19,14 @@ class ClientRule(private val useProxy: Boolean = false) : ExternalResource() {
 
     private var toxiproxyContainer: ToxiproxyContainer? = null
     private val crudServiceRule = CrudServiceRule()
+    private val log = createLogger()
 
     val defaultConfiguration: Configuration by lazy {
         registry.getConfiguration(APP_NAME)
     }
 
     private lateinit var registry: ConfigurationRegistry
-    lateinit var metrics: LibraryMetrics
+    private lateinit var metrics: LibraryMetrics
 
     var proxy: ToxiproxyContainer.ContainerProxy? = null
 
@@ -40,7 +43,7 @@ class ClientRule(private val useProxy: Boolean = false) : ExternalResource() {
         val backendHost = proxy?.containerIpAddress ?: "localhost"
 
         val backendPort = proxy?.proxyPort ?: INTERNAL_PORT
-        metrics = TestMetrics()
+        metrics = ChangingObservable()
         registry = ConfigurationRegistryFactory.getConfiguration(ConfigurationTransport.RemoteGrpc(HOST_NAME,
             DEFAULT_APP_NAME, backendHost, backendPort, metrics))
     }
@@ -65,6 +68,15 @@ class ClientRule(private val useProxy: Boolean = false) : ExternalResource() {
 
     fun deleteProperty(appName: String, hostName: String, propertyName: String, version: Long) {
         crudServiceRule.deleteProperty(appName, hostName, propertyName, version)
+    }
+
+    fun subscribeOnMetric(metricKey: MetricKey, subscriber: Subscriber<MetricKey>) {
+        metrics.onSubscribe { value ->
+            if (value == metricKey) {
+                log.info("Metric received = {}", value)
+                subscriber.process(metricKey)
+            }
+        }
     }
 
     private fun createRequestId(): String {

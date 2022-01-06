@@ -3,7 +3,7 @@ package com.configset.client.repository.grpc
 import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
 import com.configset.client.metrics.LibraryMetrics
-import com.configset.client.metrics.Metrics
+import com.configset.client.metrics.MetricKey
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
@@ -104,9 +104,9 @@ class GrpcRemoteConnector(
         if (filteredUpdates.size != updates.size) {
             LOG.debug("Some updates where filtered (they are obsolete)" +
                     ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
-            libraryMetrics.increment(Metrics.SKIPPED_OBSOLETE_UPDATES)
+            libraryMetrics.push(MetricKey.SkippedObsoleteUpdate)
         }
-        watchState.observable.setValue(filteredUpdates)
+        watchState.observable.push(filteredUpdates)
         watchState.lastVersion = lastVersion
         watchMethodApi.onNext(WatchRequest.newBuilder()
             .setType(WatchRequest.Type.UPDATE_RECEIVED)
@@ -115,6 +115,7 @@ class GrpcRemoteConnector(
                 .setVersion(lastVersion)
                 .build())
             .build())
+        libraryMetrics.push(MetricKey.ConnectionEstablished)
     }
 
     override fun onError(t: Throwable?) {

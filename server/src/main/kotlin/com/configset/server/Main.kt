@@ -2,7 +2,7 @@ package com.configset.server
 
 import com.configset.sdk.extension.createLogger
 import com.configset.server.network.grpc.GrpcConfigurationServer
-import org.koin.core.context.startKoin
+import org.koin.dsl.koinApplication
 import java.util.concurrent.Semaphore
 
 /**
@@ -16,7 +16,7 @@ object Main {
     fun main(args: Array<String>) {
         val config = getConfig() ?: return
 
-        val koinApp = startKoin {
+        val koinApp = koinApplication {
             modules(createAppModules(config))
         }
         Runtime.getRuntime().addShutdownHook(Thread {

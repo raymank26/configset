@@ -11,8 +11,7 @@ import com.configset.server.network.grpc.GrpcConfigurationServer
 import io.grpc.stub.StreamObserver
 import org.junit.rules.ExternalResource
 import org.koin.core.KoinApplication
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
+import org.koin.dsl.koinApplication
 import java.util.concurrent.LinkedBlockingDeque
 
 const val SERVER_PORT = 8080
@@ -43,7 +42,7 @@ class ServiceStarterRule : ExternalResource() {
             "authenticator_type" to "stub",
             "auth_stub.admin_access_token" to ACCESS_TOKEN
         )))
-        koinApp = startKoin {
+        koinApp = koinApplication {
             modules(mainModules)
         }
         koinApp.koin.get<GrpcConfigurationServer>().start()
@@ -68,6 +67,6 @@ class ServiceStarterRule : ExternalResource() {
 
     public override fun after() {
         configSetClient.stop()
-        stopKoin()
+        koinApp.close()
     }
 }
