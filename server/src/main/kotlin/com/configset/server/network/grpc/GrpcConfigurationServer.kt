@@ -28,5 +28,6 @@ class GrpcConfigurationServer(
 
     fun stop() {
         server.shutdown()
+        server.awaitTermination()
     }
 }
