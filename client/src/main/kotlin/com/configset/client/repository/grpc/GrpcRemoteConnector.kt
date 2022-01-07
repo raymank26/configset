@@ -106,6 +106,7 @@ class GrpcRemoteConnector(
                     ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
             libraryMetrics.push(MetricKey.SkippedObsoleteUpdate)
         }
+        LOG.info("Configuration updated {}", filteredUpdates)
         watchState.observable.push(filteredUpdates)
         watchState.lastVersion = lastVersion
         watchMethodApi.onNext(WatchRequest.newBuilder()

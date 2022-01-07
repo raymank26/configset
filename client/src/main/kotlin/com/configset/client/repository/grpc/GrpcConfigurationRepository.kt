@@ -2,7 +2,6 @@ package com.configset.client.repository.grpc
 
 import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
-import com.configset.client.Subscriber
 import com.configset.client.metrics.LibraryMetrics
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
@@ -49,11 +48,7 @@ class GrpcConfigurationRepository(
         }
 
         val future = CompletableFuture<List<PropertyItem>>()
-        currentObservable.onSubscribe(object : Subscriber<List<PropertyItem>> {
-            override fun process(value: List<PropertyItem>) {
-                future.complete(value)
-            }
-        })
+        currentObservable.onSubscribe { value -> future.complete(value) }
         var initialProperties: List<PropertyItem>
         while (true) {
             try {

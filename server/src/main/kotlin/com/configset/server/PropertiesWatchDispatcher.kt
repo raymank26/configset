@@ -127,7 +127,7 @@ class PropertiesWatchDispatcher(
             return
         }
         appSubscription.lastVersion = version
-        LOG.debug("Version updated for for subscriber = $subscriberId, app = $applicationName, version = $version")
+        LOG.debug("Version updated for subscriber = $subscriberId, app = $applicationName, version = $version")
     }
 }
 
