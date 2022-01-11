@@ -36,7 +36,6 @@ class GrpcRemoteConnector(
     @Volatile
     private var isStopped = false
 
-    @Synchronized
     fun init() {
         channel = ManagedChannelBuilder.forAddress(serverHostname, serverPort)
             .usePlaintext()
@@ -44,8 +43,12 @@ class GrpcRemoteConnector(
             .build()
         asyncClient = ConfigurationServiceGrpc.newStub(channel)
 
-        watchMethodApi = asyncClient.watchChanges(this)
+        resubscribe()
+    }
 
+    @Synchronized
+    private fun resubscribe() {
+        watchMethodApi = asyncClient.watchChanges(this)
         for (watchState in appWatchMappers) {
             val appName = watchState.value.appName
             val subscribeRequest = SubscribeApplicationRequest
@@ -140,7 +143,7 @@ class GrpcRemoteConnector(
                 LOG.warn("Exception during shutdown", e)
             }
             Thread.sleep(5000)
-            init()
+            resubscribe()
         }
     }
 }
