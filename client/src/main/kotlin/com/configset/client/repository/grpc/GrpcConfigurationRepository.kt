@@ -2,7 +2,6 @@ package com.configset.client.repository.grpc
 
 import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
-import com.configset.client.metrics.LibraryMetrics
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.sdk.extension.createLoggerStatic
@@ -16,18 +15,16 @@ private const val INITIAL_TIMEOUT_SEC: Long = 10L
 private val LOG = createLoggerStatic<GrpcConfigurationRepository>()
 
 class GrpcConfigurationRepository(
-        private val applicationHostname: String,
-        private val defaultApplicationName: String,
-        private val serverHostname: String,
-        private val serverPort: Int,
-        private val libraryMetrics: LibraryMetrics
+    private val applicationHostname: String,
+    private val defaultApplicationName: String,
+    private val grpcClientFactory: GrpcClientFactory,
 ) : ConfigurationRepository {
 
     private lateinit var grpcRemoteConnector: GrpcRemoteConnector
 
     @Synchronized
     override fun start() {
-        grpcRemoteConnector = GrpcRemoteConnector(libraryMetrics, applicationHostname, serverHostname, serverPort)
+        grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, grpcClientFactory)
         grpcRemoteConnector.init()
     }
 

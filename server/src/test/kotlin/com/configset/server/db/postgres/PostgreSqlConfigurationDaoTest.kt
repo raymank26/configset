@@ -13,8 +13,7 @@ class PostgreSqlConfigurationDaoTest : AbstractConfigurationDaoTest() {
     val postgresSqlRule = PostgresqlTestRule()
 
     override fun getDao(): ConfigurationDao {
-        @Suppress("UNCHECKED_CAST")
-        return PostgreSqlConfigurationDao(postgresSqlRule.getDBI()) as ConfigurationDao
+        return PostgreSqlConfigurationDao(postgresSqlRule.getDBI())
     }
 
     override fun getDbHandleFactory(): DbHandleFactory {

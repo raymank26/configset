@@ -9,10 +9,11 @@ import io.grpc.stub.MetadataUtils
 
 const val AUTH_KEY = "Authentication"
 
-class ConfigSetClient(hostname: String, port: Int) {
-    private val channel: ManagedChannel = ManagedChannelBuilder.forAddress(hostname, port)
+class ConfigSetClient(val channel: ManagedChannel) {
+
+    constructor(hostname: String, port: Int) : this(ManagedChannelBuilder.forAddress(hostname, port)
         .usePlaintext()
-        .build()
+        .build())
 
     val blockingClient: ConfigurationServiceGrpc.ConfigurationServiceBlockingStub =
         ConfigurationServiceGrpc.newBlockingStub(channel)
