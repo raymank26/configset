@@ -18,13 +18,14 @@ class GrpcConfigurationRepository(
     private val applicationHostname: String,
     private val defaultApplicationName: String,
     private val grpcClientFactory: GrpcClientFactory,
+    private val reconnectionTimeoutMs: Long,
 ) : ConfigurationRepository {
 
     private lateinit var grpcRemoteConnector: GrpcRemoteConnector
 
     @Synchronized
     override fun start() {
-        grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, grpcClientFactory)
+        grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, grpcClientFactory, reconnectionTimeoutMs)
         grpcRemoteConnector.init()
     }
 

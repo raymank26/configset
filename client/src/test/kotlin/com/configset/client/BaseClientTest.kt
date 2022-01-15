@@ -22,9 +22,14 @@ abstract class BaseClientTest {
 
     @Before
     fun before() {
-        val repository = GrpcConfigurationRepository(APP_NAME, APP_NAME) {
-            clientUtil.asyncClient
-        }
+        val repository = GrpcConfigurationRepository(
+            applicationHostname = APP_NAME,
+            defaultApplicationName = APP_NAME,
+            grpcClientFactory = {
+                clientUtil.asyncClient
+            },
+            reconnectionTimeoutMs = 1000
+        )
         registry = ConfigurationRegistryFactory.getConfiguration(repository)
         setUp()
     }

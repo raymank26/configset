@@ -24,9 +24,13 @@ object ConfigurationRegistryFactory {
     }
 
     private fun createGrpcConfiguration(transport: ConfigurationTransport.RemoteGrpc): ConfigurationRepository {
-        return GrpcConfigurationRepository(transport.hostName, transport.defaultApplicationName) {
-            prepareGrpcStub(transport)
-        }
+        return GrpcConfigurationRepository(
+            applicationHostname = transport.hostName,
+            defaultApplicationName = transport.defaultApplicationName,
+            grpcClientFactory = {
+                prepareGrpcStub(transport)
+            },
+            reconnectionTimeoutMs = 5000)
     }
 
     private fun prepareGrpcStub(transport: ConfigurationTransport.RemoteGrpc): ConfigurationServiceGrpc.ConfigurationServiceStub {

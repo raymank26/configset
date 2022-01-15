@@ -20,6 +20,7 @@ private val LOG = createLoggerStatic<GrpcRemoteConnector>()
 class GrpcRemoteConnector(
     private val applicationHostname: String,
     private val grpcClientFactory: GrpcClientFactory,
+    private val reconnectionTimeoutMs: Long,
 ) : StreamObserver<PropertiesChangesResponse> {
 
     private val appWatchMappers: MutableMap<String, WatchState> = ConcurrentHashMap()
@@ -127,7 +128,7 @@ class GrpcRemoteConnector(
     private fun reconnect() {
         thread {
             LOG.info("Resubscribe started, waiting for 5 seconds")
-            Thread.sleep(5000)
+            Thread.sleep(reconnectionTimeoutMs)
             resubscribe()
         }
     }
