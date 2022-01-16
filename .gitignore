@@ -11,3 +11,9 @@
 /out
 node_modules/
 /local.properties
+
+/client/out
+/dashboard/out
+/server/out
+/sdk/out
+/sample/out
