@@ -1,43 +1,58 @@
 package com.configset.dashboard
 
+import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.extension.createLoggerStatic
+import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.ACCESS_TOKEN
 import com.configset.test.fixtures.SERVER_PORT
-import com.configset.test.fixtures.ServiceStarterRule
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.grpc.inprocess.InProcessChannelBuilder
+import io.grpc.inprocess.InProcessServerBuilder
+import io.grpc.testing.GrpcCleanupRule
+import io.mockk.spyk
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
+import org.junit.After
 import org.junit.Assert
-import org.junit.rules.ExternalResource
+import org.junit.Before
+import org.junit.Rule
 import org.koin.core.KoinApplication
 import org.koin.dsl.koinApplication
+import org.koin.dsl.module
 import java.util.*
 
-private val LOG = createLoggerStatic<DashboardRule>()
+private val LOG = createLoggerStatic<BaseDashboardTest>()
 private val OBJECT_MAPPER = ObjectMapper()
 
-class DashboardRule : ExternalResource() {
-
-    private lateinit var koinApp: KoinApplication
-    private val serverStarterRule = ServiceStarterRule()
+abstract class BaseDashboardTest {
 
     private lateinit var okHttp: OkHttpClient
+    private lateinit var koinApp: KoinApplication
 
-    override fun before() {
-        startConfigService()
-        startDashboard()
-    }
+    lateinit var mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase
+    lateinit var mockConfigServiceExt: ServerMockExtension
 
-    private fun startConfigService() {
-        serverStarterRule.before()
-    }
+    @Rule
+    @JvmField
+    val grpcCleanup = GrpcCleanupRule()
 
-    private fun startDashboard() {
+    @Before
+    fun before() {
+        mockConfigService = spyk()
+        mockConfigServiceExt = ServerMockExtension(mockConfigService)
+        grpcCleanup.register(InProcessServerBuilder.forName("mytest")
+            .directExecutor().addService(mockConfigService).build().start())
+        val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
+
         koinApp = koinApplication {
-            modules(mainModule)
+            modules(mainModule, module {
+                single {
+                    ConfigSetClient(channel)
+                }
+            })
         }.properties(mapOf(
             Pair("config", Config(
                 mapOf(
@@ -56,6 +71,10 @@ class DashboardRule : ExternalResource() {
         server.start()
 
         okHttp = OkHttpClient()
+        setUp()
+    }
+
+    open fun setUp() {
     }
 
     fun <T> executeGetRequest(
@@ -147,8 +166,8 @@ class DashboardRule : ExternalResource() {
         }
     }
 
-    override fun after() {
+    @After
+    fun after() {
         koinApp.close()
-        serverStarterRule.after()
     }
 }

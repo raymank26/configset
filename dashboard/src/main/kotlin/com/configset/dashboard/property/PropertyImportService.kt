@@ -14,8 +14,8 @@ private val xmlMapper = XmlMapper()
 private val LOG = createLoggerStatic<PropertyImportService>()
 
 class PropertyImportService(
-        private val serverApiGateway: ServerApiGateway,
-        private val requestIdProducer: RequestIdProducer
+    private val serverApiGateway: ServerApiGateway,
+    private val requestIdProducer: RequestIdProducer,
 ) {
 
     fun import(requestId: String, appName: String, properties: String, accessToken: String): PropertiesImport {
@@ -65,8 +65,8 @@ class PropertyImportService(
 
 sealed class PropertiesImport {
     object ApplicationNotFound : PropertiesImport()
-    object OK: PropertiesImport()
-    object IllegalFormat: PropertiesImport()
+    object OK : PropertiesImport()
+    object IllegalFormat : PropertiesImport()
 }
 
 

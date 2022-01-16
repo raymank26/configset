@@ -11,7 +11,7 @@ object Main {
     fun main(args: Array<String>) {
         val config = Config(System.getenv())
         val koinApp = koinApplication {
-            modules(mainModule)
+            modules(mainModule, remoteClientModule)
         }.properties(mapOf(CONFIG_KEY to config))
         Runtime.getRuntime().addShutdownHook(Thread {
             koinApp.close()

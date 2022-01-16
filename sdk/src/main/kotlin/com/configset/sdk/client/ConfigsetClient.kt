@@ -9,7 +9,7 @@ import io.grpc.stub.MetadataUtils
 
 const val AUTH_KEY = "Authentication"
 
-class ConfigSetClient(val channel: ManagedChannel) {
+class ConfigSetClient(private val channel: ManagedChannel) {
 
     constructor(hostname: String, port: Int) : this(ManagedChannelBuilder.forAddress(hostname, port)
         .usePlaintext()

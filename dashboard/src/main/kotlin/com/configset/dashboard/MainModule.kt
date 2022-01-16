@@ -56,16 +56,8 @@ val mainModule = module {
     }
 
     single {
-        val gateway = ServerApiGateway(config().hostname, config().port)
-        gateway.start()
-
-        this.registerCallback(object : ScopeCallback {
-            override fun onScopeClose(scope: Scope) {
-                gateway.stop()
-            }
-        })
-        gateway
+        ServerApiGateway(get())
     }
 }
 
-private fun Scope.config(): Config = getProperty(CONFIG_KEY)
+fun Scope.config(): Config = getProperty(CONFIG_KEY)

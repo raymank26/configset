@@ -1,23 +1,35 @@
 package com.configset.dashboard
 
+import com.configset.sdk.proto.ApplicationCreatedResponse
+import com.configset.sdk.proto.ApplicationsResponse
+import io.grpc.stub.StreamObserver
+import io.mockk.every
 import org.amshove.kluent.shouldBe
-import org.junit.Rule
 import org.junit.Test
 
-class CreateApplicationTest {
-
-    @Rule
-    @JvmField
-    val dashboardRule = DashboardRule()
+class CreateApplicationTest : BaseDashboardTest() {
 
     @Test
     fun testNoApplications() {
-        val res = dashboardRule.executeGetRequest("/application/list", List::class.java)
+        every { mockConfigService.listApplications(any(), any()) } answers {
+            @Suppress("UNCHECKED_CAST")
+            val observer = (it.invocation.args[1] as StreamObserver<ApplicationsResponse>)
+            observer.onNext(ApplicationsResponse.newBuilder().build())
+            observer.onCompleted()
+        }
+        val res = executeGetRequest("/application/list", List::class.java)
         res.isEmpty() shouldBe true
     }
 
     @Test
     fun createApplication() {
-        dashboardRule.executePostRequest("/application/", mapOf(Pair("appName", "testApp")), Any::class.java)
+        every { mockConfigService.createApplication(any(), any()) } answers {
+            @Suppress("UNCHECKED_CAST")
+            val observer = (it.invocation.args[1] as StreamObserver<ApplicationCreatedResponse>)
+            observer.onNext(ApplicationCreatedResponse.newBuilder()
+                .setType(ApplicationCreatedResponse.Type.OK).build())
+            observer.onCompleted()
+        }
+        executePostRequest("/application/", mapOf(Pair("appName", "testApp")), Any::class.java)
     }
 }

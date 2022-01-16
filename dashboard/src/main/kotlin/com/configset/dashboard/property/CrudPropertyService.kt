@@ -19,6 +19,7 @@ class CrudPropertyService(
         version: Long?,
         accessToken: String,
     ): PropertyCreateResult {
+        // TODO: move logic below to config server
         val apps = serverApiGateway.listApplications(accessToken)
         if (!apps.contains(appName)) {
             return PropertyCreateResult.ApplicationNotFound

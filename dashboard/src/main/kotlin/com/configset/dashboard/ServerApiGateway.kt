@@ -14,16 +14,7 @@ import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 
-class ServerApiGateway(
-    private val serverHostname: String,
-    private val serverPort: Int,
-) {
-
-    private lateinit var configSetClient: ConfigSetClient
-
-    fun start() {
-        configSetClient = ConfigSetClient(serverHostname, serverPort)
-    }
+class ServerApiGateway(private val configSetClient: ConfigSetClient) {
 
     fun createApplication(requestId: String, appName: String, accessToken: String): CreateApplicationResult {
         val res = withClient(accessToken).createApplication(ApplicationCreateRequest.newBuilder()
