@@ -76,13 +76,8 @@ class CrudPropertyTest : BaseDashboardTest() {
         ), Map::class.java, requestId = "1239")
     }
 
-    private fun insertProperty(): Map<*, *>? {
-        return executePostRequest("/property/update", mapOf(
-            Pair("applicationName", appName),
-            Pair("hostName", hostName),
-            Pair("propertyName", "someName"),
-            Pair("propertyValue", "234")
-        ), Map::class.java, requestId = "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+    private fun insertProperty() {
+        updateProperty(appName, hostName, "someName", "234", "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 
     @Test

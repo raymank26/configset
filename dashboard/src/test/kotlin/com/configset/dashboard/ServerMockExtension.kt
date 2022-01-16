@@ -15,6 +15,7 @@ import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.stub.StreamObserver
 import io.mockk.every
+import org.amshove.kluent.shouldNotBeNull
 
 typealias AppName = String
 typealias HostName = String
@@ -56,6 +57,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
             override fun answer(supplier: () -> UpdatePropertyResponse.Type) {
                 every { mockConfigService.updateProperty(request ?: any(), any()) } answers {
                     val request = (it.invocation.args[0] as UpdatePropertyRequest)
+                    (request.requestId).shouldNotBeNull()
                     interceptor.invoke(request)
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<UpdatePropertyResponse>)

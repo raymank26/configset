@@ -6,6 +6,11 @@ import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.ACCESS_TOKEN
 import com.configset.test.fixtures.SERVER_PORT
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.grpc.Metadata
+import io.grpc.ServerCall
+import io.grpc.ServerCallHandler
+import io.grpc.ServerInterceptor
+import io.grpc.ServerInterceptors
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
@@ -15,6 +20,7 @@ import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -44,7 +50,10 @@ abstract class BaseDashboardTest {
         mockConfigService = spyk()
         mockConfigServiceExt = ServerMockExtension(mockConfigService)
         grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor().addService(mockConfigService).build().start())
+            .directExecutor().addService(ServerInterceptors
+                .intercept(mockConfigService, AuthCheckInterceptor()))
+            .build()
+            .start())
         val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
 
         koinApp = koinApplication {
@@ -131,13 +140,14 @@ abstract class BaseDashboardTest {
         propertyName: String,
         propertyValue: String,
         requestId: String,
-    ) {
-        executePostRequest("/property/update", mapOf(
+    ): Map<Any, Any> {
+        @Suppress("UNCHECKED_CAST")
+        return (executePostRequest("/property/update", mapOf(
             Pair("applicationName", applicationName),
             Pair("hostName", hostName),
             Pair("propertyName", propertyName),
             Pair("propertyValue", propertyValue)
-        ), Map::class.java, requestId)
+        ), Map::class.java, requestId) ?: emptyMap<Any, Any>()) as Map<Any, Any>
     }
 
     fun searchProperties(
@@ -169,5 +179,18 @@ abstract class BaseDashboardTest {
     @After
     fun after() {
         koinApp.close()
+    }
+}
+
+private class AuthCheckInterceptor : ServerInterceptor {
+    override fun <ReqT : Any, RespT : Any> interceptCall(
+        call: ServerCall<ReqT, RespT>,
+        headers: Metadata,
+        next: ServerCallHandler<ReqT, RespT>,
+    ): ServerCall.Listener<ReqT> {
+
+        val authHeader = headers.get(Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER))
+        authHeader.shouldNotBeNull()
+        return next.startCall(call, headers)
     }
 }

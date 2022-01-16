@@ -9,6 +9,7 @@ class SearchPropertiesTest : BaseDashboardTest() {
     @Test
     fun testSearch() {
         mockConfigServiceExt.whenSearchProperties()
+            .intercept { req -> req.applicationName shouldBeEqualTo "testApp" }
             .answer {
                 listOf(ShowPropertyItem.newBuilder().build())
             }
