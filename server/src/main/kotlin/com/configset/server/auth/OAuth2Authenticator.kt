@@ -18,13 +18,9 @@ class OAuth2Authenticator(
     private val verificationBuilder: JwtVerificationBuilder,
 ) : Authenticator {
 
-    private lateinit var verifier: JWTVerifier
+    private var verifier: JWTVerifier
 
-    fun init() {
-        setupVerifier()
-    }
-
-    private fun setupVerifier() {
+    init {
         val realmInfo = oauth2Api.getResource()
         val publicKeyBytes = Base64.getDecoder().decode(realmInfo.publicKey)
         val encodedKeySpec = X509EncodedKeySpec(publicKeyBytes)
@@ -32,6 +28,7 @@ class OAuth2Authenticator(
         val publicKey = kf.generatePublic(encodedKeySpec) as RSAPublicKey
         val jwtAlgo = Algorithm.RSA256(publicKey, null)
         verifier = verificationBuilder.build(jwtAlgo)
+
     }
 
 

@@ -15,11 +15,9 @@ class OAuth2AuthenticatorTest {
         every { oauth2Api.getResource() } answers {
             ResourceInfo("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq83KBqrOTEp4OX2cj3JBnHE0nvbQJC4WjXbTnFztzlhT8gCU20WGeI0AuufdHk3H+s2Er2MrJEEp+5puVWfT+VrqHqVUorwCaBmNYpfR8bx9W3NYXm2RqI3Eu1px+yDwo0hqJwdJJoOCe6cyI4CyyC9boAUl8SnDznCPgqeRoLOJaMwrf19YzCO2EpeUtw+oUzaZOTaaAQEYEiP/QKySm6i2QIJuJF7f2crFsgq5dbeen3fg2no/ZSMEQUO9JjW75055UbB3CCGk3ol8QoQ9QjankgAt3d/9svpLCWAcQZYiWMnQ2Z/Tp6yyQW16lT8z0sooSwkMmnkTGE4RrrhAswIDAQAB")
         }
-        val k = OAuth2Authenticator(oauth2Api) { algo ->
+        OAuth2Authenticator(oauth2Api) { algo ->
             JWT.require(algo).acceptExpiresAt(TimeUnit.DAYS.toMillis(356L * 100)).build()
         }
-        k.init()
-        k
     }
 
     @Test
