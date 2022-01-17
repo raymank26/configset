@@ -3,7 +3,6 @@ package com.configset.server
 import com.configset.sdk.extension.createLogger
 import com.configset.server.network.grpc.GrpcConfigurationServer
 import org.koin.dsl.koinApplication
-import java.util.concurrent.Semaphore
 
 /**
  * Date: 15.02.17.
@@ -24,9 +23,7 @@ object Main {
             LOG.info("Application has exited normally")
         })
         koinApp.koin.get<GrpcConfigurationServer>().start()
-        val semaphore = Semaphore(0)
         LOG.info("Server started")
-        semaphore.acquire()
     }
 
     private fun getConfig(): AppConfiguration? {
