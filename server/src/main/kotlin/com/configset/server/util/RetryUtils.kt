@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("RetryUtils")
 
-fun <T> retry(f: () -> T, delayMs: Long = 2000): T {
+fun <T> retry(delayMs: Long = 2000, f: () -> T): T {
     while (true) {
         try {
             return f()

@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.configset.sdk.extension.createLoggerStatic
-import com.configset.server.util.retry
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.security.KeyFactory
@@ -26,7 +25,7 @@ class OAuth2Authenticator(
     }
 
     private fun setupVerifier() {
-        val realmInfo = retry({ oauth2Api.getResource() })
+        val realmInfo = oauth2Api.getResource()
         val publicKeyBytes = Base64.getDecoder().decode(realmInfo.publicKey)
         val encodedKeySpec = X509EncodedKeySpec(publicKeyBytes)
         val kf = KeyFactory.getInstance("RSA")
