@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.concurrent.thread
 
-
 class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
 
     var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
@@ -21,33 +20,42 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
     private val cmdQueue = LinkedBlockingQueue<Payload>()
 
     private val service = object : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
+
         override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
             var isShuttedDown = false
 
+            fun startSubscription(responseObserver: StreamObserver<PropertiesChangesResponse>) {
+                thread {
+                    val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
+                        (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
+                    } else {
+                        updateVersion.get()
+                    }
+                    responseObserver.onNext(PropertiesChangesResponse.newBuilder()
+                        .setApplicationName(APP_NAME)
+                        .setLastVersion(lastVersion)
+                        .build())
+                    while (!isShuttedDown) {
+                        when (val cmd = cmdQueue.take()) {
+                            Payload.DropConnection -> {
+                                isShuttedDown = true
+                                responseObserver.onCompleted()
+                            }
+                            is Payload.Msg -> responseObserver.onNext(cmd.data)
+                        }
+                    }
+                }
+            }
+
             return object : StreamObserver<WatchRequest> {
                 override fun onNext(value: WatchRequest) {
+                    when (value.type) {
+                        WatchRequest.Type.SUBSCRIBE_APPLICATION -> startSubscription(responseObserver)
+                        WatchRequest.Type.UPDATE_RECEIVED -> return
+                        else -> responseObserver.onError(RuntimeException("Unrecognized option received"))
+                    }
                     if (value.type != WatchRequest.Type.SUBSCRIBE_APPLICATION) {
                         return
-                    }
-                    thread {
-                        val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
-                            (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
-                        } else {
-                            updateVersion.get()
-                        }
-                        responseObserver.onNext(PropertiesChangesResponse.newBuilder()
-                            .setApplicationName(APP_NAME)
-                            .setLastVersion(lastVersion)
-                            .build())
-                        while (!isShuttedDown) {
-                            when (val cmd = cmdQueue.take()) {
-                                Payload.DropConnection -> {
-                                    isShuttedDown = true
-                                    responseObserver.onCompleted()
-                                }
-                                is Payload.Msg -> responseObserver.onNext(cmd.data)
-                            }
-                        }
                     }
                 }
 

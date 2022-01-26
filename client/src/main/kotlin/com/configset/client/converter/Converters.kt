@@ -11,7 +11,7 @@ object Converters {
         require(str.length == 1)
         str.first()
     }
-    val BYTE = GenericConverter { str -> str.toByte() }
+    val BYTE = GenericConverter { it.toByte() }
     val DOUBLE = GenericConverter { it.toDouble() }
     val SHORT = GenericConverter { it.toShort() }
     val PROPERTIES: Converter<Properties> = ConverterProperties()
