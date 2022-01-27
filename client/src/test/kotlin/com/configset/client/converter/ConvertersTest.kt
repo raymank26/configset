@@ -50,6 +50,22 @@ class ConvertersTest {
     fun testEnumFail() {
         EnumConverter(EnumExample::class.java).convert("RANDOM")
     }
+
+    @Test
+    fun testMapMethod() {
+        val converter = Converters.STRING.map { it.toLong() }
+        converter.convert("123") shouldBeEqualTo 123L
+    }
+
+    @Test
+    fun testChar() {
+        Converters.CHAR.convert("1") shouldBeEqualTo '1'
+    }
+
+    @Test(expected = RuntimeException::class)
+    fun testIllegalChar() {
+        Converters.CHAR.convert("some string")
+    }
 }
 
 private data class PojoExample(val foo: String, val bar: Long, val bazz: List<String>)
