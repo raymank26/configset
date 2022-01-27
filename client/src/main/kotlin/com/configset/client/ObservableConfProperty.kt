@@ -46,7 +46,7 @@ class ObservableConfProperty<T>(
             }
             configPropertyLinkProcessor.evaluate(tokensNode, valueDependencyResolver)
         } else {
-            value
+            null
         }
         state = PropertyState(convertSafely(currentValueStr), depSubscriptions)
         fireListeners(state.value)

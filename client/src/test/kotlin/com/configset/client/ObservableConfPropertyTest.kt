@@ -2,6 +2,7 @@ package com.configset.client
 
 import com.configset.client.converter.Converters
 import org.amshove.kluent.should
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.Test
@@ -39,6 +40,42 @@ class ObservableConfPropertyTest {
             dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable()))
 
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
+    }
+
+    @Test
+    fun testUnsubscription() {
+        val linkedPropertyObservable = DynamicValue<String?, String?>("linkValue", ChangingObservable())
+        val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
+            configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
+            valueDependencyResolver = { _, _ -> error("should not be called") },
+            name = "linked.name",
+            defaultValue = "linkValue",
+            converter = Converters.STRING,
+            dynamicValue = linkedPropertyObservable
+        )
+        val targetPropertyObservable = DynamicValue<String?, String?>("some value \${linkApp\\linkName} suffix",
+            ChangingObservable())
+        val targetProperty = ObservableConfProperty(
+            configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
+            valueDependencyResolver = { appName, propName ->
+                should { appName == "linkApp" }
+                should { propName == "linkName" }
+                linkedProperty
+            },
+            name = "property.name",
+            defaultValue = null,
+            converter = Converters.STRING,
+            dynamicValue = targetPropertyObservable)
+
+        targetPropertyObservable.observable.push("new value")
+
+        var subscriptionCalled = false
+        targetProperty.subscribe {
+            subscriptionCalled = true
+        }
+        linkedPropertyObservable.observable.push("new linked value")
+
+        subscriptionCalled shouldBe false
     }
 
     @Test
