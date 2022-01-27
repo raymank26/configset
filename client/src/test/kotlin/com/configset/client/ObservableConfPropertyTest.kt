@@ -6,7 +6,6 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.Test
-import java.util.*
 import kotlin.test.fail
 
 class ObservableConfPropertyTest {
@@ -80,7 +79,15 @@ class ObservableConfPropertyTest {
 
     @Test
     fun testLinkUpdateRecalculation() {
-        val linkedProperty: UpdatableConfProperty<String?> = UpdatableConfProperty("linkValue")
+        val linkedPropertyObservable = DynamicValue<String?, String?>("linkValue", ChangingObservable())
+        val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
+            configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
+            valueDependencyResolver = { _, _ -> error("should not be called") },
+            name = "linked.name",
+            defaultValue = "linkValue",
+            converter = Converters.STRING,
+            dynamicValue = linkedPropertyObservable
+        )
         val property = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { appName, propName ->
@@ -98,8 +105,8 @@ class ObservableConfPropertyTest {
         property.subscribe {
             subscriberInvocations++
         }
-
-        linkedProperty.setValue("link updated")
+//
+        linkedPropertyObservable.observable.push("link updated")
 
         property.getValue() shouldBeEqualTo "some value link updated suffix"
 
@@ -119,31 +126,5 @@ class ObservableConfPropertyTest {
             dynamicValue = DynamicValue("Non integer", ChangingObservable()))
 
         property.getValue().shouldBeNull()
-    }
-}
-
-private class UpdatableConfProperty<T>(value: T) : ConfProperty<T> {
-
-    private var currentValue = value
-    private var listeners: Set<Subscriber<T>> = Collections.newSetFromMap(IdentityHashMap())
-
-    override fun getValue(): T {
-        return currentValue
-    }
-
-    fun setValue(value: T) {
-        currentValue = value
-        for (listener in listeners) {
-            listener.process(value)
-        }
-    }
-
-    override fun subscribe(listener: Subscriber<T>): Subscription {
-        listeners = listeners.plus(listener)
-        return object : Subscription {
-            override fun unsubscribe() {
-                listeners = listeners.minus(listener)
-            }
-        }
     }
 }

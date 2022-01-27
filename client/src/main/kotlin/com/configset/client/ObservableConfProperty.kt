@@ -2,7 +2,6 @@ package com.configset.client
 
 import com.configset.client.converter.Converter
 import com.configset.sdk.extension.createLoggerStatic
-import java.util.*
 
 private val LOG = createLoggerStatic<ObservableConfProperty<*>>()
 
@@ -17,7 +16,7 @@ class ObservableConfProperty<T>(
 
     @Volatile
     private lateinit var state: PropertyState<T>
-    private val listeners: MutableSet<Subscriber<T>> = Collections.newSetFromMap(IdentityHashMap())
+    private val listeners: MutableSet<Subscriber<T>> = HashSet()
 
     init {
         evaluate(dynamicValue.value)
@@ -29,6 +28,7 @@ class ObservableConfProperty<T>(
         return state.value
     }
 
+    @Synchronized
     private fun evaluate(value: String?) {
         if (::state.isInitialized) {
             state.dependencySubscriptions.map { it.unsubscribe() }
@@ -76,8 +76,10 @@ class ObservableConfProperty<T>(
     }
 
     private fun fireListeners(value: T) {
-        for (listener in listeners) {
+        // it might be possible that somebody unsubscribes while iterating. That's why we do a copy here.
+        for (listener in HashSet(listeners)) {
             try {
+                LOG.debug("Listener of {}", this)
                 listener.process(value)
             } catch (e: Exception) {
                 LOG.warn("For propertyName = $name unable to call listener for value = $value", e)
