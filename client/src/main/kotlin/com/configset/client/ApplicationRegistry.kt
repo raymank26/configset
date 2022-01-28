@@ -12,9 +12,10 @@ class ApplicationRegistry(
 ) {
 
     private val appName = propertiesProvider.appName
-    private val propertiesSubscribers: MutableMap<String, ChangingObservable<String?>> = HashMap()
-    private val snapshot: MutableMap<String, String> =
-        propertiesProvider.initial.associate { it.name to it.value!! }.toMutableMap()
+    private val snapshot: MutableMap<String, DynamicValue<String?, String?>> =
+        propertiesProvider.initial.associate {
+            it.name to (DynamicValue<String?, String?>(it.value!!, ChangingObservable()))
+        }.toMutableMap()
     private val inProgressResolution = mutableSetOf<String>()
 
     fun start() {
@@ -25,11 +26,11 @@ class ApplicationRegistry(
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
             LOG.info("Update come for appName = ${appName}, property = $propertyItem")
-            propertiesSubscribers[propertyItem.name]?.push(propertyItem.value)
-        }
-        for (propertyItem in value) {
-            if (propertyItem.value != null) {
-                snapshot[propertyItem.name] = propertyItem.value
+            val dynValue = snapshot[propertyItem.name]
+            if (dynValue != null) {
+                dynValue.observable.push(propertyItem.value)
+            } else {
+                snapshot[propertyItem.name] = DynamicValue(propertyItem.value!!, ChangingObservable())
             }
         }
     }
@@ -45,17 +46,16 @@ class ApplicationRegistry(
             error("Recursive resolution found")
         }
         inProgressResolution.add(name)
-        val value = snapshot[name]
-        val observable = propertiesSubscribers.compute(name) { _, prev ->
-            prev ?: ChangingObservable()
+        val dynamicValue = snapshot.compute(name) { _, prev ->
+            prev ?: DynamicValue(null, ChangingObservable())
         }!!
         val res = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = propertyResolver,
             name = name,
-            defaultValue = value?.let { converter.convert(it) } ?: defaultValue,
+            defaultValue = defaultValue,
             converter = converter,
-            dynamicValue = DynamicValue(value, observable)
+            dynamicValue = dynamicValue
         )
         inProgressResolution.remove(name)
         return res

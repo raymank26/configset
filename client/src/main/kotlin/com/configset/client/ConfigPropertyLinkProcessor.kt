@@ -17,10 +17,6 @@ class ConfigPropertyLinkProcessor {
             when (state) {
                 ParseState.IN_TEXT -> {
                     val nextChar = value[index++]
-                    if (value.length - index < 2) {
-                        currentBuffer.append(nextChar)
-                        continue
-                    }
                     if (nextChar == '$' && value[index] == '{') {
                         index++
                         tokens.add(Text(currentBuffer.toString()))

@@ -50,5 +50,4 @@ class ConfigPropertyLinkProcessorTest {
             processor.parse("\${appName\\}")
         }
     }
-
 }
