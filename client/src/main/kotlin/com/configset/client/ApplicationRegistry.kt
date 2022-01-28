@@ -12,9 +12,9 @@ class ApplicationRegistry(
 ) {
 
     private val appName = propertiesProvider.appName
-    private val snapshot: MutableMap<String, DynamicValue<String?, String?>> =
+    private val snapshot: MutableMap<String, DynamicValue<String?>> =
         propertiesProvider.initial.associate {
-            it.name to (DynamicValue<String?, String?>(it.value!!, ChangingObservable()))
+            it.name to (DynamicValue<String?>(it.value!!, ChangingObservable()))
         }.toMutableMap()
     private val inProgressResolution = mutableSetOf<String>()
 

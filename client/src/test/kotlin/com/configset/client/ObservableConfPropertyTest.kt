@@ -1,10 +1,15 @@
 package com.configset.client
 
 import com.configset.client.converter.Converters
+import com.configset.client.repository.ConfigApplication
+import com.configset.client.repository.ConfigurationRepository
+import org.amshove.kluent.invoking
 import org.amshove.kluent.should
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.junit.Test
 import kotlin.test.fail
 
@@ -43,7 +48,7 @@ class ObservableConfPropertyTest {
 
     @Test
     fun testUnsubscription() {
-        val linkedPropertyObservable = DynamicValue<String?, String?>("linkValue", ChangingObservable())
+        val linkedPropertyObservable = DynamicValue<String?>("linkValue", ChangingObservable())
         val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ -> error("should not be called") },
@@ -52,7 +57,7 @@ class ObservableConfPropertyTest {
             converter = Converters.STRING,
             dynamicValue = linkedPropertyObservable
         )
-        val targetPropertyObservable = DynamicValue<String?, String?>("some value \${linkApp\\linkName} suffix",
+        val targetPropertyObservable = DynamicValue<String?>("some value \${linkApp\\linkName} suffix",
             ChangingObservable())
         val targetProperty = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
@@ -79,7 +84,7 @@ class ObservableConfPropertyTest {
 
     @Test
     fun testLinkUpdateRecalculation() {
-        val linkedPropertyObservable = DynamicValue<String?, String?>("linkValue", ChangingObservable())
+        val linkedPropertyObservable = DynamicValue<String?>("linkValue", ChangingObservable())
         val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ -> error("should not be called") },
@@ -126,5 +131,36 @@ class ObservableConfPropertyTest {
             dynamicValue = DynamicValue("Non integer", ChangingObservable()))
 
         property.getValue().shouldBeNull()
+    }
+
+    @Test
+    fun testRecursiveResolutionFails() {
+        val content = """
+            prop1=${'$'}{foo\prop2}
+            prop2=${'$'}{foo\prop1}
+        """.trimIndent()
+        val config: ConfigurationRegistry =
+            ConfigurationRegistryFactory.getConfiguration(TextConfigurationRepository(content))
+        invoking {
+            config.getConfiguration("foo").getConfProperty("prop2", Converters.STRING).getValue()
+        } shouldThrow IllegalStateException::class withMessage "Recursive resolution found"
+    }
+}
+
+private class TextConfigurationRepository(val text: String) : ConfigurationRepository {
+
+    override fun start() {
+    }
+
+    override fun subscribeToProperties(appName: String): ConfigApplication {
+        val properties = text.lineSequence()
+            .map { it.split('=') }
+            .map { PropertyItem(appName, it[0], 1, it[1]) }
+            .toList()
+
+        return ConfigApplication(appName, properties, ChangingObservable())
+    }
+
+    override fun stop() {
     }
 }

@@ -11,7 +11,7 @@ class ObservableConfProperty<T>(
     private val name: String,
     private val defaultValue: T,
     private val converter: Converter<T>,
-    dynamicValue: DynamicValue<String?, String?>,
+    dynamicValue: DynamicValue<String?>,
 ) : ConfProperty<T> {
 
     @Volatile
@@ -70,7 +70,7 @@ class ObservableConfProperty<T>(
                 converter.convert(value)
             }
         } catch (e: Exception) {
-            LOG.warn("For propertyName = $name unable to convert value = $value")
+            LOG.warn("For propertyName = $name unable to convert value = $value", e)
             defaultValue
         }
     }
