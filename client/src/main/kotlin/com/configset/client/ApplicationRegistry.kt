@@ -46,9 +46,9 @@ class ApplicationRegistry(
             error("Recursive resolution found")
         }
         inProgressResolution.add(name)
-        val dynamicValue = snapshot.compute(name) { _, prev ->
-            prev ?: DynamicValue(null, ChangingObservable())
-        }!!
+        val dynamicValue = snapshot.getOrPut(name) {
+            DynamicValue(null, ChangingObservable())
+        }
         val res = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = propertyResolver,
