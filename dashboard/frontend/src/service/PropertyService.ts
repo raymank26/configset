@@ -1,7 +1,7 @@
-import Axios from "axios";
 import {uuidv4} from "@/service/Uuid";
 import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
 import ShowPropertyItem from "@/model/ShowPropertyItem";
+import {axiosApiInstance} from "@/main";
 
 const qs = require('querystring');
 
@@ -18,7 +18,7 @@ export default class PropertyService {
     if (version) {
       request["version"] = version
     }
-    return Axios.post("/api/property/update", qs.stringify(request))
+    return axiosApiInstance.post("/api/property/update", qs.stringify(request))
       .then(() => UpdateResult.OK)
       .catch(reason => {
         let code = reason.response.data.code;
@@ -40,7 +40,7 @@ export default class PropertyService {
       "propertyName": searchPropertiesRequest.searchPropertyName,
       "propertyValue": searchPropertiesRequest.searchPropertyValue,
     };
-    return Axios.get("/api/property/search", {
+    return axiosApiInstance.get("/api/property/search", {
       params: request
     }).then(response => response.data)
   }
@@ -51,7 +51,7 @@ export default class PropertyService {
       "hostName": hostName,
       "propertyName": propertyName,
     };
-    return Axios.get("api/property/get", {
+    return axiosApiInstance.get("api/property/get", {
       params: request
     }).then(response => response.data);
   }
@@ -65,7 +65,7 @@ export default class PropertyService {
       "requestId": uuidv4()
     } as any;
 
-    return Axios.post("/api/property/delete", qs.stringify(request))
+    return axiosApiInstance.post("/api/property/delete", qs.stringify(request))
       .then(() => DeleteResult.OK)
       .catch(reason => {
         let code = reason.response.data.code;
@@ -84,7 +84,7 @@ export default class PropertyService {
       "properties": propertiesXml,
       "requestId": uuidv4()
     };
-    return Axios.post("/api/property/import", qs.stringify(request))
+    return axiosApiInstance.post("/api/property/import", qs.stringify(request))
       .then(() => ImportResult.OK)
       .catch(reason => {
         let code = reason.response.data.code;

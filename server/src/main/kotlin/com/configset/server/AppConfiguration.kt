@@ -23,8 +23,8 @@ class AppConfiguration(private val properties: Map<String, String>) {
                 StubAuthenticatorConfig(adminAccessToken)
             }
             "oauth" -> AuthConfiguration(
-                baseUrl = readProperty("oauth.url"),
-                timeoutMs = readProperty("oauth.timeoutMs", "2000").toLong())
+                baseUrl = readProperty("oauth_provider_url"),
+                timeoutMs = readProperty("oauth_timeout_ms", "2000").toLong())
             else -> error("unknown type $type")
         }
     }

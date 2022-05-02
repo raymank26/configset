@@ -10,6 +10,8 @@ services:
       - "5554:5554"
     environment:
       - "db_type=postgres"
+      - "authenticator_type=oauth"
+      - "oauth_provider_url=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/userinfo"
       - "jdbc_url=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
       - "log.level=DEBUG"
   dashboard:
@@ -30,4 +32,3 @@ services:
     environment:
       - "KEYCLOAK_USER=admin"
       - "KEYCLOAK_PASSWORD=admin"
-

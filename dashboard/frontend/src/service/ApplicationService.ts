@@ -1,18 +1,18 @@
-import Axios from "axios";
 import {uuidv4} from "@/service/Uuid";
+import {axiosApiInstance} from "@/main";
 
 const qs = require('querystring');
 
 export class ApplicationService {
 
   createApplication(appName: string): Promise<any> {
-    return Axios.post("/api/application", qs.stringify({
+    return axiosApiInstance.post("/api/application", qs.stringify({
       "appName": appName,
       "requestId": uuidv4()
     }))
   }
 
   listApplications(): Promise<string[]> {
-    return Axios.get("/api/application/list").then(data => data.data)
+    return axiosApiInstance.get("/api/application/list").then(data => data.data)
   }
 }

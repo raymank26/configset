@@ -183,7 +183,7 @@ abstract class BaseDashboardTest {
 }
 
 private class AuthCheckInterceptor : ServerInterceptor {
-    override fun <ReqT : Any, RespT : Any> interceptCall(
+    override fun <ReqT, RespT> interceptCall(
         call: ServerCall<ReqT, RespT>,
         headers: Metadata,
         next: ServerCallHandler<ReqT, RespT>,

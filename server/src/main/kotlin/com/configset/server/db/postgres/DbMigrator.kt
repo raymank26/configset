@@ -61,8 +61,6 @@ class DbMigrator(private val dbi: Jdbi) {
             require(lastSavedVersion == lastApplied.version)
         }
         logger.info("Initialization completed")
-
-
     }
 
     private fun getLastVersion(): Long {

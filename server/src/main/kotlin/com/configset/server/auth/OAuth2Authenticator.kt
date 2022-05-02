@@ -1,40 +1,36 @@
 package com.configset.server.auth
 
 import com.auth0.jwt.JWT
-import com.auth0.jwt.JWTVerifier
-import com.auth0.jwt.algorithms.Algorithm
 import com.configset.sdk.extension.createLoggerStatic
+import com.configset.server.util.retry
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.security.KeyFactory
-import java.security.interfaces.RSAPublicKey
-import java.security.spec.X509EncodedKeySpec
-import java.util.*
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
 
 private val log = createLoggerStatic<OAuth2Authenticator>()
 
 class OAuth2Authenticator(
-    private val oauth2Api: OAuth2Api,
-    private val verificationBuilder: JwtVerificationBuilder,
+    private val baseUrl: String,
+    private val timeoutMs: Long,
+    private val httpClient: HttpClient,
 ) : Authenticator {
 
-    private var verifier: JWTVerifier
-
-    init {
-        val realmInfo = oauth2Api.getResource()
-        val publicKeyBytes = Base64.getDecoder().decode(realmInfo.publicKey)
-        val encodedKeySpec = X509EncodedKeySpec(publicKeyBytes)
-        val kf = KeyFactory.getInstance("RSA")
-        val publicKey = kf.generatePublic(encodedKeySpec) as RSAPublicKey
-        val jwtAlgo = Algorithm.RSA256(publicKey, null)
-        verifier = verificationBuilder.build(jwtAlgo)
-
-    }
-
-
     override fun getUserInfo(accessToken: String): UserInfo {
+        retry {
+            val body: HttpResponse<String> = httpClient.send(HttpRequest.newBuilder()
+                .GET()
+                .timeout(Duration.ofMillis(timeoutMs))
+                .uri(URI(baseUrl))
+                .build(), HttpResponse.BodyHandlers.ofString())
+            require(body.statusCode() == 200)
+        }
+
         return try {
-            val decodedJwt = verifier.verify(accessToken)
+            val decodedJwt = JWT.decode(accessToken)
             val rolesJson: RolesJson = decodedJwt.claims["realm_access"]!!.`as`(RolesJson::class.java)
 
             LoggedIn(decodedJwt.claims["preferred_username"]!!.asString(), rolesJson.roles.toHashSet())
@@ -42,16 +38,6 @@ class OAuth2Authenticator(
             log.info("Unable to process access_token", e)
             Anonymous
         }
-    }
-}
-
-fun interface JwtVerificationBuilder {
-    fun build(algo: Algorithm): JWTVerifier
-}
-
-class DefaultJwtVerificationBuilder : JwtVerificationBuilder {
-    override fun build(algo: Algorithm): JWTVerifier {
-        return JWT.require(algo).build()
     }
 }
 

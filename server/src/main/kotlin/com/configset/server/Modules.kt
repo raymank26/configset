@@ -2,10 +2,8 @@ package com.configset.server
 
 import com.configset.server.auth.Admin
 import com.configset.server.auth.Authenticator
-import com.configset.server.auth.DefaultJwtVerificationBuilder
 import com.configset.server.auth.LoggedIn
 import com.configset.server.auth.OAuth2Authenticator
-import com.configset.server.auth.OAuth2Rest2Api
 import com.configset.server.auth.StubAuthenticator
 import com.configset.server.auth.UserRoleService
 import com.configset.server.db.ConfigurationDao
@@ -27,6 +25,7 @@ import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
+import java.net.http.HttpClient
 
 fun createAppModules(config: AppConfiguration): List<Module> {
     val dbModule = createDbModule(config)
@@ -111,8 +110,11 @@ private fun createAuthModule(config: AppConfiguration): Module {
     return when (val c = config.getAuthenticatorConfig()) {
         is AuthConfiguration -> module {
             single<Authenticator> {
-                OAuth2Authenticator(OAuth2Rest2Api(c.baseUrl, c.timeoutMs),
-                    DefaultJwtVerificationBuilder())
+                OAuth2Authenticator(
+                    baseUrl = c.baseUrl,
+                    timeoutMs = 2000,
+                    httpClient = HttpClient.newHttpClient()
+                )
             }
         }
         is StubAuthenticatorConfig -> module {

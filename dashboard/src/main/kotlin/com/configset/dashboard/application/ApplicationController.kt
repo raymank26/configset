@@ -10,7 +10,7 @@ import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
 class ApplicationController(
-        private val serverApiGateway: ServerApiGateway
+    private val serverApiGateway: ServerApiGateway,
 ) {
 
     fun bind() {
