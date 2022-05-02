@@ -44,14 +44,13 @@ abstract class BaseDashboardTest {
     @Rule
     @JvmField
     val grpcCleanup = GrpcCleanupRule()
-
     @Before
     fun before() {
         mockConfigService = spyk()
         mockConfigServiceExt = ServerMockExtension(mockConfigService)
         grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor().addService(ServerInterceptors
-                .intercept(mockConfigService, AuthCheckInterceptor()))
+            .directExecutor()
+            .addService(ServerInterceptors.intercept(mockConfigService, AuthCheckInterceptor()))
             .build()
             .start())
         val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
@@ -70,9 +69,9 @@ abstract class BaseDashboardTest {
                     Pair("dashboard.port", 9299.toString()),
                     Pair("serve.static", "false"),
                     Pair("authenticator_type", ""),
-                    Pair("client.keycloackUrl", "localhost"),
-                    Pair("client.keycloackRealm", "sample-realm"),
-                    Pair("client.keycloackClientId", "sample-clientId"),
+                    Pair("client.keycloack_url", "localhost"),
+                    Pair("client.keycloack_realm", "sample-realm"),
+                    Pair("client.keycloack_clientId", "sample-clientId"),
                 )
             ))
         ))
@@ -86,11 +85,11 @@ abstract class BaseDashboardTest {
     open fun setUp() {
     }
 
-    fun <T> executeGetRequest(
+    fun buildGetRequest(
         endpoint: String,
-        responseClass: Class<T>,
         queryParams: Map<String, String> = emptyMap(),
-    ): T {
+    ): Request.Builder {
+
         val urlBuilder = HttpUrl.Builder()
             .scheme("http")
             .host("localhost")
@@ -99,15 +98,27 @@ abstract class BaseDashboardTest {
         for ((key, value) in queryParams) {
             urlBuilder.addQueryParameter(key, value)
         }
-        val response = okHttp.newCall(Request.Builder()
+        return Request.Builder()
             .url(urlBuilder.build())
             .header("Authorization", "Bearer $ACCESS_TOKEN")
-            .build())
+    }
+
+    fun <T> executeRequest(request: Request, responseClass: Class<T>): T {
+        val response = okHttp.newCall(request)
             .execute()
         response.code shouldBeEqualTo 200
         return response.body?.byteStream().use {
             OBJECT_MAPPER.readValue(it, responseClass)
         }
+    }
+
+    fun <T> executeGetRequest(
+        endpoint: String,
+        responseClass: Class<T>,
+        queryParams: Map<String, String> = emptyMap(),
+    ): T {
+        val urlBuilder = buildGetRequest(endpoint, queryParams)
+        return executeRequest(urlBuilder.build(), responseClass)
     }
 
     fun <T> executePostRequest(

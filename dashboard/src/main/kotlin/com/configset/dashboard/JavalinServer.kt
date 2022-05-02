@@ -1,6 +1,7 @@
 package com.configset.dashboard
 
 import com.configset.dashboard.application.ApplicationController
+import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.util.ClientConfig
 import com.configset.dashboard.util.ExceptionMapper
@@ -13,10 +14,11 @@ import io.javalin.http.staticfiles.Location
 private val LOG = createLoggerStatic<JavalinServer>()
 
 class JavalinServer(
-        private val applicationController: ApplicationController,
-        private val serverConfig: Config,
-        private val exceptionMapper: ExceptionMapper,
-        private val propertyController: PropertyController,
+    private val applicationController: ApplicationController,
+    private val serverConfig: Config,
+    private val exceptionMapper: ExceptionMapper,
+    private val propertyController: PropertyController,
+    private val authInterceptor: AuthInterceptor,
 ) {
 
     private val app = Javalin.create { config ->
@@ -30,6 +32,7 @@ class JavalinServer(
     fun start() {
         exceptionMapper.bind(app)
 
+        app.before(authInterceptor)
         app.routes {
             path("api") {
                 path("application") {

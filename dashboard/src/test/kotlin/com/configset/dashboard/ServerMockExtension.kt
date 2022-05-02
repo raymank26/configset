@@ -34,6 +34,14 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                     observer.onCompleted()
                 }
             }
+
+            override fun throws(ex: Exception) {
+                every { mockConfigService.listApplications(request ?: any(), any()) } answers {
+                    @Suppress("UNCHECKED_CAST")
+                    val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
+                    observer.onError(ex)
+                }
+            }
         }
     }
 
@@ -153,4 +161,8 @@ abstract class ServerMockContext<R, T> {
     }
 
     abstract fun answer(supplier: () -> T)
+
+    open fun throws(ex: Exception) {
+        throw NotImplementedError()
+    }
 }

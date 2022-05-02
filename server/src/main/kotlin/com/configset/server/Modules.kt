@@ -4,6 +4,7 @@ import com.configset.server.auth.Admin
 import com.configset.server.auth.Authenticator
 import com.configset.server.auth.LoggedIn
 import com.configset.server.auth.OAuth2Authenticator
+import com.configset.server.auth.RemoteJwtVerificationProvider
 import com.configset.server.auth.StubAuthenticator
 import com.configset.server.auth.UserRoleService
 import com.configset.server.db.ConfigurationDao
@@ -110,11 +111,8 @@ private fun createAuthModule(config: AppConfiguration): Module {
     return when (val c = config.getAuthenticatorConfig()) {
         is AuthConfiguration -> module {
             single<Authenticator> {
-                OAuth2Authenticator(
-                    baseUrl = c.baseUrl,
-                    timeoutMs = 2000,
-                    httpClient = HttpClient.newHttpClient()
-                )
+                val jwtVerificationProvider = RemoteJwtVerificationProvider(HttpClient.newHttpClient(), c.baseUrl)
+                OAuth2Authenticator(jwtVerificationProvider.createVerification().build())
             }
         }
         is StubAuthenticatorConfig -> module {

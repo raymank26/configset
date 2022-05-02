@@ -11,7 +11,7 @@ services:
     environment:
       - "db_type=postgres"
       - "authenticator_type=oauth"
-      - "oauth_provider_url=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/userinfo"
+      - "oauth_provider_url=http://keycloack:8080/auth/realms/demo"
       - "jdbc_url=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
       - "log.level=DEBUG"
   dashboard:
@@ -22,9 +22,9 @@ services:
     environment:
       - "config_server.hostname=backend"
       - "config_server.port=8080"
-      - "client.keycloackUrl=http://localhost:8077"
-      - "client.keycloackRealm=demo"
-      - "client.keycloackClientId=demo-clientId"
+      - "client.keycloack_url=http://localhost:8077"
+      - "client.keycloack_realm=demo"
+      - "client.keycloack_clientId=demo-clientId"
   keycloack:
     image: "quay.io/keycloak/keycloak:15.0.1"
     ports:
