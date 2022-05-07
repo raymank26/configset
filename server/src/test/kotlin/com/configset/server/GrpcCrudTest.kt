@@ -63,7 +63,7 @@ class GrpcCrudTest {
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
 
         val result: List<String> = serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationsList
-        Assert.assertEquals(listOf(appName), result)
+        result shouldBeEqualTo listOf(appName)
     }
 
     @Test
@@ -103,7 +103,7 @@ class GrpcCrudTest {
                 .setVersion(123L)
                 .build())
 
-        Assert.assertEquals(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND, result.type)
+        result.type shouldBeEqualTo UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND
     }
 
     @Test
@@ -121,6 +121,6 @@ class GrpcCrudTest {
                 .setHostName("host")
                 .setVersion(1)
                 .build())
-        Assert.assertEquals(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND, res.type)
+        res.type shouldBeEqualTo DeletePropertyResponse.Type.PROPERTY_NOT_FOUND
     }
 }

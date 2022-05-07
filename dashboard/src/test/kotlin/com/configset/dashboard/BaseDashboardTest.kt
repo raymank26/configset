@@ -181,9 +181,13 @@ abstract class BaseDashboardTest {
         return executeGetRequest("/property/search", List::class.java, queryParams).map {
             @Suppress("UNCHECKED_CAST")
             val mapping = it as Map<String, Any>
-            ShowPropertyItem(mapping.getValue("applicationName").toString(), mapping.getValue("hostName").toString(),
-                mapping.getValue("propertyName").toString(), mapping.getValue("propertyValue").toString(),
-                (mapping.getValue("version") as Int).toLong())
+            ShowPropertyItem(
+                applicationName = mapping.getValue("applicationName").toString(),
+                hostName = mapping.getValue("hostName").toString(),
+                propertyName = mapping.getValue("propertyName").toString(),
+                propertyValue = mapping.getValue("propertyValue").toString(),
+                version = (mapping.getValue("version") as Int).toLong()
+            )
         }
     }
 

@@ -12,13 +12,4 @@ class UserRoleService {
         }
         return false
     }
-
-    fun hasAnyRole(userInfo: UserInfo, roles: Set<Role>): Boolean {
-        for (role in roles) {
-            if (hasRole(userInfo, role)) {
-                return true
-            }
-        }
-        return false
-    }
 }
