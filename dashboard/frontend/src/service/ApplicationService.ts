@@ -1,5 +1,5 @@
 import {uuidv4} from "@/service/Uuid";
-import {axiosApiInstance} from "@/main";
+import {axiosApiInstance} from "@/Axios";
 
 const qs = require('querystring');
 

@@ -1,7 +1,7 @@
 import {uuidv4} from "@/service/Uuid";
 import SearchPropertiesRequest from "@/model/SearchPropertiesRequest";
 import ShowPropertyItem from "@/model/ShowPropertyItem";
-import {axiosApiInstance} from "@/main";
+import {axiosApiInstance} from "@/Axios";
 
 const qs = require('querystring');
 

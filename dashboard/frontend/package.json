@@ -6,10 +6,11 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "test": "jest"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.27.2",
     "bootstrap": "^4.4.1",
     "core-js": "^3.6.4",
     "jquery": "^3.5.0",
@@ -22,7 +23,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
-    "@types/mocha": "^5.2.4",
+    "@types/jest": "^27.5.0",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "@vue/cli-plugin-babel": "~4.3.0",
@@ -33,7 +34,8 @@
     "@vue/cli-service": "~4.3.0",
     "@vue/eslint-config-standard": "^5.1.2",
     "@vue/eslint-config-typescript": "^5.0.2",
-    "@vue/test-utils": "1.0.0-beta.31",
+    "@vue/test-utils": "^1.0.0-beta.31",
+    "babel-core": "^7.0.0-bridge.0",
     "chai": "^4.1.2",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
@@ -41,9 +43,12 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^6.2.2",
+    "jest": "^27.0.6",
     "node-sass": "^4.12.0",
     "sass-loader": "^8.0.2",
+    "ts-jest": "^27.0.6",
     "typescript": "~3.8.3",
+    "vue-jest": "^3.0.7",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
@@ -71,6 +76,22 @@
         }
       }
     ]
+  },
+  "jest": {
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "json",
+      "vue"
+    ],
+    "transform": {
+      ".*\\.(vue)$": "<rootDir>/node_modules/vue-jest",
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "browserslist": [
     "> 1%",
