@@ -45,8 +45,8 @@ export default class AddNewApplication extends Vue {
         path: "/applications"
       });
     }
-    }
   }
+}
 </script>
 
 <style scoped>
