@@ -25,27 +25,26 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator'
-  import {applicationService} from "@/service/services";
+import {Component, Vue} from 'vue-property-decorator'
+import {applicationService} from "@/service/services";
 
-  @Component
-  export default class AddNewApplication extends Vue {
+@Component
+export default class AddNewApplication extends Vue {
 
-    appName: string | null = null;
+  appName: string | null = null;
 
-    submitApp() {
-      let form = this.$refs['appForm'] as HTMLFormElement;
-      let isValid = form.checkValidity();
-      form.classList.add('was-validated');
+  async submitApp() {
+    let form = this.$refs['appForm'] as HTMLFormElement;
+    let isValid = form.checkValidity();
+    form.classList.add('was-validated');
 
-      if (isValid) {
-        applicationService.createApplication(this.appName!)
-          .then(() => {
-            this.$router.push({
-              path: "/applications"
-            });
-          });
-      }
+    if (isValid) {
+      await applicationService.createApplication(this.appName!)
+
+      await this.$router.push({
+        path: "/applications"
+      });
+    }
     }
   }
 </script>

@@ -7,8 +7,11 @@ import {applicationService} from "@/service/services";
 import Mock = jest.Mock;
 
 jest.mock('@/service/services')
+let applicationServiceMock = applicationService.createApplication as Mock<any, any>;
 
-let applicationServiceMock = applicationService.createApplication as Mock<any, any>
+beforeEach(() => {
+  applicationServiceMock.mockClear()
+})
 
 test('application is saved, user redirected to /applications', async () => {
   // given
@@ -31,8 +34,37 @@ test('application is saved, user redirected to /applications', async () => {
   await wrapper.find("form").trigger("submit")
 
   // then
+  expect(wrapper.find("form").classes("was-validated")).toBe(true)
   expect(applicationServiceMock).toBeCalled()
   expect(mockRouter.push).toHaveBeenCalledWith({
     path: "/applications"
   })
 });
+
+test('application has invalid name, error is shown', async () => {
+
+  // given
+  let wrapper = mount(AddNewApplication, {})
+
+  // when
+  await wrapper.find("#appName").setValue("invalid name 29")
+  await wrapper.find("form").trigger("submit")
+
+  // then
+  expect(wrapper.find("form").classes("was-validated")).toBe(true)
+  expect(wrapper.find(".invalid-feedback").isVisible()).toBe(true)
+  expect(applicationServiceMock).not.toBeCalled()
+})
+
+test('application is empty, error is shown', async () => {
+  // given
+  let wrapper = mount(AddNewApplication, {})
+
+  // when
+  await wrapper.find("form").trigger("submit")
+
+  // then
+  expect(wrapper.find("form").classes("was-validated")).toBe(true)
+  expect(wrapper.find(".invalid-feedback").isVisible()).toBe(true)
+  expect(applicationServiceMock).not.toBeCalled()
+})
