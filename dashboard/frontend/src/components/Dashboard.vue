@@ -38,9 +38,9 @@
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator'
+import {Component, Vue} from 'vue-property-decorator'
 
-  @Component
+@Component
   export default class Dashboard extends Vue {
   }
 </script>
@@ -83,10 +83,5 @@
   .sidebar .nav-link:hover .feather,
   .sidebar .nav-link.active .feather {
     color: inherit;
-  }
-
-  .sidebar-heading {
-    font-size: .75rem;
-    text-transform: uppercase;
   }
 </style>

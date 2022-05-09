@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.27.2",
     "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.22.0",
     "core-js": "^3.6.4",
     "jquery": "^3.5.0",
     "keycloak-js": "^15.0.1",

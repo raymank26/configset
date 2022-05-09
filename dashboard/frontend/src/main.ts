@@ -1,14 +1,19 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import {BootstrapVue} from 'bootstrap-vue'
 import 'bootstrap'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 import Axios from "axios";
 import {ClientConfig, getConfig, setConfig} from "@/config";
 import Keycloak from "keycloak-js";
 import {axiosApiInstance} from "@/Axios";
+import Toasts from "@/plugins/Toasts";
 
 Vue.config.productionTip = false;
+Vue.use(BootstrapVue)
+Vue.use(Toasts)
 
 let loadPromise = Axios.get("/api/config").then(clientConfig => {
   setConfig(clientConfig.data as ClientConfig)
@@ -57,8 +62,15 @@ loadPromise = loadPromise.then(() => {
 
 
 loadPromise.then(() => {
-  new Vue({
+  let app = new Vue({
     router,
     render: h => h(App)
   }).$mount('#app');
+
+  axiosApiInstance.interceptors.response.use((response: any) => {
+    return response
+  }, (error: any) => {
+    app.$showError!!(error.toString())
+    return Promise.reject(error)
+  })
 })
