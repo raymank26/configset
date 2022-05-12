@@ -1,8 +1,7 @@
 package com.configset.dashboard.application
 
-import com.configset.dashboard.CreateApplicationResult
 import com.configset.dashboard.ServerApiGateway
-import com.configset.dashboard.util.BadRequest
+import com.configset.dashboard.util.ExceptionMappingService
 import com.configset.dashboard.util.accessToken
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.requestId
@@ -11,6 +10,7 @@ import io.javalin.apibuilder.ApiBuilder.post
 
 class ApplicationController(
     private val serverApiGateway: ServerApiGateway,
+    private val exceptionMappingService: ExceptionMappingService,
 ) {
 
     fun bind() {
@@ -19,10 +19,8 @@ class ApplicationController(
         }
         post("") { ctx ->
             val appName = ctx.formParamSafe("appName")
-            when (serverApiGateway.createApplication(ctx.requestId(), appName, ctx.accessToken())) {
-                CreateApplicationResult.OK -> Unit
-                CreateApplicationResult.ApplicationAlreadyExists -> throw BadRequest("already.exists")
-            }
+            serverApiGateway.createApplication(ctx.requestId(), appName, ctx.accessToken())
+                .orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
         }
     }
 }

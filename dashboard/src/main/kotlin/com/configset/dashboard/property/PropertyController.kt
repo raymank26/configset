@@ -1,9 +1,7 @@
 package com.configset.dashboard.property
 
-import com.configset.dashboard.PropertyCreateResult
-import com.configset.dashboard.PropertyDeleteResult
 import com.configset.dashboard.SearchPropertiesRequest
-import com.configset.dashboard.util.BadRequest
+import com.configset.dashboard.util.ExceptionMappingService
 import com.configset.dashboard.util.accessToken
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.queryParamSafe
@@ -12,9 +10,10 @@ import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
 class PropertyController(
-        private val crudPropertyService: CrudPropertyService,
-        private val listPropertiesService: ListPropertiesService,
-        private val propertyImportService: PropertyImportService
+    private val crudPropertyService: CrudPropertyService,
+    private val listPropertiesService: ListPropertiesService,
+    private val propertyImportService: PropertyImportService,
+    private val exceptionMappingService: ExceptionMappingService,
 ) {
 
     fun bind() {
@@ -26,16 +25,15 @@ class PropertyController(
             val version = ctx.formParam("version")?.toLong()
             val requestId = ctx.requestId()
 
-            when (crudPropertyService.updateProperty(requestId,
+            crudPropertyService.updateProperty(
+                requestId,
                 appName,
                 hostName,
                 propertyName,
                 propertyValue,
-                version, ctx.accessToken())) {
-                PropertyCreateResult.OK -> Unit
-                PropertyCreateResult.ApplicationNotFound -> throw BadRequest("application.not.found")
-                PropertyCreateResult.UpdateConflict -> throw BadRequest("update.conflict")
-            }
+                version,
+                ctx.accessToken()
+            ).orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
         }
 
         post("delete") { ctx ->
@@ -45,23 +43,22 @@ class PropertyController(
             val version = ctx.formParamSafe("version").toLong()
             val requestId = ctx.requestId()
 
-            when (crudPropertyService.deleteProperty(requestId, appName, hostName, propertyName, version,
-                ctx.accessToken())) {
-
-                PropertyDeleteResult.OK -> Unit
-                PropertyDeleteResult.DeleteConflict -> throw BadRequest("delete.conflict")
-            }
+            crudPropertyService.deleteProperty(
+                requestId,
+                appName,
+                hostName,
+                propertyName,
+                version,
+                ctx.accessToken()
+            ).orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
         }
 
         post("import") { ctx ->
             val appName = ctx.formParamSafe("applicationName")
             val properties = ctx.formParamSafe("properties")
             val requestId = ctx.requestId()
-            when (propertyImportService.import(requestId, appName, properties, ctx.accessToken())) {
-                PropertiesImport.ApplicationNotFound -> throw BadRequest("application.not.found")
-                PropertiesImport.OK -> Unit
-                PropertiesImport.IllegalFormat -> throw BadRequest("illegal.format")
-            }
+            propertyImportService.import(requestId, appName, properties, ctx.accessToken())
+                .orElseThrow { exceptionMappingService.mapImportErrorToException(it) }
         }
 
         get("list") { ctx ->

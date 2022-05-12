@@ -1,13 +1,13 @@
 package com.configset.dashboard.property
 
-import com.configset.dashboard.PropertyCreateResult
-import com.configset.dashboard.PropertyDeleteResult
 import com.configset.dashboard.ServerApiGateway
+import com.configset.dashboard.UpdateError
+import com.configset.dashboard.util.Outcome
 import com.configset.dashboard.util.RequestIdProducer
 
 class CrudPropertyService(
-        private val serverApiGateway: ServerApiGateway,
-        private val requestIdProducer: RequestIdProducer
+    private val serverApiGateway: ServerApiGateway,
+    private val requestIdProducer: RequestIdProducer,
 ) {
 
     fun updateProperty(
@@ -18,11 +18,11 @@ class CrudPropertyService(
         propertyValue: String,
         version: Long?,
         accessToken: String,
-    ): PropertyCreateResult {
+    ): Outcome<Unit, UpdateError> {
         // TODO: move logic below to config server
         val apps = serverApiGateway.listApplications(accessToken)
         if (!apps.contains(appName)) {
-            return PropertyCreateResult.ApplicationNotFound
+            return Outcome.error(UpdateError.APPLICATION_NOT_FOUND)
         }
         if (version == null) {
             val hosts = serverApiGateway.listHosts(accessToken)
@@ -47,7 +47,7 @@ class CrudPropertyService(
         propertyName: String,
         version: Long,
         accessToken: String,
-    ): PropertyDeleteResult {
+    ): Outcome<Unit, UpdateError> {
         return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, accessToken)
     }
 }

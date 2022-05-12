@@ -23,16 +23,20 @@ fun main() {
     val backendPort = System.getenv()["config_server.port"]!!.toInt()
 
     val configuration: ConfigurationRegistry = ConfigurationRegistryFactory.getConfiguration(
-            ConfigurationTransport.RemoteGrpc(hostname, BILLING_APP, backendHost, backendPort))
+        ConfigurationTransport.RemoteGrpc(hostname, BILLING_APP, backendHost, backendPort))
 
     val sampleAppConfiguration: Configuration = configuration.getConfiguration(BILLING_APP)
 
-    val priceProperty: ConfProperty<Int> = sampleAppConfiguration.getConfProperty("app.price.usd", Converters.INTEGER, DEFAULT_PRICE)
+    val priceProperty: ConfProperty<Int> = sampleAppConfiguration.getConfProperty(
+        "app.price.usd",
+        Converters.INTEGER,
+        DEFAULT_PRICE
+    )
 
     LOG.info("Initial price value = ${priceProperty.getValue()}")
 
     priceProperty.subscribe { newPrice ->
-        LOG.info("New price = $newPrice")
+        LOG.info("New price = {}", newPrice)
     }
 
     semaphore.acquire()

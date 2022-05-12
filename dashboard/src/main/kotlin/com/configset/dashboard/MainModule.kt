@@ -7,6 +7,7 @@ import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.property.PropertyImportService
 import com.configset.dashboard.util.ExceptionMapper
+import com.configset.dashboard.util.ExceptionMappingService
 import com.configset.dashboard.util.RequestIdProducer
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
@@ -15,7 +16,6 @@ import org.koin.dsl.module
 const val CONFIG_KEY = "config"
 
 val mainModule = module {
-
 
     single {
         val server = JavalinServer(get(), config(), get(), get(), get())
@@ -29,11 +29,15 @@ val mainModule = module {
     }
 
     single {
-        ApplicationController(get())
+        ApplicationController(get(), get())
     }
 
     single {
-        PropertyController(get(), get(), get())
+        PropertyController(get(), get(), get(), get())
+    }
+
+    single {
+        ExceptionMappingService()
     }
 
     single {
@@ -57,7 +61,13 @@ val mainModule = module {
     }
 
     single {
-        ServerApiGateway(get())
+        val gateway = ServerApiGateway(get())
+        this.registerCallback(object : ScopeCallback {
+            override fun onScopeClose(scope: Scope) {
+                gateway.stop()
+            }
+        })
+        gateway
     }
 
     single {
