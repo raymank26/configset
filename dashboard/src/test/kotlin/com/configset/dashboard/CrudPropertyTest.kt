@@ -20,10 +20,11 @@ class CrudPropertyTest : BaseDashboardTest() {
         mockConfigServiceExt.whenListApplications().answer { appName }
         mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
         mockConfigServiceExt.whenUpdateProperty()
-            .intercept { request ->
-                request.propertyName shouldBeEqualTo "someName"
-                request.propertyValue shouldBeEqualTo "234"
-            }.answer { UpdatePropertyResponse.Type.OK }
+            .answer { req ->
+                req.propertyName shouldBeEqualTo "someName"
+                req.propertyValue shouldBeEqualTo "234"
+                UpdatePropertyResponse.Type.OK
+            }
 
         val update = {
             insertProperty()
@@ -37,10 +38,9 @@ class CrudPropertyTest : BaseDashboardTest() {
     @Test
     fun testReadProperty() {
         mockConfigServiceExt.whenReadProperty()
-            .intercept { req ->
+            .answer { req ->
                 req.propertyName shouldBeEqualTo "propertyName"
                 req.hostName shouldBeEqualTo hostName
-            }.answer {
                 PropertyItem.newBuilder()
                     .setPropertyName("propertyName")
                     .setPropertyValue("value")
@@ -57,13 +57,12 @@ class CrudPropertyTest : BaseDashboardTest() {
     @Test
     fun testDelete() {
         mockConfigServiceExt.whenDeleteProperty()
-            .intercept { req ->
+            .answer { req ->
                 req.applicationName shouldBeEqualTo appName
                 req.hostName shouldBeEqualTo hostName
                 req.propertyName shouldBeEqualTo "propertyName"
                 req.version shouldBeEqualTo 1
-            }
-            .answer {
+
                 DeletePropertyResponse.newBuilder()
                     .setType(DeletePropertyResponse.Type.OK)
                     .build()
@@ -92,9 +91,10 @@ class CrudPropertyTest : BaseDashboardTest() {
 
         val updateRequests = mutableListOf<UpdatePropertyRequest>()
         mockConfigServiceExt.whenUpdateProperty()
-            .intercept {
-                updateRequests.add(it)
-            }.answer { UpdatePropertyResponse.Type.OK }
+            .answer { req ->
+                updateRequests.add(req)
+                UpdatePropertyResponse.Type.OK
+            }
 
         executePostRequest("/property/import", mapOf(
             Pair("applicationName", appName),
