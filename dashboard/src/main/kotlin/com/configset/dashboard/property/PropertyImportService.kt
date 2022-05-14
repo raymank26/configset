@@ -1,8 +1,10 @@
 package com.configset.dashboard.property
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.configset.dashboard.ConfigurationUpdateError
 import com.configset.dashboard.ServerApiGateway
-import com.configset.dashboard.UpdateError
-import com.configset.dashboard.util.Outcome
 import com.configset.dashboard.util.RequestIdProducer
 import com.configset.sdk.extension.createLoggerStatic
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -24,12 +26,12 @@ class PropertyImportService(
         appName: String,
         properties: String,
         accessToken: String,
-    ): Outcome<Unit, ImportError> {
+    ): Either<ImportError, Unit> {
         val root = try {
             xmlMapper.readValue(properties, PropertiesXml::class.java)
         } catch (e: Exception) {
             LOG.warn("Illegal format of input data", e)
-            return Outcome.error(ImportError.ILLEGAL_FORMAT)
+            return ImportError.ILLEGAL_FORMAT.left()
         }
         var curRequestId = requestId
         val hosts = serverApiGateway.listHosts(accessToken).toSet()
@@ -56,19 +58,19 @@ class PropertyImportService(
                 version,
                 accessToken
             )
-            val updateResult = updatePropertyResult.mapError {
+            val updateResult = updatePropertyResult.mapLeft {
                 when (it) {
-                    UpdateError.CONFLICT -> ImportError.ILLEGAL_FORMAT
-                    UpdateError.APPLICATION_NOT_FOUND -> ImportError.APPLICATION_NOT_FOUND
-                    UpdateError.HOST_NOT_FOUND -> ImportError.HOST_NOT_FOUND
+                    ConfigurationUpdateError.CONFLICT -> ImportError.ILLEGAL_FORMAT
+                    ConfigurationUpdateError.APPLICATION_NOT_FOUND -> ImportError.APPLICATION_NOT_FOUND
+                    ConfigurationUpdateError.HOST_NOT_FOUND -> ImportError.HOST_NOT_FOUND
                     else -> error("Unknown error $it")
                 }
             }
-            if (updateResult.isError()) {
+            if (updateResult.isLeft()) {
                 return updateResult
             }
         }
-        return Outcome.success()
+        return Unit.right()
     }
 }
 
@@ -96,5 +98,6 @@ class PropertyXml {
 enum class ImportError {
     APPLICATION_NOT_FOUND,
     HOST_NOT_FOUND,
-    ILLEGAL_FORMAT
+    ILLEGAL_FORMAT,
+    PROPERTY_CONFLICT
 }

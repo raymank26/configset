@@ -44,6 +44,7 @@ abstract class BaseDashboardTest {
     @Rule
     @JvmField
     val grpcCleanup = GrpcCleanupRule()
+
     @Before
     fun before() {
         mockConfigService = spyk()
@@ -122,8 +123,11 @@ abstract class BaseDashboardTest {
     }
 
     fun <T> executePostRequest(
-        endpoint: String, bodyParams: Map<String, String>, responseClass: Class<T>,
-        requestId: String = UUID.randomUUID().toString(), expectedResponseCode: Int = 200,
+        endpoint: String,
+        bodyParams: Map<String, String>,
+        responseClass: Class<T>,
+        requestId: String = UUID.randomUUID().toString(),
+        expectedResponseCode: Int = 200,
     ): T? {
 
         val formBody = FormBody.Builder()

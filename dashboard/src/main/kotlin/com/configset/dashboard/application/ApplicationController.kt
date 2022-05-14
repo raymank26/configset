@@ -20,7 +20,7 @@ class ApplicationController(
         post("") { ctx ->
             val appName = ctx.formParamSafe("appName")
             serverApiGateway.createApplication(ctx.requestId(), appName, ctx.accessToken())
-                .orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
+                .mapLeft { exceptionMappingService.throwUpdateErrorToException(it) }
         }
     }
 }

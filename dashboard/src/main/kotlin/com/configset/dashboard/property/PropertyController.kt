@@ -33,7 +33,7 @@ class PropertyController(
                 propertyValue,
                 version,
                 ctx.accessToken()
-            ).orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
+            ).mapLeft { exceptionMappingService.throwUpdateErrorToException(it) }
         }
 
         post("delete") { ctx ->
@@ -50,7 +50,7 @@ class PropertyController(
                 propertyName,
                 version,
                 ctx.accessToken()
-            ).orElseThrow { exceptionMappingService.mapUpdateErrorToException(it) }
+            ).mapLeft { exceptionMappingService.throwUpdateErrorToException(it) }
         }
 
         post("import") { ctx ->
@@ -58,7 +58,7 @@ class PropertyController(
             val properties = ctx.formParamSafe("properties")
             val requestId = ctx.requestId()
             propertyImportService.import(requestId, appName, properties, ctx.accessToken())
-                .orElseThrow { exceptionMappingService.mapImportErrorToException(it) }
+                .mapLeft { exceptionMappingService.throwImportErrorToException(it) }
         }
 
         get("list") { ctx ->

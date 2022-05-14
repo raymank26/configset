@@ -6,9 +6,9 @@ import io.grpc.StatusRuntimeException
 import io.javalin.Javalin
 import org.eclipse.jetty.http.HttpStatus
 
-private val LOG = createLoggerStatic<ExceptionMapper>()
+private val LOG = createLoggerStatic<JavalinExceptionMapper>()
 
-class ExceptionMapper {
+class JavalinExceptionMapper {
     fun bind(app: Javalin) {
         app.exception(BadRequest::class.java) { e, ctx ->
             ctx.status(400)

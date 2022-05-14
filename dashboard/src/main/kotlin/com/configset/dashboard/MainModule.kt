@@ -6,8 +6,8 @@ import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.property.PropertyImportService
-import com.configset.dashboard.util.ExceptionMapper
 import com.configset.dashboard.util.ExceptionMappingService
+import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
@@ -57,7 +57,7 @@ val mainModule = module {
     }
 
     single {
-        ExceptionMapper()
+        JavalinExceptionMapper()
     }
 
     single {
