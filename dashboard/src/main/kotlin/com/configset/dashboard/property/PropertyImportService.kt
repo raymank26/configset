@@ -1,9 +1,5 @@
 package com.configset.dashboard.property
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
-import com.configset.dashboard.ConfigurationUpdateError
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.util.RequestIdProducer
 import com.configset.sdk.extension.createLoggerStatic
@@ -26,12 +22,12 @@ class PropertyImportService(
         appName: String,
         properties: String,
         accessToken: String,
-    ): Either<ImportError, Unit> {
+    ) {
         val root = try {
             xmlMapper.readValue(properties, PropertiesXml::class.java)
         } catch (e: Exception) {
             LOG.warn("Illegal format of input data", e)
-            return ImportError.ILLEGAL_FORMAT.left()
+            throw ImportErrorType.ILLEGAL_FORMAT.throwException()
         }
         var curRequestId = requestId
         val hosts = serverApiGateway.listHosts(accessToken).toSet()
@@ -49,7 +45,7 @@ class PropertyImportService(
             )
             val version = alreadyCreatedProperty?.version
 
-            val updatePropertyResult = serverApiGateway.updateProperty(
+            serverApiGateway.updateProperty(
                 curRequestId,
                 appName,
                 property.host,
@@ -58,19 +54,7 @@ class PropertyImportService(
                 version,
                 accessToken
             )
-            val updateResult = updatePropertyResult.mapLeft {
-                when (it) {
-                    ConfigurationUpdateError.CONFLICT -> ImportError.ILLEGAL_FORMAT
-                    ConfigurationUpdateError.APPLICATION_NOT_FOUND -> ImportError.APPLICATION_NOT_FOUND
-                    ConfigurationUpdateError.HOST_NOT_FOUND -> ImportError.HOST_NOT_FOUND
-                    else -> error("Unknown error $it")
-                }
-            }
-            if (updateResult.isLeft()) {
-                return updateResult
-            }
         }
-        return Unit.right()
     }
 }
 
@@ -93,11 +77,4 @@ class PropertyXml {
 
     @JsonProperty("value")
     lateinit var value: String
-}
-
-enum class ImportError {
-    APPLICATION_NOT_FOUND,
-    HOST_NOT_FOUND,
-    ILLEGAL_FORMAT,
-    PROPERTY_CONFLICT
 }

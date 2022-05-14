@@ -1,7 +1,6 @@
 package com.configset.dashboard.property
 
 import com.configset.dashboard.SearchPropertiesRequest
-import com.configset.dashboard.util.ExceptionMappingService
 import com.configset.dashboard.util.accessToken
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.queryParamSafe
@@ -13,7 +12,6 @@ class PropertyController(
     private val crudPropertyService: CrudPropertyService,
     private val listPropertiesService: ListPropertiesService,
     private val propertyImportService: PropertyImportService,
-    private val exceptionMappingService: ExceptionMappingService,
 ) {
 
     fun bind() {
@@ -32,8 +30,7 @@ class PropertyController(
                 propertyName,
                 propertyValue,
                 version,
-                ctx.accessToken()
-            ).mapLeft { exceptionMappingService.throwUpdateErrorToException(it) }
+                ctx.accessToken())
         }
 
         post("delete") { ctx ->
@@ -49,8 +46,7 @@ class PropertyController(
                 hostName,
                 propertyName,
                 version,
-                ctx.accessToken()
-            ).mapLeft { exceptionMappingService.throwUpdateErrorToException(it) }
+                ctx.accessToken())
         }
 
         post("import") { ctx ->
@@ -58,7 +54,6 @@ class PropertyController(
             val properties = ctx.formParamSafe("properties")
             val requestId = ctx.requestId()
             propertyImportService.import(requestId, appName, properties, ctx.accessToken())
-                .mapLeft { exceptionMappingService.throwImportErrorToException(it) }
         }
 
         get("list") { ctx ->

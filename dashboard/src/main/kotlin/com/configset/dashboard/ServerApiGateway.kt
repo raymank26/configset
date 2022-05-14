@@ -1,8 +1,5 @@
 package com.configset.dashboard
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
@@ -23,7 +20,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         requestId: String,
         appName: String,
         accessToken: String,
-    ): Either<ConfigurationUpdateError, Unit> {
+    ) {
         val res = withClient(accessToken).createApplication(ApplicationCreateRequest.newBuilder()
             .setRequestId(requestId)
             .setApplicationName(appName)
@@ -31,8 +28,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         )
 
         return when (res.type) {
-            ApplicationCreatedResponse.Type.OK -> Unit.right()
-            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ConfigurationUpdateError.CONFLICT.left()
+            ApplicationCreatedResponse.Type.OK -> Unit
+            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.throwException()
             else -> throw RuntimeException("Unrecognized type for msg = $res")
         }
     }
@@ -63,10 +60,10 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
                 }
                 if (searchPropertiesRequest.propertyNameQuery != null) {
                     propertyName = searchPropertiesRequest.propertyNameQuery
-                    }
-                    if (searchPropertiesRequest.propertyValueQuery != null) {
-                        propertyValue = searchPropertiesRequest.propertyValueQuery
-                    }
+                }
+                if (searchPropertiesRequest.propertyValueQuery != null) {
+                    propertyValue = searchPropertiesRequest.propertyValueQuery
+                }
             }
             .build())
 
@@ -86,14 +83,14 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             }
     }
 
-    fun createHost(requestId: String, hostName: String, accessToken: String): Either<ConfigurationUpdateError, Unit> {
+    fun createHost(requestId: String, hostName: String, accessToken: String) {
         val response = withClient(accessToken).createHost(CreateHostRequest.newBuilder()
             .setRequestId(requestId)
             .setHostName(hostName)
             .build())
         return when (response.type) {
-            CreateHostResponse.Type.OK -> Unit.right()
-            CreateHostResponse.Type.HOST_ALREADY_EXISTS -> ConfigurationUpdateError.CONFLICT.left()
+            CreateHostResponse.Type.OK -> Unit
+            CreateHostResponse.Type.HOST_ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.throwException()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
@@ -119,7 +116,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         propertyValue: String,
         version: Long?,
         accessToken: String,
-    ): Either<ConfigurationUpdateError, Unit> {
+    ) {
         val response = withClient(accessToken).updateProperty(UpdatePropertyRequest.newBuilder()
             .setRequestId(requestId)
             .setApplicationName(appName)
@@ -130,10 +127,11 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             .build())
 
         return when (response.type) {
-            UpdatePropertyResponse.Type.OK -> Unit.right()
-            UpdatePropertyResponse.Type.HOST_NOT_FOUND -> ConfigurationUpdateError.HOST_NOT_FOUND.left()
-            UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND -> ConfigurationUpdateError.APPLICATION_NOT_FOUND.left()
-            UpdatePropertyResponse.Type.UPDATE_CONFLICT -> ConfigurationUpdateError.CONFLICT.left()
+            UpdatePropertyResponse.Type.OK -> Unit
+            UpdatePropertyResponse.Type.HOST_NOT_FOUND -> ServerApiGatewayErrorType.HOST_NOT_FOUND.throwException()
+            UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND ->
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.throwException()
+            UpdatePropertyResponse.Type.UPDATE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.throwException()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
@@ -145,7 +143,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         propertyName: String,
         version: Long,
         accessToken: String,
-    ): Either<ConfigurationUpdateError, Unit> {
+    ) {
         val response = withClient(accessToken).deleteProperty(DeletePropertyRequest.newBuilder()
             .setRequestId(requestId)
             .setApplicationName(appName)
@@ -155,9 +153,9 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             .build()
         )
         return when (response.type) {
-            DeletePropertyResponse.Type.OK -> Unit.right()
-            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ConfigurationUpdateError.PROPERTY_NOT_FOUND.left()
-            DeletePropertyResponse.Type.DELETE_CONFLICT -> ConfigurationUpdateError.CONFLICT.left()
+            DeletePropertyResponse.Type.OK -> Unit
+            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ServerApiGatewayErrorType.PROPERTY_NOT_FOUND.throwException()
+            DeletePropertyResponse.Type.DELETE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.throwException()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
@@ -177,13 +175,6 @@ data class SearchPropertiesRequest(
     val propertyNameQuery: String?,
     val propertyValueQuery: String?,
 )
-
-enum class ConfigurationUpdateError {
-    CONFLICT,
-    APPLICATION_NOT_FOUND,
-    PROPERTY_NOT_FOUND,
-    HOST_NOT_FOUND
-}
 
 data class ShowPropertyItem(
     val applicationName: String,

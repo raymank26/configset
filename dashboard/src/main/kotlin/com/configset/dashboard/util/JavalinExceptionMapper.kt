@@ -1,5 +1,9 @@
 package com.configset.dashboard.util
 
+import com.configset.dashboard.ServerApiGatewayErrorType
+import com.configset.dashboard.ServerApiGatewayException
+import com.configset.dashboard.property.ImportErrorType
+import com.configset.dashboard.property.ImportPropertiesException
 import com.configset.sdk.extension.createLoggerStatic
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -24,6 +28,23 @@ class JavalinExceptionMapper {
                 LOG.warn("Unknown gRPC exception", e)
                 ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
             }
+        }
+
+        app.exception(ServerApiGatewayException::class.java) { e, ctx ->
+            ctx.status(400)
+            ctx.json(ServerExceptionResponse(when (e.type) {
+                ServerApiGatewayErrorType.CONFLICT -> "update.conflict"
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND -> "application.not.found"
+                ServerApiGatewayErrorType.PROPERTY_NOT_FOUND -> "property.not.found"
+                ServerApiGatewayErrorType.HOST_NOT_FOUND -> "host.not.found"
+            }, null))
+        }
+
+        app.exception(ImportPropertiesException::class.java) { e, ctx ->
+            ctx.status(400)
+            ctx.json(ServerExceptionResponse(when (e.type) {
+                ImportErrorType.ILLEGAL_FORMAT -> "illegal.format"
+            }, null))
         }
     }
 }

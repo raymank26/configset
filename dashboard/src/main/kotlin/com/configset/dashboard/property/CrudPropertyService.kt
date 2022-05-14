@@ -1,9 +1,8 @@
 package com.configset.dashboard.property
 
-import arrow.core.Either
-import arrow.core.left
-import com.configset.dashboard.ConfigurationUpdateError
 import com.configset.dashboard.ServerApiGateway
+import com.configset.dashboard.ServerApiGatewayErrorType
+import com.configset.dashboard.throwException
 import com.configset.dashboard.util.RequestIdProducer
 
 class CrudPropertyService(
@@ -19,11 +18,11 @@ class CrudPropertyService(
         propertyValue: String,
         version: Long?,
         accessToken: String,
-    ): Either<ConfigurationUpdateError, Unit> {
+    ) {
         // TODO: move logic below to config server
         val apps = serverApiGateway.listApplications(accessToken)
         if (!apps.contains(appName)) {
-            return ConfigurationUpdateError.APPLICATION_NOT_FOUND.left()
+            ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.throwException()
         }
         if (version == null) {
             val hosts = serverApiGateway.listHosts(accessToken)
@@ -48,7 +47,7 @@ class CrudPropertyService(
         propertyName: String,
         version: Long,
         accessToken: String,
-    ): Either<ConfigurationUpdateError, Unit> {
+    ) {
         return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, accessToken)
     }
 }
