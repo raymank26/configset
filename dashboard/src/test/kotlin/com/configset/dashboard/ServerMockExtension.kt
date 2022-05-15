@@ -1,5 +1,7 @@
 package com.configset.dashboard
 
+import com.configset.sdk.proto.ApplicationCreateRequest
+import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
@@ -13,6 +15,7 @@ import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.ReadPropertyResponse
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.SearchPropertiesResponse
+import com.configset.sdk.proto.ShowPropertyItem
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.stub.StreamObserver
@@ -44,6 +47,22 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
                     observer.onError(ex)
+                }
+            }
+        }
+    }
+
+    fun whenCreateApplication(): ServerMockContext<ApplicationCreateRequest, ApplicationCreatedResponse.Type> {
+        return object : ServerMockContext<ApplicationCreateRequest, ApplicationCreatedResponse.Type>() {
+            override fun answer(supplier: (ApplicationCreateRequest) -> ApplicationCreatedResponse.Type) {
+                every { mockConfigService.createApplication(any(), any()) } answers {
+                    val request = invocation.args[0] as ApplicationCreateRequest
+
+                    @Suppress("UNCHECKED_CAST")
+                    val observer = (it.invocation.args[1] as StreamObserver<ApplicationCreatedResponse>)
+                    observer.onNext(ApplicationCreatedResponse.newBuilder()
+                        .setType(supplier.invoke(request)).build())
+                    observer.onCompleted()
                 }
             }
         }
@@ -141,9 +160,9 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenSearchProperties(): ServerMockContext<SearchPropertiesRequest, List<com.configset.sdk.proto.ShowPropertyItem>> {
-        return object : ServerMockContext<SearchPropertiesRequest, List<com.configset.sdk.proto.ShowPropertyItem>>() {
-            override fun answer(supplier: (SearchPropertiesRequest) -> List<com.configset.sdk.proto.ShowPropertyItem>) {
+    fun whenSearchProperties(): ServerMockContext<SearchPropertiesRequest, List<ShowPropertyItem>> {
+        return object : ServerMockContext<SearchPropertiesRequest, List<ShowPropertyItem>>() {
+            override fun answer(supplier: (SearchPropertiesRequest) -> List<ShowPropertyItem>) {
                 every { mockConfigService.searchProperties(any(), any()) } answers {
                     val request = (it.invocation.args[0] as SearchPropertiesRequest)
 
