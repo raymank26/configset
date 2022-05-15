@@ -195,3 +195,8 @@ class DashboardClient {
         })
     }
 }
+
+data class DashboardHttpFailure(
+    val httpCode: Int,
+    val errorCode: String?,
+)

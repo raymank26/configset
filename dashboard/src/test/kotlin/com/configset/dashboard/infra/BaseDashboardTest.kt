@@ -70,10 +70,6 @@ abstract class BaseDashboardTest {
         server.start()
 
         dashboardClient = DashboardClient()
-        setUp()
-    }
-
-    open fun setUp() {
     }
 
     @After
@@ -95,7 +91,3 @@ private class AuthCheckInterceptor : ServerInterceptor {
     }
 }
 
-data class DashboardHttpFailure(
-    val httpCode: Int,
-    val errorCode: String?,
-)
