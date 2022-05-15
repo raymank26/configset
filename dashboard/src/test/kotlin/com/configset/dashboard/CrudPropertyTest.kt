@@ -1,6 +1,10 @@
 package com.configset.dashboard
 
 import arrow.core.Either
+import com.configset.dashboard.infra.BaseDashboardTest
+import com.configset.dashboard.infra.DashboardHttpFailure
+import com.configset.dashboard.infra.expectLeft
+import com.configset.dashboard.infra.expectRight
 import com.configset.sdk.proto.CreateHostResponse
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.PropertyItem
@@ -48,7 +52,7 @@ class CrudPropertyTest : BaseDashboardTest() {
                     .setApplicationName(appName)
                     .build()
             }
-        getProperty(appName, hostName)
+        dashboardClient.getProperty(appName, hostName)
             .expectRight()
             .shouldNotBeNull()
     }
@@ -61,7 +65,7 @@ class CrudPropertyTest : BaseDashboardTest() {
                 req.hostName shouldBeEqualTo hostName
                 null
             }
-        getProperty(appName, hostName)
+        dashboardClient.getProperty(appName, hostName)
             .expectRight()
             .shouldBeNull()
     }
@@ -111,7 +115,7 @@ class CrudPropertyTest : BaseDashboardTest() {
                     .setType(DeletePropertyResponse.Type.OK)
                     .build()
             }
-        deleteProperty(appName, hostName, "some property")
+        dashboardClient.deleteProperty(appName, hostName, "some property")
             .expectRight()
     }
 
@@ -132,7 +136,7 @@ class CrudPropertyTest : BaseDashboardTest() {
                 UpdatePropertyResponse.Type.OK
             }
 
-        importProperties(appName,
+        dashboardClient.importProperties(appName,
             """
                 <properties>
                     <property>
@@ -160,13 +164,17 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun testImportIllegalFormat() {
-        importProperties(appName, "illegal input")
+        dashboardClient.importProperties(appName, "illegal input")
             .expectLeft()
             .should { httpCode == 400 }
             .should { errorCode == "illegal.format" }
     }
 
     private fun insertProperty(): Either<DashboardHttpFailure, Unit> {
-        return updateProperty(appName, hostName, "someName", "234", "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
+        return dashboardClient.updateProperty(appName,
+            hostName,
+            "someName",
+            "234",
+            "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 }

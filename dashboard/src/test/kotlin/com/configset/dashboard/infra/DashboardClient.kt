@@ -1,94 +1,27 @@
-package com.configset.dashboard
+package com.configset.dashboard.infra
 
 import arrow.core.Either
 import arrow.core.left
-import com.configset.sdk.client.ConfigSetClient
+import com.configset.dashboard.ShowPropertyItem
 import com.configset.sdk.extension.createLoggerStatic
-import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.ACCESS_TOKEN
-import com.configset.test.fixtures.SERVER_PORT
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.grpc.Metadata
-import io.grpc.ServerCall
-import io.grpc.ServerCallHandler
-import io.grpc.ServerInterceptor
-import io.grpc.ServerInterceptors
-import io.grpc.inprocess.InProcessChannelBuilder
-import io.grpc.inprocess.InProcessServerBuilder
-import io.grpc.testing.GrpcCleanupRule
-import io.mockk.spyk
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.amshove.kluent.shouldNotBeNull
-import org.junit.After
-import org.junit.Assert.fail
-import org.junit.Before
-import org.junit.Rule
-import org.koin.core.KoinApplication
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
 import java.util.*
 
-private val LOG = createLoggerStatic<BaseDashboardTest>()
+private val LOG = createLoggerStatic<DashboardClient>()
+
 val OBJECT_MAPPER = ObjectMapper()
 
-abstract class BaseDashboardTest {
+class DashboardClient {
 
-    private lateinit var okHttp: OkHttpClient
-    private lateinit var koinApp: KoinApplication
-
-    lateinit var mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase
-    lateinit var mockConfigServiceExt: ServerMockExtension
-
-    @Rule
-    @JvmField
-    val grpcCleanup = GrpcCleanupRule()
-
-    @Before
-    fun before() {
-        mockConfigService = spyk()
-        mockConfigServiceExt = ServerMockExtension(mockConfigService)
-        grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor()
-            .addService(ServerInterceptors.intercept(mockConfigService, AuthCheckInterceptor()))
-            .build()
-            .start())
-        val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
-
-        koinApp = koinApplication {
-            modules(mainModule, module {
-                single {
-                    ConfigSetClient(channel)
-                }
-            })
-        }.properties(mapOf(
-            Pair("config", Config(
-                mapOf(
-                    Pair("config_server.hostname", "localhost"),
-                    Pair("config_server.port", SERVER_PORT.toString()),
-                    Pair("dashboard.port", 9299.toString()),
-                    Pair("serve.static", "false"),
-                    Pair("authenticator_type", ""),
-                    Pair("client.keycloack_url", "localhost"),
-                    Pair("client.keycloack_realm", "sample-realm"),
-                    Pair("client.keycloack_clientId", "sample-clientId"),
-                )
-            ))
-        ))
-        val server = koinApp.koin.get<JavalinServer>()
-        server.start()
-
-        okHttp = OkHttpClient()
-        setUp()
-    }
-
-    open fun setUp() {
-    }
+    private val okHttp = OkHttpClient()
 
     fun buildGetRequest(
         endpoint: String,
@@ -129,46 +62,6 @@ abstract class BaseDashboardTest {
             }
         }
         return Either.Right(res)
-    }
-
-    private fun <T> executeGetRequest(
-        endpoint: String,
-        responseClass: JavaType,
-        queryParams: Map<String, String> = emptyMap(),
-    ): Either<DashboardHttpFailure, T?> {
-        val urlBuilder = buildGetRequest(endpoint, queryParams)
-        return executeRequest(urlBuilder.build(), responseClass)
-    }
-
-    private fun <T> executePostRequest(
-        endpoint: String,
-        bodyParams: Map<String, String>,
-        responseClass: JavaType,
-        requestId: String = UUID.randomUUID().toString(),
-    ): Either<DashboardHttpFailure, T?> {
-
-        val formBody = FormBody.Builder()
-        bodyParams.forEach { (key, value) -> formBody.add(key, value) }
-        formBody.add("requestId", requestId)
-        val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint")
-            .header("Authorization", "Bearer $ACCESS_TOKEN")
-            .post(formBody.build())
-            .build()).execute()
-        if (response.code / 100 != 2) {
-            val errorDetails = response.body?.byteStream().use {
-                OBJECT_MAPPER.readTree(it)
-            }
-            return DashboardHttpFailure(
-                response.code,
-                errorDetails["code"]?.textValue(),
-            ).left()
-        }
-        if (response.body?.contentLength() == 0L) {
-            return Either.Right(null)
-        }
-        return Either.Right(response.body?.byteStream().use {
-            OBJECT_MAPPER.readValue(it, responseClass)
-        })
     }
 
     fun getProperty(appName: String, hostName: String): Either<DashboardHttpFailure, ShowPropertyItem?> {
@@ -261,47 +154,44 @@ abstract class BaseDashboardTest {
             .map { it!! }
     }
 
-    @After
-    fun after() {
-        koinApp.close()
+
+    private fun <T> executeGetRequest(
+        endpoint: String,
+        responseClass: JavaType,
+        queryParams: Map<String, String> = emptyMap(),
+    ): Either<DashboardHttpFailure, T?> {
+        val urlBuilder = buildGetRequest(endpoint, queryParams)
+        return executeRequest(urlBuilder.build(), responseClass)
     }
-}
 
-private class AuthCheckInterceptor : ServerInterceptor {
-    override fun <ReqT, RespT> interceptCall(
-        call: ServerCall<ReqT, RespT>,
-        headers: Metadata,
-        next: ServerCallHandler<ReqT, RespT>,
-    ): ServerCall.Listener<ReqT> {
+    private fun <T> executePostRequest(
+        endpoint: String,
+        bodyParams: Map<String, String>,
+        responseClass: JavaType,
+        requestId: String = UUID.randomUUID().toString(),
+    ): Either<DashboardHttpFailure, T?> {
 
-        val authHeader = headers.get(Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER))
-        authHeader.shouldNotBeNull()
-        return next.startCall(call, headers)
-    }
-}
-
-data class DashboardHttpFailure(
-    val httpCode: Int,
-    val errorCode: String?,
-)
-
-fun <L, R> Either<L, R>.expectLeft(): L {
-    when (this) {
-        is Either.Left -> return value
-        is Either.Right -> {
-            fail("Expected Left, but Right is given $value")
-            error("Unreachable")
+        val formBody = FormBody.Builder()
+        bodyParams.forEach { (key, value) -> formBody.add(key, value) }
+        formBody.add("requestId", requestId)
+        val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint")
+            .header("Authorization", "Bearer $ACCESS_TOKEN")
+            .post(formBody.build())
+            .build()).execute()
+        if (response.code / 100 != 2) {
+            val errorDetails = response.body?.byteStream().use {
+                OBJECT_MAPPER.readTree(it)
+            }
+            return DashboardHttpFailure(
+                response.code,
+                errorDetails["code"]?.textValue(),
+            ).left()
         }
-    }
-}
-
-fun <L, R> Either<L, R>.expectRight(): R {
-    when (this) {
-        is Either.Right -> return value
-        is Either.Left -> {
-            fail("Expected Right, but Left is given $value")
-            error("Unreachable")
+        if (response.body?.contentLength() == 0L) {
+            return Either.Right(null)
         }
+        return Either.Right(response.body?.byteStream().use {
+            OBJECT_MAPPER.readValue(it, responseClass)
+        })
     }
 }
-

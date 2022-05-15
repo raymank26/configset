@@ -1,5 +1,7 @@
 package com.configset.dashboard
 
+import com.configset.dashboard.infra.BaseDashboardTest
+import com.configset.dashboard.infra.expectRight
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Test
@@ -11,7 +13,7 @@ class CreateApplicationTest : BaseDashboardTest() {
         mockConfigServiceExt.whenListApplications().answer {
             "sample app"
         }
-        val response = listApplications()
+        val response = dashboardClient.listApplications()
             .expectRight()
         response.size shouldBeEqualTo 1
         response[0] shouldBeEqualTo ("sample app")
@@ -22,7 +24,7 @@ class CreateApplicationTest : BaseDashboardTest() {
         mockConfigServiceExt.whenCreateApplication().answer {
             ApplicationCreatedResponse.Type.OK
         }
-        createApplication("testApp")
+        dashboardClient.createApplication("testApp")
             .expectRight()
     }
 }

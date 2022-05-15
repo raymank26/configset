@@ -1,4 +1,4 @@
-package com.configset.dashboard
+package com.configset.dashboard.infra
 
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse

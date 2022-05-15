@@ -1,5 +1,7 @@
 package com.configset.dashboard
 
+import com.configset.dashboard.infra.BaseDashboardTest
+import com.configset.dashboard.infra.expectRight
 import com.configset.sdk.proto.ShowPropertyItem
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Test
@@ -14,7 +16,7 @@ class SearchPropertiesTest : BaseDashboardTest() {
                 listOf(ShowPropertyItem.newBuilder()
                     .build())
             }
-        searchProperties(applicationName = "testApp")
+        dashboardClient.searchProperties(applicationName = "testApp")
             .expectRight()
             .size shouldBeEqualTo 1
     }
