@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import arrow.core.Either
 import com.configset.sdk.proto.CreateHostResponse
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.PropertyItem
@@ -19,7 +20,7 @@ class CrudPropertyTest : BaseDashboardTest() {
     private val hostName = "srvd1"
 
     @Test
-    fun `update should be indempotent`() {
+    fun `update should be idempotent`() {
         mockConfigServiceExt.whenListApplications().answer { appName }
         mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
         mockConfigServiceExt.whenUpdateProperty()
@@ -29,8 +30,8 @@ class CrudPropertyTest : BaseDashboardTest() {
                 UpdatePropertyResponse.Type.OK
             }
 
-        insertProperty()
-        insertProperty()
+        insertProperty().expectRight()
+        insertProperty().expectRight()
 
         verify(exactly = 2) { mockConfigService.updateProperty(any(), any()) }
     }
@@ -73,10 +74,9 @@ class CrudPropertyTest : BaseDashboardTest() {
             .answer { req ->
                 UpdatePropertyResponse.Type.UPDATE_CONFLICT
             }
-//        invoking {
-//            insertProperty()
-//        }.shouldThrow(DashboardHttpException::class)
-//            .exception.errorCode.shouldBeEqualTo("update.conflict")
+        val err = insertProperty()
+            .expectLeft()
+        err.errorCode shouldBeEqualTo "update.conflict"
     }
 
     @Test
@@ -166,8 +166,7 @@ class CrudPropertyTest : BaseDashboardTest() {
             .should { errorCode == "illegal.format" }
     }
 
-    private fun insertProperty(): Map<*, *>? {
+    private fun insertProperty(): Either<DashboardHttpFailure, Unit> {
         return updateProperty(appName, hostName, "someName", "234", "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
-            .expectRight()
     }
 }

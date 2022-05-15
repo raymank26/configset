@@ -188,14 +188,14 @@ abstract class BaseDashboardTest {
         propertyName: String,
         propertyValue: String,
         requestId: String,
-    ): Either<DashboardHttpFailure, Map<*, *>?> {
-        @Suppress("UNCHECKED_CAST")
-        return executePostRequest("/property/update", mapOf(
+    ): Either<DashboardHttpFailure, Unit> {
+        return executePostRequest<Unit>("/property/update", mapOf(
             Pair("applicationName", applicationName),
             Pair("hostName", hostName),
             Pair("propertyName", propertyName),
             Pair("propertyValue", propertyValue)
         ), OBJECT_MAPPER.typeFactory.constructType(Unit::class.java), requestId)
+            .map { }
     }
 
     fun searchProperties(
