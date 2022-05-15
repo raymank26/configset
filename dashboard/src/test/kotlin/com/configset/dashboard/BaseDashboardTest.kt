@@ -1,10 +1,14 @@
 package com.configset.dashboard
 
+import arrow.core.Either
+import arrow.core.left
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.ACCESS_TOKEN
 import com.configset.test.fixtures.SERVER_PORT
+import com.fasterxml.jackson.databind.JavaType
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.grpc.Metadata
@@ -16,11 +20,11 @@ import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.testing.GrpcCleanupRule
 import io.mockk.spyk
+import junit.framework.TestCase.fail
 import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.After
 import org.junit.Before
@@ -31,7 +35,7 @@ import org.koin.dsl.module
 import java.util.*
 
 private val LOG = createLoggerStatic<BaseDashboardTest>()
-private val OBJECT_MAPPER = ObjectMapper()
+val OBJECT_MAPPER = ObjectMapper()
 
 abstract class BaseDashboardTest {
 
@@ -104,30 +108,44 @@ abstract class BaseDashboardTest {
             .header("Authorization", "Bearer $ACCESS_TOKEN")
     }
 
-    fun <T> executeRequest(request: Request, responseClass: Class<T>): T {
+    fun <T> executeRequest(request: Request, responseClass: JavaType): Either<DashboardHttpFailure, T?> {
         val response = okHttp.newCall(request)
             .execute()
-        response.code shouldBeEqualTo 200
-        return response.body?.byteStream().use {
-            OBJECT_MAPPER.readValue(it, responseClass)
+        if (response.code / 100 != 2) {
+            val errorDetails = response.body?.byteStream().use {
+                OBJECT_MAPPER.readTree(it)
+            }
+            return DashboardHttpFailure(
+                response.code,
+                errorDetails["code"]?.textValue(),
+            ).left()
         }
+        val res: T? = response.body?.let {
+            it.charStream().use {
+                val content = it.readText()
+                LOG.debug("JSON received = {}", content)
+                val node: JsonNode = OBJECT_MAPPER.readValue(content, JsonNode::class.java)
+                if (node is ObjectNode && node.size() == 0) null else OBJECT_MAPPER.convertValue<T>(node, responseClass)
+            }
+        }
+        return Either.Right(res)
     }
 
-    fun <T> executeGetRequest(
+    private fun <T> executeGetRequest(
         endpoint: String,
-        responseClass: Class<T>,
+        responseClass: JavaType,
         queryParams: Map<String, String> = emptyMap(),
-    ): T {
+    ): Either<DashboardHttpFailure, T?> {
         val urlBuilder = buildGetRequest(endpoint, queryParams)
         return executeRequest(urlBuilder.build(), responseClass)
     }
 
-    fun <T> executePostRequest(
+    private fun <T> executePostRequest(
         endpoint: String,
         bodyParams: Map<String, String>,
-        responseClass: Class<T>,
+        responseClass: JavaType,
         requestId: String = UUID.randomUUID().toString(),
-    ): T? {
+    ): Either<DashboardHttpFailure, T?> {
 
         val formBody = FormBody.Builder()
         bodyParams.forEach { (key, value) -> formBody.add(key, value) }
@@ -140,27 +158,28 @@ abstract class BaseDashboardTest {
             val errorDetails = response.body?.byteStream().use {
                 OBJECT_MAPPER.readTree(it)
             }
-            throw DashboardHttpException(
+            return DashboardHttpFailure(
                 response.code,
                 errorDetails["code"]?.textValue(),
-            )
+            ).left()
         }
         if (response.body?.contentLength() == 0L) {
-            return null
+            return Either.Right(null)
         }
-        return response.body?.byteStream().use {
+        return Either.Right(response.body?.byteStream().use {
             OBJECT_MAPPER.readValue(it, responseClass)
-        }
+        })
     }
 
-    fun getProperty(appName: String, hostName: String): ShowPropertyItem? {
-        return executeGetRequest("/property/get", ObjectNode::class.java, mapOf(
-            Pair("applicationName", appName),
-            Pair("hostName", hostName),
-            Pair("propertyName", "propertyName")
-        )).let {
-            if (it.size() == 0) null else OBJECT_MAPPER.treeToValue(it, ShowPropertyItem::class.java)
-        }
+    fun getProperty(appName: String, hostName: String): Either<DashboardHttpFailure, ShowPropertyItem?> {
+        return executeGetRequest(
+            "/property/get",
+            OBJECT_MAPPER.typeFactory.constructType(ShowPropertyItem::class.java),
+            mapOf(
+                Pair("applicationName", appName),
+                Pair("hostName", hostName),
+                Pair("propertyName", "propertyName")
+            ))
     }
 
     fun updateProperty(
@@ -169,20 +188,20 @@ abstract class BaseDashboardTest {
         propertyName: String,
         propertyValue: String,
         requestId: String,
-    ): Map<Any, Any> {
+    ): Either<DashboardHttpFailure, Map<*, *>?> {
         @Suppress("UNCHECKED_CAST")
-        return (executePostRequest("/property/update", mapOf(
+        return executePostRequest("/property/update", mapOf(
             Pair("applicationName", applicationName),
             Pair("hostName", hostName),
             Pair("propertyName", propertyName),
             Pair("propertyValue", propertyValue)
-        ), Map::class.java, requestId) ?: emptyMap<Any, Any>()) as Map<Any, Any>
+        ), OBJECT_MAPPER.typeFactory.constructType(Unit::class.java), requestId)
     }
 
     fun searchProperties(
         applicationName: String? = null, hostName: String? = null, propertyName: String? = null,
         propertyValue: String? = null,
-    ): List<ShowPropertyItem> {
+    ): Either<DashboardHttpFailure, List<ShowPropertyItem>> {
         val queryParams = mutableMapOf<String, String>()
         if (applicationName != null) {
             queryParams["applicationName"] = applicationName
@@ -196,17 +215,50 @@ abstract class BaseDashboardTest {
         if (propertyValue != null) {
             queryParams["propertyValue"] = propertyValue
         }
-        return executeGetRequest("/property/search", List::class.java, queryParams).map {
-            @Suppress("UNCHECKED_CAST")
-            val mapping = it as Map<String, Any>
-            ShowPropertyItem(
-                applicationName = mapping.getValue("applicationName").toString(),
-                hostName = mapping.getValue("hostName").toString(),
-                propertyName = mapping.getValue("propertyName").toString(),
-                propertyValue = mapping.getValue("propertyValue").toString(),
-                version = (mapping.getValue("version") as Int).toLong()
-            )
-        }
+        val responseClass = OBJECT_MAPPER
+            .typeFactory
+            .constructCollectionType(ArrayList::class.java, ShowPropertyItem::class.java)
+        return executeGetRequest<List<ShowPropertyItem>>("/property/search", responseClass, queryParams)
+            .map { it!! }
+    }
+
+    fun importProperties(appName: String, content: String): Either<DashboardHttpFailure, Unit> {
+        return executePostRequest<Unit>("/property/import",
+            mapOf(
+                Pair("applicationName", appName),
+                Pair("properties", content)),
+            OBJECT_MAPPER.typeFactory.constructType(Any::class.java)
+        ).map { }
+    }
+
+    fun deleteProperty(appName: String, hostName: String, propertyName: String): Either<DashboardHttpFailure, Unit> {
+        return executePostRequest<Unit>("/property/delete", mapOf(
+            Pair("applicationName", appName),
+            Pair("hostName", hostName),
+            Pair("propertyName", propertyName),
+            Pair("version", "1")
+        ), OBJECT_MAPPER.constructType(Unit::class.java), requestId = "1239")
+            .map { }
+    }
+
+    fun listApplications(): Either<DashboardHttpFailure, List<String>> {
+        return executeGetRequest<List<String>>("/application/list",
+            OBJECT_MAPPER.typeFactory.constructCollectionType(ArrayList::class.java, String::class.java))
+            .map { it!! }
+    }
+
+    fun createApplication(appName: String): Either<DashboardHttpFailure, Unit> {
+        return executePostRequest<Unit>("/application/", mapOf(Pair("appName", appName)),
+            OBJECT_MAPPER.constructType(Unit::class.java))
+            .map { }
+    }
+
+    fun getConfig(): Either<DashboardHttpFailure, Map<String, String>> {
+        val res = buildGetRequest("/config")
+        res.removeHeader("Authorization")
+        return executeRequest<Map<String, String>>(res.build(),
+            OBJECT_MAPPER.typeFactory.constructMapType(HashMap::class.java, String::class.java, String::class.java))
+            .map { it!! }
     }
 
     @After
@@ -228,7 +280,28 @@ private class AuthCheckInterceptor : ServerInterceptor {
     }
 }
 
-data class DashboardHttpException(
+data class DashboardHttpFailure(
     val httpCode: Int,
     val errorCode: String?,
-) : Exception()
+)
+
+fun <L, R> Either<L, R>.expectLeft(): L {
+    when (this) {
+        is Either.Left -> return value
+        is Either.Right -> {
+            fail("Expected Left, but Right is given $value")
+            error("Unreachable")
+        }
+    }
+}
+
+fun <L, R> Either<L, R>.expectRight(): R {
+    when (this) {
+        is Either.Right -> return value
+        is Either.Left -> {
+            fail("Expected Right, but Left is given $value")
+            error("Unreachable")
+        }
+    }
+}
+

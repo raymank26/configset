@@ -4,7 +4,7 @@ import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import io.grpc.stub.StreamObserver
 import io.mockk.every
-import org.amshove.kluent.shouldBe
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Test
 
 class CreateApplicationTest : BaseDashboardTest() {
@@ -14,11 +14,13 @@ class CreateApplicationTest : BaseDashboardTest() {
         every { mockConfigService.listApplications(any(), any()) } answers {
             @Suppress("UNCHECKED_CAST")
             val observer = (it.invocation.args[1] as StreamObserver<ApplicationsResponse>)
-            observer.onNext(ApplicationsResponse.newBuilder().build())
+            observer.onNext(ApplicationsResponse.newBuilder().addApplications("sample app").build())
             observer.onCompleted()
         }
-        val res = executeGetRequest("/application/list", List::class.java)
-        res.isEmpty() shouldBe true
+        val response = listApplications()
+            .expectRight()
+        response.size shouldBeEqualTo 1
+        response[0] shouldBeEqualTo ("sample app")
     }
 
     @Test
@@ -30,6 +32,7 @@ class CreateApplicationTest : BaseDashboardTest() {
                 .setType(ApplicationCreatedResponse.Type.OK).build())
             observer.onCompleted()
         }
-        executePostRequest("/application/", mapOf(Pair("appName", "testApp")), Any::class.java)
+        createApplication("testApp")
+            .expectRight()
     }
 }
