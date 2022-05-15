@@ -5,9 +5,12 @@ import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.mockk.verify
+import org.amshove.kluent.invoking
+import org.amshove.kluent.should
 import org.amshove.kluent.`should match at least one of`
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldThrow
 import org.junit.Test
 
 class CrudPropertyTest : BaseDashboardTest() {
@@ -126,12 +129,15 @@ class CrudPropertyTest : BaseDashboardTest() {
     @Test
     fun testImportIllegalFormat() {
         @Suppress("UNCHECKED_CAST")
-        val response: Map<String, Any> = executePostRequest("/property/import",
-            mapOf(
-                Pair("applicationName", appName),
-                Pair("properties", """123""".trimIndent())),
-            Map::class.java,
-            expectedResponseCode = 400) as Map<String, Any>
-        response.getValue("code") shouldBeEqualTo "illegal.format"
+        invoking {
+            executePostRequest("/property/import",
+                mapOf(
+                    Pair("applicationName", appName),
+                    Pair("properties", """123""".trimIndent())),
+                Map::class.java)
+        }
+            .shouldThrow(DashboardHttpException::class)
+            .should { exception.httpCode == 400 }
+            .should { exception.errorCode == "illegal.format" }
     }
 }

@@ -22,7 +22,6 @@ import okhttp3.Request
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.koin.core.KoinApplication
@@ -127,7 +126,6 @@ abstract class BaseDashboardTest {
         bodyParams: Map<String, String>,
         responseClass: Class<T>,
         requestId: String = UUID.randomUUID().toString(),
-        expectedResponseCode: Int = 200,
     ): T? {
 
         val formBody = FormBody.Builder()
@@ -137,9 +135,14 @@ abstract class BaseDashboardTest {
             .header("Authorization", "Bearer $ACCESS_TOKEN")
             .post(formBody.build())
             .build()).execute()
-        if (response.code != expectedResponseCode) {
-            LOG.error("Body = " + response.body?.string())
-            Assert.fail()
+        if (response.code / 100 != 2) {
+            val errorDetails = response.body?.byteStream().use {
+                OBJECT_MAPPER.readTree(it)
+            }
+            throw DashboardHttpException(
+                response.code,
+                errorDetails["code"]?.textValue(),
+            )
         }
         if (response.body?.contentLength() == 0L) {
             return null
@@ -213,3 +216,8 @@ private class AuthCheckInterceptor : ServerInterceptor {
         return next.startCall(call, headers)
     }
 }
+
+class DashboardHttpException(
+    val httpCode: Int,
+    val errorCode: String?,
+) : Exception()
