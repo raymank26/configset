@@ -78,7 +78,7 @@ class PropertyController(
             val propertyName = ctx.queryParamSafe("propertyName")
             val property = listPropertiesService.getProperty(appName, hostName, propertyName, ctx.accessToken())
             if (property == null) {
-                ctx.contentType("application/json").result("null")
+                ctx.contentType("application/json").result("{}")
             } else {
                 ctx.json(property)
             }

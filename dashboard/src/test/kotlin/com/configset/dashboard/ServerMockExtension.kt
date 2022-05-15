@@ -2,6 +2,8 @@ package com.configset.dashboard
 
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
+import com.configset.sdk.proto.CreateHostRequest
+import com.configset.sdk.proto.CreateHostResponse
 import com.configset.sdk.proto.DeletePropertyRequest
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.EmptyRequest
@@ -58,6 +60,21 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                     val builder = ListHostsResponse.newBuilder()
                     supplier.invoke(request).forEach { builder.addHostNames(it) }
                     observer.onNext(builder.build())
+                    observer.onCompleted()
+                }
+            }
+        }
+    }
+
+    fun whenCreateHost(): ServerMockContext<CreateHostRequest, CreateHostResponse> {
+        return object : ServerMockContext<CreateHostRequest, CreateHostResponse>() {
+            override fun answer(supplier: (CreateHostRequest) -> CreateHostResponse) {
+                every { mockConfigService.createHost(any(), any()) } answers {
+                    val request = (it.invocation.args[0] as CreateHostRequest)
+
+                    @Suppress("UNCHECKED_CAST")
+                    val observer = (invocation.args[1] as StreamObserver<CreateHostResponse>)
+                    observer.onNext(supplier.invoke(request))
                     observer.onCompleted()
                 }
             }

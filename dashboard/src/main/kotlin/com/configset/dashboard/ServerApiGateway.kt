@@ -13,6 +13,8 @@ import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 
 class ServerApiGateway(private val configSetClient: ConfigSetClient) {
 
@@ -117,14 +119,15 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         version: Long?,
         accessToken: String,
     ) {
-        val response = withClient(accessToken).updateProperty(UpdatePropertyRequest.newBuilder()
-            .setRequestId(requestId)
-            .setApplicationName(appName)
-            .setHostName(hostName)
-            .setPropertyName(propertyName)
-            .setPropertyValue(propertyValue)
-            .setVersion(version ?: 0)
-            .build())
+        val response = withClient(accessToken)
+            .updateProperty(UpdatePropertyRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .setPropertyValue(propertyValue)
+                .setVersion(version ?: 0)
+                .build())
 
         return when (response.type) {
             UpdatePropertyResponse.Type.OK -> Unit
@@ -176,11 +179,16 @@ data class SearchPropertiesRequest(
     val propertyValueQuery: String?,
 )
 
-data class ShowPropertyItem(
+data class ShowPropertyItem @JsonCreator constructor(
+    @JsonProperty("applicationName")
     val applicationName: String,
+    @JsonProperty("hostName")
     val hostName: String,
+    @JsonProperty("propertyName")
     val propertyName: String,
+    @JsonProperty("propertyValue")
     val propertyValue: String,
+    @JsonProperty("version")
     val version: Long,
 )
 

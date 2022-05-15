@@ -6,6 +6,7 @@ import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.ACCESS_TOKEN
 import com.configset.test.fixtures.SERVER_PORT
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import io.grpc.Metadata
 import io.grpc.ServerCall
 import io.grpc.ServerCallHandler
@@ -152,6 +153,16 @@ abstract class BaseDashboardTest {
         }
     }
 
+    fun getProperty(appName: String, hostName: String): ShowPropertyItem? {
+        return executeGetRequest("/property/get", ObjectNode::class.java, mapOf(
+            Pair("applicationName", appName),
+            Pair("hostName", hostName),
+            Pair("propertyName", "propertyName")
+        )).let {
+            if (it.size() == 0) null else OBJECT_MAPPER.treeToValue(it, ShowPropertyItem::class.java)
+        }
+    }
+
     fun updateProperty(
         applicationName: String,
         hostName: String,
@@ -217,7 +228,7 @@ private class AuthCheckInterceptor : ServerInterceptor {
     }
 }
 
-class DashboardHttpException(
+data class DashboardHttpException(
     val httpCode: Int,
     val errorCode: String?,
 ) : Exception()

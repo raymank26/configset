@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import com.configset.sdk.proto.CreateHostResponse
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.UpdatePropertyRequest
@@ -9,7 +10,8 @@ import org.amshove.kluent.invoking
 import org.amshove.kluent.should
 import org.amshove.kluent.`should match at least one of`
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldNotBeNull
 import org.amshove.kluent.shouldThrow
 import org.junit.Test
 
@@ -19,7 +21,7 @@ class CrudPropertyTest : BaseDashboardTest() {
     private val hostName = "srvd1"
 
     @Test
-    fun testIdempotentUpdate() {
+    fun `update should be indempotent`() {
         mockConfigServiceExt.whenListApplications().answer { appName }
         mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
         mockConfigServiceExt.whenUpdateProperty()
@@ -29,17 +31,14 @@ class CrudPropertyTest : BaseDashboardTest() {
                 UpdatePropertyResponse.Type.OK
             }
 
-        val update = {
-            insertProperty()
-        }
-        update.invoke()
-        update.invoke()
+        insertProperty()
+        insertProperty()
 
         verify(exactly = 2) { mockConfigService.updateProperty(any(), any()) }
     }
 
     @Test
-    fun testReadProperty() {
+    fun `should read property`() {
         mockConfigServiceExt.whenReadProperty()
             .answer { req ->
                 req.propertyName shouldBeEqualTo "propertyName"
@@ -50,15 +49,55 @@ class CrudPropertyTest : BaseDashboardTest() {
                     .setApplicationName(appName)
                     .build()
             }
-        executeGetRequest("/property/get", Map::class.java, mapOf(
-            Pair("applicationName", appName),
-            Pair("hostName", hostName),
-            Pair("propertyName", "propertyName")
-        )).size shouldBeGreaterThan 0
+        getProperty(appName, hostName).shouldNotBeNull()
     }
 
     @Test
-    fun testDelete() {
+    fun `should return empty JSON if property doesn't exist`() {
+        mockConfigServiceExt.whenReadProperty()
+            .answer { req ->
+                req.propertyName shouldBeEqualTo "propertyName"
+                req.hostName shouldBeEqualTo hostName
+                null
+            }
+        getProperty(appName, hostName).shouldBeNull()
+    }
+
+    @Test
+    fun `should throw an exception if a conflict is found`() {
+        mockConfigServiceExt.whenListApplications().answer { appName }
+        mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
+        mockConfigServiceExt.whenUpdateProperty()
+            .answer { req ->
+                UpdatePropertyResponse.Type.UPDATE_CONFLICT
+            }
+        invoking {
+            insertProperty()
+        }.shouldThrow(DashboardHttpException::class)
+            .exception.errorCode.shouldBeEqualTo("update.conflict")
+    }
+
+    @Test
+    fun `should create a host if it's not found`() {
+        mockConfigServiceExt.whenListApplications().answer { appName }
+        mockConfigServiceExt.whenListHosts().answer { emptyList() }
+        mockConfigServiceExt.whenCreateHost().answer {
+            CreateHostResponse.newBuilder()
+                .setType(CreateHostResponse.Type.OK)
+                .build()
+        }
+
+        mockConfigServiceExt.whenUpdateProperty()
+            .answer {
+                UpdatePropertyResponse.Type.OK
+            }
+        insertProperty()
+
+        verify(exactly = 1) { mockConfigService.createHost(any(), any()) }
+    }
+
+    @Test
+    fun `should delete a property`() {
         mockConfigServiceExt.whenDeleteProperty()
             .answer { req ->
                 req.applicationName shouldBeEqualTo appName
@@ -76,10 +115,6 @@ class CrudPropertyTest : BaseDashboardTest() {
             Pair("propertyName", "propertyName"),
             Pair("version", "1")
         ), Map::class.java, requestId = "1239")
-    }
-
-    private fun insertProperty() {
-        updateProperty(appName, hostName, "someName", "234", "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 
     @Test
@@ -139,5 +174,9 @@ class CrudPropertyTest : BaseDashboardTest() {
             .shouldThrow(DashboardHttpException::class)
             .should { exception.httpCode == 400 }
             .should { exception.errorCode == "illegal.format" }
+    }
+
+    private fun insertProperty() {
+        updateProperty(appName, hostName, "someName", "234", "b350bfd5-9f0b-4d3c-b2bf-ec6c429181a8")
     }
 }
