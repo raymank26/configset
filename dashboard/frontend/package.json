@@ -28,6 +28,7 @@
     "@types/jest": "^27.5.0",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
+    "@vue/cli-plugin-babel": "^5.0.4",
     "@vue/cli-plugin-eslint": "~4.3.0",
     "@vue/cli-plugin-router": "~4.3.0",
     "@vue/cli-plugin-typescript": "~4.3.0",
