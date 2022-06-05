@@ -37,6 +37,7 @@ export default class AddNewApplication extends Vue {
     let form = this.$refs['appForm'] as HTMLFormElement;
     let isValid = form.checkValidity();
     form.classList.add('was-validated');
+    debugger;
 
     if (isValid) {
       await applicationService.createApplication(this.appName!)
