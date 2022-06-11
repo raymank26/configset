@@ -1,4 +1,3 @@
-import {UpdateResult} from "@/service/PropertyService";
 <template>
   <div>
     <div class="row">
@@ -53,7 +52,8 @@ import {UpdateResult} from "@/service/PropertyService";
               </div>
             </div>
             <div class="form-group">
-              <input class="btn btn-primary" type="submit" value="Update"/>
+              <input id="updateButton" class="btn btn-primary" :disabled="updateButtonDisabled" type="submit"
+                     value="Update"/>
             </div>
           </form>
         </div>
@@ -77,75 +77,81 @@ import {UpdateResult} from "@/service/PropertyService";
 </template>
 
 <script lang="ts">
-  import {Component, Vue} from 'vue-property-decorator'
-  import {propertyService, searchService} from "@/service/services";
-  import {UpdateResult} from "@/service/PropertyService";
-  import ApplicationSelect from "@/components/ApplicationSelect.vue";
+import {Component, Vue, Watch} from 'vue-property-decorator'
+import {propertyService, searchService} from "@/service/services";
+import {UpdateResult} from "@/service/PropertyService";
+import ApplicationSelect from "@/components/ApplicationSelect.vue";
 
-  @Component({
-    components: {ApplicationSelect}
-  })
-  export default class UpdateProperty extends Vue {
-    appName: string = "";
-    propertyName: string = "";
-    hostName: string = "";
-    propertyValue: string = "";
-    _version: number | null = null;
+@Component({
+  components: {ApplicationSelect}
+})
+export default class UpdateProperty extends Vue {
+  appName: string = "";
+  propertyName: string = "";
+  hostName: string = "";
+  propertyValue: string = "";
+  _version: number | null = null;
 
-    loading: boolean = true;
-    hasConflict: boolean = false;
-    appNotFound: boolean = false;
-    propertyNotFound: boolean = false;
+  loading: boolean = true;
+  hasConflict: boolean = false;
+  appNotFound: boolean = false;
+  propertyNotFound: boolean = false;
+  updateButtonDisabled: boolean = false;
 
-    created() {
-      if (Object.keys(this.$router.currentRoute.query).length !== 0) {
-        let query = this.$router.currentRoute.query as any;
-        this.appName = query.applicationName;
-        this.propertyName = query.propertyName;
-        this.hostName = query.hostName;
-
-        if (this.appName && this.hostName && this.propertyName) {
-          propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(property => {
-            if (property) {
-              debugger;
-              this.propertyValue = property.propertyValue;
-              this._version = property.version;
-            } else {
-              this.propertyNotFound = true;
-            }
-            this.loading = false;
-          });
-        } else {
-          this.loading = false;
-        }
-      }
+  created() {
+    if (Object.keys(this.$router.currentRoute.query).length === 0) {
+      alert("Application is not selected")
+      return
     }
-
-    submitApp() {
-      if (this.hasConflict) {
-        return;
-      }
-      propertyService.updateProperty(this.appName, this.hostName, this.propertyName, this.propertyValue, this._version)
-        .then(updateResult => {
-          switch (updateResult) {
-            case UpdateResult.OK:
-              searchService.searchPush({
-                searchApplicationName: this.appName,
-                searchHost: null,
-                searchPropertyName: this.propertyName,
-                searchPropertyValue: null
-              });
-              break;
-            case UpdateResult.CONFLICT:
-              this.hasConflict = true;
-              break;
-            case UpdateResult.APPLICATION_NOT_FOUND:
-              this.appNotFound = true;
-              break;
-          }
-        });
+    let query = this.$router.currentRoute.query as any;
+    this.appName = query.applicationName;
+    this.propertyName = query.propertyName;
+    this.hostName = query.hostName;
+    if (this.appName && this.hostName && this.propertyName) {
+      propertyService.readProperty(this.appName, this.hostName, this.propertyName).then(property => {
+        if (property) {
+          this.propertyValue = property.propertyValue;
+          this._version = property.version;
+        } else {
+          this.propertyNotFound = true;
+        }
+        this.loading = false;
+      });
+    } else {
+      this.loading = false;
     }
   }
+
+  submitApp() {
+    if (this.hasConflict) {
+      return;
+    }
+    propertyService.updateProperty(this.appName, this.hostName, this.propertyName, this.propertyValue, this._version)
+      .then(updateResult => {
+        switch (updateResult) {
+          case UpdateResult.OK:
+            searchService.searchPush({
+              searchApplicationName: this.appName,
+              searchHost: null,
+              searchPropertyName: this.propertyName,
+              searchPropertyValue: null
+            });
+            break;
+          case UpdateResult.CONFLICT:
+            this.hasConflict = true;
+            break;
+          case UpdateResult.APPLICATION_NOT_FOUND:
+            this.appNotFound = true;
+            break;
+        }
+      });
+  }
+
+  @Watch("appName")
+  watchAppName() {
+    this.updateButtonDisabled = this.$roles.indexOf("applicationOwner_" + this.appName) == -1
+  }
+}
 </script>
 
 <style scoped>

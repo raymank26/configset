@@ -38,6 +38,7 @@ loadPromise = loadPromise.then(() => {
       }
       localStorage.setItem("vue-token", keycloak.token!!);
       localStorage.setItem("vue-refresh-token", keycloak.refreshToken!!);
+      Vue.prototype.$roles = keycloak.tokenParsed?.realm_access?.roles || [];
 
       setInterval(() => {
         keycloak.updateToken(70)
