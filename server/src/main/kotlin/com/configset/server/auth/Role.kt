@@ -11,6 +11,11 @@ object Admin : Role {
     override val parent: Role? = null
 }
 
+object HostCreator : Role {
+    override val key: String = "hostCreator"
+    override val parent: Role = Admin
+}
+
 data class ApplicationOwner(val appName: String) : Role {
     override val key: String = "applicationOwner_$appName"
     override val parent: Role = Admin

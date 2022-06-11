@@ -32,6 +32,7 @@ import com.configset.server.SearchPropertyRequest
 import com.configset.server.WatchSubscriber
 import com.configset.server.auth.Admin
 import com.configset.server.auth.ApplicationOwner
+import com.configset.server.auth.HostCreator
 import com.configset.server.auth.Role
 import com.configset.server.auth.UserRoleService
 import io.grpc.Status
@@ -74,7 +75,7 @@ class GrpcConfigurationService(
     }
 
     override fun createHost(request: CreateHostRequest, responseObserver: StreamObserver<CreateHostResponse>) {
-        requireRole(Admin)
+        requireRole(HostCreator)
         when (configurationService.createHost(request.requestId, request.hostName)) {
             HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
             HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())

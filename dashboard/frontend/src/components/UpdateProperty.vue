@@ -149,7 +149,9 @@ export default class UpdateProperty extends Vue {
 
   @Watch("appName")
   watchAppName() {
-    this.updateButtonDisabled = this.$roles.indexOf("applicationOwner_" + this.appName) == -1
+    this.updateButtonDisabled =
+      this.$roles.indexOf("applicationOwner_" + this.appName) == -1 ||
+      this.$roles.indexOf("hostCreator") == -1
   }
 }
 </script>

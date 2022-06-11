@@ -58,7 +58,7 @@ test('button is active if permission is granted on change', async () => {
   let wrapper = mount(UpdateProperty, {
     mocks: {
       $router: mockRouter,
-      $roles: ["applicationOwner_test-another"]
+      $roles: ["applicationOwner_test-another", "hostCreator"]
     }
   })
   await Vue.nextTick()
@@ -97,7 +97,7 @@ test("property value is loaded if property data is provided", async () => {
   let wrapper = mount(UpdateProperty, {
     mocks: {
       $router: mockRouter,
-      $roles: ["applicationOwner_test-test"]
+      $roles: ["applicationOwner_test-test", "hostCreator"]
     }
   })
   await Vue.nextTick();
@@ -136,7 +136,7 @@ test("submit function should persist values", async () => {
   let wrapper = mount(UpdateProperty, {
     mocks: {
       $router: mockRouter,
-      $roles: ["applicationOwner_test-test"]
+      $roles: ["applicationOwner_test-test", "hostCreator"]
     }
   })
   await Vue.nextTick();
