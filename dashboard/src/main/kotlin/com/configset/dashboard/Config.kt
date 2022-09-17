@@ -6,7 +6,7 @@ class Config(properties: Map<String, String>) {
     val hostname = properties["config_server.hostname"] ?: "localhost"
     val port = properties["config_server.port"]?.toInt() ?: 8988
     val dashboardPort = properties["dashboard.port"]?.toInt() ?: 8188
-    val serveStatic = properties["server.static"]?.toBoolean() ?: false
+    val templatesFilePath = properties["templates.file.path"]
 
     // client
     val keycloackUrl = requireProp(properties, "client.keycloack_url")

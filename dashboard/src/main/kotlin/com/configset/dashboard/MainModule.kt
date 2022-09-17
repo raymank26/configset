@@ -2,6 +2,7 @@ package com.configset.dashboard
 
 import com.configset.dashboard.application.ApplicationController
 import com.configset.dashboard.auth.AuthInterceptor
+import com.configset.dashboard.pages.PagesController
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.property.PropertyController
@@ -17,7 +18,7 @@ const val CONFIG_KEY = "config"
 val mainModule = module {
 
     single {
-        val server = JavalinServer(get(), config(), get(), get(), get())
+        val server = JavalinServer(get(), config(), get(), get(), get(), get())
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
@@ -67,6 +68,14 @@ val mainModule = module {
 
     single {
         AuthInterceptor(listOf("/api/config"))
+    }
+
+    single {
+        TemplateRenderer(config().templatesFilePath)
+    }
+
+    single {
+        PagesController(get())
     }
 }
 

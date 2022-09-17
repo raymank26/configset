@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block main %}
+<form>
+    <label>
+        <span>Application name</span>
+        <input name="application-name"/>
+    </label>
+    <label>
+        <span>Property name</span>
+        <input name="property-name"/>
+    </label>
+    <label>
+        <span>Property value</span>
+        <input name="property-value"/>
+    </label>
+    <button type="submit" name="search">Search</button>
+</form>
+{% endblock %}

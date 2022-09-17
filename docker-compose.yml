@@ -23,8 +23,11 @@ services:
       - "config_server.hostname=backend"
       - "config_server.port=8080"
       - "client.keycloack_url=http://localhost:8077"
+      - "templates.file.path=/templates"
       - "client.keycloack_realm=demo"
       - "client.keycloack_clientId=demo-clientId"
+    volumes:
+      - "./dashboard/src/main/resources/templates:/templates"
   keycloack:
     image: "quay.io/keycloak/keycloak:15.0.1"
     ports:
