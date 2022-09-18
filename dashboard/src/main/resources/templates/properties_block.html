@@ -1,0 +1,16 @@
+<table class="table">
+    <thead>
+    <tr>
+        <th>Application</th>
+        <th>Name</th>
+        <th>Value</th>
+    </tr>
+    </thead>
+    {% for property in properties %}
+    <tr>
+        <td>{{ property.applicationName }}</td>
+        <td>{{ property.propertyName }}</td>
+        <td>{{ property.propertyValue }}</td>
+    </tr>
+    {% endfor %}
+</table>

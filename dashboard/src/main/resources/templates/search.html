@@ -7,6 +7,10 @@
         <input name="application-name"/>
     </label>
     <label>
+        <span>Host value</span>
+        <input name="hostname"/>
+    </label>
+    <label>
         <span>Property name</span>
         <input name="property-name"/>
     </label>
@@ -14,6 +18,13 @@
         <span>Property value</span>
         <input name="property-value"/>
     </label>
-    <button type="submit" name="search">Search</button>
+    <button type="submit"
+            name="search"
+            hx-post="/api/property/search"
+            hx-trigger="click"
+            hx-target="#properties-search-result">Search
+    </button>
 </form>
+
+<div id="properties-search-result"></div>
 {% endblock %}

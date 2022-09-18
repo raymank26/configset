@@ -75,7 +75,7 @@ val mainModule = module {
     }
 
     single {
-        PagesController(get())
+        PagesController(get(), get())
     }
 }
 

@@ -8,7 +8,6 @@ import com.configset.sdk.proto.CreateHostRequest
 import com.configset.sdk.proto.CreateHostResponse
 import com.configset.sdk.proto.DeletePropertyRequest
 import com.configset.sdk.proto.DeletePropertyResponse
-import com.configset.sdk.proto.EmptyRequest
 import com.configset.sdk.proto.ListHostsResponse
 import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.ReadPropertyRequest
@@ -20,24 +19,24 @@ import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.stub.StreamObserver
 import io.mockk.every
-import org.amshove.kluent.shouldNotBeNull
 
 typealias AppName = String
 typealias HostName = String
 
 class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase) {
 
-    fun whenListApplications(): ServerMockContext<EmptyRequest, AppName> {
-        return object : ServerMockContext<EmptyRequest, AppName>() {
-            override fun answer(supplier: (EmptyRequest) -> AppName) {
+    fun whenListApplications(): ServerMockContext<AppName> {
+        return object : ServerMockContext<AppName>() {
+            override fun answer(response: AppName) {
                 every { mockConfigService.listApplications(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as EmptyRequest)
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
-                    observer.onNext(ApplicationsResponse.newBuilder()
-                        .addApplications(supplier.invoke(request))
-                        .build())
+                    observer.onNext(
+                        ApplicationsResponse.newBuilder()
+                            .addApplications(response)
+                            .build()
+                    )
                     observer.onCompleted()
                 }
             }
@@ -52,32 +51,31 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenCreateApplication(): ServerMockContext<ApplicationCreateRequest, ApplicationCreatedResponse.Type> {
-        return object : ServerMockContext<ApplicationCreateRequest, ApplicationCreatedResponse.Type>() {
-            override fun answer(supplier: (ApplicationCreateRequest) -> ApplicationCreatedResponse.Type) {
-                every { mockConfigService.createApplication(any(), any()) } answers {
-                    val request = invocation.args[0] as ApplicationCreateRequest
-
+    fun whenCreateApplication(request: ApplicationCreateRequest): ServerMockContext<ApplicationCreatedResponse.Type> {
+        return object : ServerMockContext<ApplicationCreatedResponse.Type>() {
+            override fun answer(response: ApplicationCreatedResponse.Type) {
+                every { mockConfigService.createApplication(request, any()) } answers {
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<ApplicationCreatedResponse>)
-                    observer.onNext(ApplicationCreatedResponse.newBuilder()
-                        .setType(supplier.invoke(request)).build())
+                    observer.onNext(
+                        ApplicationCreatedResponse.newBuilder()
+                            .setType(response).build()
+                    )
                     observer.onCompleted()
                 }
             }
         }
     }
 
-    fun whenListHosts(): ServerMockContext<EmptyRequest, List<HostName>> {
-        return object : ServerMockContext<EmptyRequest, List<HostName>>() {
-            override fun answer(supplier: (EmptyRequest) -> List<HostName>) {
+    fun whenListHosts(): ServerMockContext<List<HostName>> {
+        return object : ServerMockContext<List<HostName>>() {
+            override fun answer(response: List<HostName>) {
                 every { mockConfigService.listHosts(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as EmptyRequest)
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ListHostsResponse>)
                     val builder = ListHostsResponse.newBuilder()
-                    supplier.invoke(request).forEach { builder.addHostNames(it) }
+                    response.forEach { builder.addHostNames(it) }
                     observer.onNext(builder.build())
                     observer.onCompleted()
                 }
@@ -85,58 +83,58 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenCreateHost(): ServerMockContext<CreateHostRequest, CreateHostResponse> {
-        return object : ServerMockContext<CreateHostRequest, CreateHostResponse>() {
-            override fun answer(supplier: (CreateHostRequest) -> CreateHostResponse) {
-                every { mockConfigService.createHost(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as CreateHostRequest)
-
+    fun whenCreateHost(request: CreateHostRequest): ServerMockContext<CreateHostResponse> {
+        return object : ServerMockContext<CreateHostResponse>() {
+            override fun answer(response: CreateHostResponse) {
+                every { mockConfigService.createHost(request, any()) } answers {
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<CreateHostResponse>)
-                    observer.onNext(supplier.invoke(request))
+                    observer.onNext(response)
                     observer.onCompleted()
                 }
             }
         }
     }
 
-    fun whenUpdateProperty(): ServerMockContext<UpdatePropertyRequest, UpdatePropertyResponse.Type> {
-        return object : ServerMockContext<UpdatePropertyRequest, UpdatePropertyResponse.Type>() {
-            override fun answer(supplier: (UpdatePropertyRequest) -> UpdatePropertyResponse.Type) {
-                every { mockConfigService.updateProperty(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as UpdatePropertyRequest)
-                    (request.requestId).shouldNotBeNull()
+    fun whenUpdateProperty(request: UpdatePropertyRequest): ServerMockContext<UpdatePropertyResponse.Type> {
+        return object : ServerMockContext<UpdatePropertyResponse.Type>() {
+            override fun answer(response: UpdatePropertyResponse.Type) {
+                every { mockConfigService.updateProperty(request, any()) } answers {
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<UpdatePropertyResponse>)
 
-                    observer.onNext(UpdatePropertyResponse.newBuilder()
-                        .setType(supplier.invoke(request))
-                        .build())
+                    observer.onNext(
+                        UpdatePropertyResponse.newBuilder()
+                            .setType(response)
+                            .build()
+                    )
                     observer.onCompleted()
                 }
             }
         }
     }
 
-    fun whenReadProperty(): ServerMockContext<ReadPropertyRequest, PropertyItem?> {
-        return object : ServerMockContext<ReadPropertyRequest, PropertyItem?>() {
-            override fun answer(supplier: (ReadPropertyRequest) -> PropertyItem?) {
-                every { mockConfigService.readProperty(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as ReadPropertyRequest)
+    fun whenReadProperty(request: ReadPropertyRequest): ServerMockContext<PropertyItem?> {
+        return object : ServerMockContext<PropertyItem?>() {
+            override fun answer(response: PropertyItem?) {
+                every { mockConfigService.readProperty(request, any()) } answers {
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<ReadPropertyResponse>)
 
-                    val propertyItem = supplier.invoke(request)
-                    if (propertyItem != null) {
-                        observer.onNext(ReadPropertyResponse.newBuilder()
-                            .setHasItem(true)
-                            .setItem(propertyItem)
-                            .build())
+                    if (response != null) {
+                        observer.onNext(
+                            ReadPropertyResponse.newBuilder()
+                                .setHasItem(true)
+                                .setItem(response)
+                                .build()
+                        )
                     } else {
-                        observer.onNext(ReadPropertyResponse.newBuilder()
-                            .setHasItem(false)
-                            .build())
+                        observer.onNext(
+                            ReadPropertyResponse.newBuilder()
+                                .setHasItem(false)
+                                .build()
+                        )
                     }
                     observer.onCompleted()
                 }
@@ -144,36 +142,33 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenDeleteProperty(): ServerMockContext<DeletePropertyRequest, DeletePropertyResponse> {
-        return object : ServerMockContext<DeletePropertyRequest, DeletePropertyResponse>() {
-            override fun answer(supplier: (DeletePropertyRequest) -> DeletePropertyResponse) {
-                every { mockConfigService.deleteProperty(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as DeletePropertyRequest)
-
+    fun whenDeleteProperty(request: DeletePropertyRequest): ServerMockContext<DeletePropertyResponse> {
+        return object : ServerMockContext<DeletePropertyResponse>() {
+            override fun answer(response: DeletePropertyResponse) {
+                every { mockConfigService.deleteProperty(request, any()) } answers {
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<DeletePropertyResponse>)
 
-                    observer.onNext(supplier.invoke(request))
+                    observer.onNext(response)
                     observer.onCompleted()
                 }
             }
         }
     }
 
-    fun whenSearchProperties(): ServerMockContext<SearchPropertiesRequest, List<ShowPropertyItem>> {
-        return object : ServerMockContext<SearchPropertiesRequest, List<ShowPropertyItem>>() {
-            override fun answer(supplier: (SearchPropertiesRequest) -> List<ShowPropertyItem>) {
-                every { mockConfigService.searchProperties(any(), any()) } answers {
-                    val request = (it.invocation.args[0] as SearchPropertiesRequest)
+    fun whenSearchProperties(request: SearchPropertiesRequest): ServerMockContext<List<ShowPropertyItem>> {
+        return object : ServerMockContext<List<ShowPropertyItem>>() {
+            override fun answer(response: List<ShowPropertyItem>) {
+                every { mockConfigService.searchProperties(request, any()) } answers {
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<SearchPropertiesResponse>)
 
                     val builder = SearchPropertiesResponse.newBuilder()
-                    supplier.invoke(request).forEach { item -> builder.addItems(item) }
 
-                    observer.onNext(builder
-                        .build())
+                    response.forEach { item -> builder.addItems(item) }
+
+                    observer.onNext(builder.build())
                     observer.onCompleted()
                 }
             }
@@ -181,9 +176,9 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
     }
 }
 
-abstract class ServerMockContext<R, T> {
+abstract class ServerMockContext<T> {
 
-    abstract fun answer(supplier: (R) -> T)
+    abstract fun answer(response: T)
 
     open fun throws(ex: Exception) {
         throw NotImplementedError()

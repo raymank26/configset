@@ -43,6 +43,7 @@ dependencies {
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.14'
     implementation 'com.hubspot.jinjava:jinjava:2.6.0'
     implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'com.codeborne:selenide-proxy:6.7.4'
 
     testImplementation(testFixtures(project(":server")))
     testImplementation 'org.awaitility:awaitility:4.0.2'

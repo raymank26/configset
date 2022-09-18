@@ -6,11 +6,14 @@ import com.configset.dashboard.infra.DashboardHttpFailure
 import com.configset.dashboard.infra.expectLeft
 import com.configset.dashboard.infra.expectRight
 import com.configset.sdk.proto.CreateHostResponse
+import com.configset.sdk.proto.DeletePropertyRequest
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.PropertyItem
+import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.mockk.verify
+import org.amshove.kluent.any
 import org.amshove.kluent.should
 import org.amshove.kluent.`should match at least one of`
 import org.amshove.kluent.shouldBeEqualTo
@@ -25,14 +28,15 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `update should be idempotent`() {
-        mockConfigServiceExt.whenListApplications().answer { appName }
-        mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
-        mockConfigServiceExt.whenUpdateProperty()
-            .answer { req ->
-                req.propertyName shouldBeEqualTo "someName"
-                req.propertyValue shouldBeEqualTo "234"
-                UpdatePropertyResponse.Type.OK
-            }
+        mockConfigServiceExt.whenListApplications().answer(appName)
+        mockConfigServiceExt.whenListHosts().answer(listOf(hostName))
+        mockConfigServiceExt.whenUpdateProperty(
+            UpdatePropertyRequest.newBuilder()
+                .setPropertyName("someName")
+                .setPropertyValue("234")
+                .build()
+        )
+            .answer(UpdatePropertyResponse.Type.OK)
 
         insertProperty().expectRight()
         insertProperty().expectRight()
@@ -42,16 +46,19 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `should read property`() {
-        mockConfigServiceExt.whenReadProperty()
-            .answer { req ->
-                req.propertyName shouldBeEqualTo "propertyName"
-                req.hostName shouldBeEqualTo hostName
+        mockConfigServiceExt.whenReadProperty(
+            ReadPropertyRequest.newBuilder()
+                .setPropertyName("propertyName")
+                .setHostName(hostName)
+                .build()
+        )
+            .answer(
                 PropertyItem.newBuilder()
                     .setPropertyName("propertyName")
                     .setPropertyValue("value")
                     .setApplicationName(appName)
                     .build()
-            }
+            )
         dashboardClient.getProperty(appName, hostName)
             .expectRight()
             .shouldNotBeNull()
@@ -59,12 +66,13 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `should return empty JSON if property doesn't exist`() {
-        mockConfigServiceExt.whenReadProperty()
-            .answer { req ->
-                req.propertyName shouldBeEqualTo "propertyName"
-                req.hostName shouldBeEqualTo hostName
-                null
-            }
+        mockConfigServiceExt.whenReadProperty(
+            ReadPropertyRequest.newBuilder()
+                .setPropertyName("propertyName")
+                .setHostName(hostName)
+                .build()
+        )
+            .answer(null)
         dashboardClient.getProperty(appName, hostName)
             .expectRight()
             .shouldBeNull()
@@ -72,12 +80,10 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `should throw an exception if a conflict is found`() {
-        mockConfigServiceExt.whenListApplications().answer { appName }
-        mockConfigServiceExt.whenListHosts().answer { listOf(hostName) }
-        mockConfigServiceExt.whenUpdateProperty()
-            .answer { req ->
-                UpdatePropertyResponse.Type.UPDATE_CONFLICT
-            }
+        mockConfigServiceExt.whenListApplications().answer(appName)
+        mockConfigServiceExt.whenListHosts().answer(listOf(hostName))
+        mockConfigServiceExt.whenUpdateProperty(any())
+            .answer(UpdatePropertyResponse.Type.UPDATE_CONFLICT)
         val err = insertProperty()
             .expectLeft()
         err.errorCode shouldBeEqualTo "update.conflict"
@@ -85,18 +91,16 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `should create a host if it's not found`() {
-        mockConfigServiceExt.whenListApplications().answer { appName }
-        mockConfigServiceExt.whenListHosts().answer { emptyList() }
-        mockConfigServiceExt.whenCreateHost().answer {
+        mockConfigServiceExt.whenListApplications().answer(appName)
+        mockConfigServiceExt.whenListHosts().answer(emptyList())
+        mockConfigServiceExt.whenCreateHost(any()).answer(
             CreateHostResponse.newBuilder()
                 .setType(CreateHostResponse.Type.OK)
                 .build()
-        }
+        )
 
-        mockConfigServiceExt.whenUpdateProperty()
-            .answer {
-                UpdatePropertyResponse.Type.OK
-            }
+        mockConfigServiceExt.whenUpdateProperty(any())
+            .answer(UpdatePropertyResponse.Type.OK)
         insertProperty()
 
         verify(exactly = 1) { mockConfigService.createHost(any(), any()) }
@@ -104,17 +108,19 @@ class CrudPropertyTest : BaseDashboardTest() {
 
     @Test
     fun `should delete a property`() {
-        mockConfigServiceExt.whenDeleteProperty()
-            .answer { req ->
-                req.applicationName shouldBeEqualTo appName
-                req.hostName shouldBeEqualTo hostName
-                req.propertyName shouldBeEqualTo "some property"
-                req.version shouldBeEqualTo 1
-
+        mockConfigServiceExt.whenDeleteProperty(
+            DeletePropertyRequest.newBuilder()
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName("some property")
+                .setVersion(1)
+                .build()
+        )
+            .answer(
                 DeletePropertyResponse.newBuilder()
                     .setType(DeletePropertyResponse.Type.OK)
                     .build()
-            }
+            )
         dashboardClient.deleteProperty(appName, hostName, "some property")
             .expectRight()
     }
@@ -122,21 +128,19 @@ class CrudPropertyTest : BaseDashboardTest() {
     @Test
     fun testImportProperties() {
         mockConfigServiceExt.whenListApplications()
-            .answer { appName }
+            .answer(appName)
 
         mockConfigServiceExt.whenListHosts()
-            .answer { listOf("srvd2", "srvd1") }
-        mockConfigServiceExt.whenReadProperty()
-            .answer { null }
+            .answer(listOf("srvd2", "srvd1"))
+        mockConfigServiceExt.whenReadProperty(any())
+            .answer(null)
 
         val updateRequests = mutableListOf<UpdatePropertyRequest>()
-        mockConfigServiceExt.whenUpdateProperty()
-            .answer { req ->
-                updateRequests.add(req)
-                UpdatePropertyResponse.Type.OK
-            }
+        mockConfigServiceExt.whenUpdateProperty(any())
+            .answer(UpdatePropertyResponse.Type.OK)
 
-        dashboardClient.importProperties(appName,
+        dashboardClient.importProperties(
+            appName,
             """
                 <properties>
                     <property>
@@ -152,8 +156,6 @@ class CrudPropertyTest : BaseDashboardTest() {
                 </properties>
             """.trimIndent()
         ).expectRight()
-
-        updateRequests.size shouldBeEqualTo 2
 
         updateRequests `should match at least one of` {
             it.hostName == "srvd2"

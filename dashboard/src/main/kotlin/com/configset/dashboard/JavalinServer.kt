@@ -37,18 +37,20 @@ class JavalinServer(
         app.routes {
             pagesController.bind()
             path("api") {
-                path("application") {
-                    applicationController.bind()
-                }
-                path("property") {
-                    propertyController.bind()
-                }
+//                path("application") {
+//                    applicationController.bind()
+//                }
+//                path("property") {
+//                    propertyController.bind()
+//                }
                 get("config") {
-                    it.json(ClientConfig(
-                        keycloackUrl = serverConfig.keycloackUrl,
-                        keycloackRealm = serverConfig.keycloackRealm,
-                        keycloackClientId = serverConfig.keycloackClientId
-                    ))
+                    it.json(
+                        ClientConfig(
+                            keycloackUrl = serverConfig.keycloackUrl,
+                            keycloackRealm = serverConfig.keycloackRealm,
+                            keycloackClientId = serverConfig.keycloackClientId
+                        )
+                    )
                 }
             }
         }
