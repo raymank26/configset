@@ -44,6 +44,7 @@ dependencies {
     implementation 'com.hubspot.jinjava:jinjava:2.6.0'
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'com.codeborne:selenide-proxy:6.7.4'
+    implementation 'com.auth0:java-jwt:3.18.1'
 
     testImplementation(testFixtures(project(":server")))
     testImplementation 'org.awaitility:awaitility:4.0.2'
@@ -52,6 +53,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:1.12.2"
     testImplementation "org.testcontainers:postgresql:1.12.2"
     testImplementation 'com.github.tomakehurst:wiremock-jre8:2.33.2'
+
     testImplementation 'org.amshove.kluent:kluent:1.59'
     testImplementation "io.arrow-kt:arrow-core:1.0.1"
     testImplementation 'com.codeborne:selenide:6.7.3'

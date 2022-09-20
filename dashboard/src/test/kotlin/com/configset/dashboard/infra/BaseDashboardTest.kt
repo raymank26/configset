@@ -60,9 +60,11 @@ abstract class BaseDashboardTest {
                     Pair("dashboard.port", 9299.toString()),
                     Pair("serve.static", "false"),
                     Pair("authenticator_type", ""),
-                    Pair("client.keycloack_url", "localhost"),
-                    Pair("client.keycloack_realm", "sample-realm"),
-                    Pair("client.keycloack_clientId", "sample-clientId"),
+                    Pair("auth.auth_uri", "http://localhost:23982/auth"),
+                    Pair("auth.redirect_uri", "http://localhost:9299/auth/redirect"),
+                    Pair("auth.request_token_uri", "http://localhost:23982/token"),
+                    Pair("auth.client_id", "sample_content_id"),
+                    Pair("auth.secret_key", "sample_secret_key"),
                 )
             ))
         ))

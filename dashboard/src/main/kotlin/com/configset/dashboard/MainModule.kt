@@ -1,6 +1,7 @@
 package com.configset.dashboard
 
 import com.configset.dashboard.application.ApplicationController
+import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.PagesController
 import com.configset.dashboard.property.CrudPropertyService
@@ -9,6 +10,7 @@ import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.property.PropertyImportService
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
@@ -18,7 +20,7 @@ const val CONFIG_KEY = "config"
 val mainModule = module {
 
     single {
-        val server = JavalinServer(get(), config(), get(), get(), get(), get())
+        val server = JavalinServer(get(), config(), get(), get(), get())
 
         this.registerCallback(object : ScopeCallback {
             override fun onScopeClose(scope: Scope) {
@@ -67,7 +69,23 @@ val mainModule = module {
     }
 
     single {
-        AuthInterceptor(listOf("/api/config"))
+        AuthInterceptor(
+            listOf("/api/config", "/auth/redirect"),
+            config().authUri,
+            config().authRedirectUri,
+            config().authClientId
+        )
+    }
+
+    single {
+        AuthController(
+            config().authSecretKey, config().authClientId, config().requestTokenUri,
+            config().authRedirectUri, get()
+        )
+    }
+
+    single {
+        ObjectMapper()
     }
 
     single {

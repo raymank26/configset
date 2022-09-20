@@ -4,7 +4,7 @@ import io.javalin.http.Context
 
 fun Context.requestId() = this.formParam("requestId") ?: throw BadRequest("requestId")
 
-fun Context.accessToken() = this.header("Authorization")?.split(" ")?.getOrNull(1)
+fun Context.accessToken() = this.attribute("access_token") as? String
     ?: error("No Authentication header found")
 
 fun Context.formParamSafe(name: String) = this.formParam(name) ?: throw BadRequest("param.not.found", name)

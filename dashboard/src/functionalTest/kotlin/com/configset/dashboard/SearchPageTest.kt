@@ -2,18 +2,25 @@ package com.configset.dashboard
 
 import com.codeborne.selenide.Condition.href
 import com.codeborne.selenide.Condition.visible
+import com.codeborne.selenide.Selenide.open
 import com.configset.dashboard.pages.LeftNavPage
 import com.configset.dashboard.pages.SearchPage
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.ShowPropertyItem
+import org.junit.Before
 import org.junit.Test
 
 class SearchPageTest : FunctionalTest() {
 
+    @Before
+    fun foreSearchPage() {
+        authenticated()
+    }
+
     @Test
     fun `should have main elements`() {
         // when
-        openAuthenticated("/")
+        open("/")
 
         // then
         SearchPage.applicationNameInput.shouldBe(visible)
@@ -58,20 +65,16 @@ class SearchPageTest : FunctionalTest() {
                 .build(),
 
             )
-        givenProperties(request, properties)
+        mockConfigServiceExt.whenSearchProperties(request)
+            .answer(properties)
 
         // when
-        openAuthenticated("/")
+        open("/")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
 
         // then
         SearchPage.searchResultsShouldContainProperty(properties[0])
         SearchPage.searchResultsShouldContainProperty(properties[1])
-    }
-
-    private fun givenProperties(request: SearchPropertiesRequest, listOf: List<ShowPropertyItem>) {
-        mockConfigServiceExt.whenSearchProperties(request)
-            .answer(listOf)
     }
 }

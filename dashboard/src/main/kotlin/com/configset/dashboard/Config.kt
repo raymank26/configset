@@ -8,10 +8,12 @@ class Config(properties: Map<String, String>) {
     val dashboardPort = properties["dashboard.port"]?.toInt() ?: 8188
     val templatesFilePath = properties["templates.file.path"]
 
-    // client
-    val keycloackUrl = requireProp(properties, "client.keycloack_url")
-    val keycloackRealm = requireProp(properties, "client.keycloack_realm")
-    val keycloackClientId = requireProp(properties, "client.keycloack_clientId")
+    // auth
+    val authUri = requireProp(properties, "auth.auth_uri")
+    val requestTokenUri = requireProp(properties, "auth.request_token_uri")
+    val authRedirectUri = requireProp(properties, "auth.redirect_uri")
+    val authClientId = requireProp(properties, "auth.client_id")
+    val authSecretKey = requireProp(properties, "auth.secret_key")
 }
 
 private fun requireProp(properties: Map<String, String>, key: String): String {
