@@ -8,7 +8,10 @@ class Config(properties: Map<String, String>) {
     val dashboardPort = properties["dashboard.port"]?.toInt() ?: 8188
     val templatesFilePath = properties["templates.file.path"]
 
-    // auth
+    val authenticationConfig = AuthenticationConfig(properties)
+}
+
+class AuthenticationConfig(properties: Map<String, String>) {
     val authUri = requireProp(properties, "auth.auth_uri")
     val requestTokenUri = requireProp(properties, "auth.request_token_uri")
     val authRedirectUri = requireProp(properties, "auth.redirect_uri")

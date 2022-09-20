@@ -1,6 +1,7 @@
 package com.configset.dashboard.auth
 
 import com.auth0.jwt.JWT
+import com.configset.dashboard.AuthenticationConfig
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.http.Cookie
@@ -11,10 +12,7 @@ import okhttp3.Request
 import java.util.*
 
 class AuthController(
-    private val authSecretKey: String,
-    private val authClientId: String,
-    private val requestTokenUri: String,
-    private val authRedirectUri: String,
+    private val authenticationConfig: AuthenticationConfig,
     private val objectMapper: ObjectMapper,
 ) {
 
@@ -28,14 +26,14 @@ class AuthController(
                     .post(
                         FormBody.Builder()
                             .add("code", code)
-                            .add("client_id", authClientId)
-                            .add("client_secret", authSecretKey)
-                            .add("redirect_uri", authRedirectUri)
+                            .add("client_id", authenticationConfig.authClientId)
+                            .add("client_secret", authenticationConfig.authSecretKey)
+                            .add("redirect_uri", authenticationConfig.authRedirectUri)
                             .add("grant_type", "authorization_code")
                             .build()
                     )
                     .url(
-                        requestTokenUri.toHttpUrl()
+                        authenticationConfig.requestTokenUri.toHttpUrl()
                             .newBuilder()
                             .build()
                     ).build()

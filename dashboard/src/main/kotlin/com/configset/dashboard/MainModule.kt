@@ -71,17 +71,12 @@ val mainModule = module {
     single {
         AuthInterceptor(
             listOf("/api/config", "/auth/redirect"),
-            config().authUri,
-            config().authRedirectUri,
-            config().authClientId
+            config().authenticationConfig
         )
     }
 
     single {
-        AuthController(
-            config().authSecretKey, config().authClientId, config().requestTokenUri,
-            config().authRedirectUri, get()
-        )
+        AuthController(config().authenticationConfig, get())
     }
 
     single {
