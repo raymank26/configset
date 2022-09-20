@@ -3,12 +3,12 @@ package com.configset.dashboard.auth
 import com.auth0.jwt.JWT
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.apibuilder.ApiBuilder.get
+import io.javalin.http.Cookie
 import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.*
-import javax.servlet.http.Cookie
 
 class AuthController(
     private val authSecretKey: String,
