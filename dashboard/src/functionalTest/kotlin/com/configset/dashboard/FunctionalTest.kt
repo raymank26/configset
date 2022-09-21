@@ -1,17 +1,13 @@
 package com.configset.dashboard
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import com.codeborne.selenide.Configuration
 import com.codeborne.selenide.Selenide
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverRunner
 import com.configset.dashboard.infra.BaseDashboardTest
+import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Before
 import org.openqa.selenium.Cookie
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.*
 
 abstract class FunctionalTest : BaseDashboardTest() {
 
@@ -24,14 +20,8 @@ abstract class FunctionalTest : BaseDashboardTest() {
         Configuration.proxyPort = 39823
     }
 
-    fun createAccessTokenJwt(): String {
-        return JWT.create().withPayload(
-            mapOf(
-                "token" to "content"
-            )
-        )
-            .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
-            .sign(Algorithm.HMAC256("some secret"))
+    fun createAccessToken(): String {
+        return RandomStringUtils.randomAlphabetic(16)
     }
 
     fun authenticated() {
@@ -39,7 +29,7 @@ abstract class FunctionalTest : BaseDashboardTest() {
         WebDriverRunner.getAndCheckWebDriver().manage().addCookie(
             Cookie(
                 "auth.access_token",
-                createAccessTokenJwt()
+                createAccessToken()
             )
         )
     }

@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
+import com.codeborne.selenide.WebDriverRunner
 import com.configset.dashboard.pages.LeftNavPage
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -16,6 +17,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.verify
 import com.github.tomakehurst.wiremock.junit.WireMockRule
+import org.amshove.kluent.shouldMatchAtLeastOneOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -57,22 +59,12 @@ class AuthorisationTest : FunctionalTest() {
                 .willReturn(
                     jsonResponse(
                         """{
-                        |"access_token": "${createAccessTokenJwt()}",
+                        |"access_token": "${createAccessToken()}",
                         |"id_token": "${createIdTokenJwt()}" 
                         |}""".trimMargin(), 200
                     )
                 )
         )
-    }
-
-    private fun createIdTokenJwt(): String {
-        return JWT.create().withPayload(
-            mapOf(
-                "name" to "john"
-            )
-        )
-            .withExpiresAt(Date.from(Instant.now().plus(1, DAYS)))
-            .sign(Algorithm.HMAC256("some secret"))
     }
 
     @Test
@@ -82,7 +74,20 @@ class AuthorisationTest : FunctionalTest() {
 
         // then
         LeftNavPage.search.shouldBe(visible)
+        WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.access_token" }
+        WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.username" }
         verify(getRequestedFor(urlPathEqualTo("/auth")))
         verify(postRequestedFor(urlEqualTo("/token")))
+    }
+
+    private fun createIdTokenJwt(): String {
+        return JWT.create()
+            .withPayload(
+                mapOf(
+                    "name" to "john"
+                )
+            )
+            .withExpiresAt(Date.from(Instant.now().plus(1, DAYS)))
+            .sign(Algorithm.HMAC256("some secret"))
     }
 }
