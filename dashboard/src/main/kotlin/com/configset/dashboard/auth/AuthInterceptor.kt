@@ -21,7 +21,7 @@ class AuthInterceptor(
         val validAccessToken = getValidAccessToken(ctx)
         if (validAccessToken == null) {
             val redirectUriEncoded = URLEncoder.encode(authenticationConfig.authRedirectUri, StandardCharsets.UTF_8)
-            val scopeEncoded = URLEncoder.encode("openid name", StandardCharsets.UTF_8)
+            val scopeEncoded = URLEncoder.encode("openid profile", StandardCharsets.UTF_8)
             return ctx.redirect(buildString {
                 append(authenticationConfig.authUri)
                 append("?client_id=")
@@ -30,6 +30,7 @@ class AuthInterceptor(
                 append(scopeEncoded)
                 append("&redirect_uri=")
                 append(redirectUriEncoded)
+                append("&response_type=code")
             })
         } else {
             ctx.attribute("access_token", validAccessToken)

@@ -2,6 +2,7 @@ package com.configset.dashboard.auth
 
 import com.auth0.jwt.JWT
 import com.configset.dashboard.AuthenticationConfig
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.http.Cookie
@@ -43,18 +44,31 @@ class AuthController(
                 objectMapper.readTree(it)
             }
             val accessToken = responseJson.get("access_token").asText()
-            ctx.cookie(Cookie("auth.access_token", accessToken).apply {
-                isHttpOnly = true
-            })
 
             val idToken = responseJson.get("id_token").asText()
             val idTokenDecoded = JWT.decode(idToken)
             val payloadJson = String(Base64.getDecoder().decode(idTokenDecoded.payload))
-            val username = objectMapper.readTree(payloadJson).get("name")?.asText()
-                ?: error("Cannot find 'name' property in token payload $payloadJson")
+            val username = readFirst(
+                objectMapper.readTree(payloadJson),
+                setOf("name", "preferred_username", "nickname")
+            )
+
+            ctx.cookie(Cookie("auth.access_token", accessToken).apply {
+                isHttpOnly = true
+            })
             ctx.cookie(Cookie("auth.username", username))
 
             ctx.redirect("/")
         }
+    }
+
+    private fun readFirst(jsonNode: JsonNode, names: Set<String>): String {
+        for (name in names) {
+            val value = jsonNode.get(name)
+            if (value != null) {
+                return value.asText()
+            }
+        }
+        error("Cannot find property by names = $names")
     }
 }

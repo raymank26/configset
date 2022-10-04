@@ -39,7 +39,8 @@ class AuthorisationTest : FunctionalTest() {
             get(urlPathEqualTo("/auth"))
                 .withQueryParam("client_id", equalTo("sample_content_id"))
                 .withQueryParam("redirect_uri", equalTo("http://localhost:9299/auth/redirect"))
-                .withQueryParam("scope", equalTo("openid name"))
+                .withQueryParam("response_type", equalTo("code"))
+                .withQueryParam("scope", equalTo("openid profile"))
                 .willReturn(temporaryRedirect("http://localhost:9299/auth/redirect?code=sample_code"))
         )
 
