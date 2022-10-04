@@ -77,4 +77,25 @@ class SearchPageTest : FunctionalTest() {
         SearchPage.searchResultsShouldContainProperty(properties[0])
         SearchPage.searchResultsShouldContainProperty(properties[1])
     }
+
+    @Test
+    fun `should return empty results`() {
+        // given
+        val request = SearchPropertiesRequest.newBuilder()
+            .setApplicationName("Sample app")
+            .setPropertyName("")
+            .setHostName("")
+            .setPropertyValue("")
+            .build()
+        mockConfigServiceExt.whenSearchProperties(request)
+            .answer(emptyList())
+
+        // when
+        open("/")
+        SearchPage.applicationNameInput.value = "Sample app"
+        SearchPage.searchButton.click()
+
+        // then
+        SearchPage.searchResultsEmpty.shouldBe(visible)
+    }
 }

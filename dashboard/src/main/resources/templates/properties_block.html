@@ -1,3 +1,4 @@
+{% if properties|length %}
 <table class="table">
     <thead>
     <tr>
@@ -18,3 +19,6 @@
     </tr>
     {% endfor %}
 </table>
+{% else %}
+<p id="properties-search-result-empty">No results found</p>
+{% endif %}
