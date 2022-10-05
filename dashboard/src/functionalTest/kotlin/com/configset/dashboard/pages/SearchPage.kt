@@ -17,7 +17,6 @@ object SearchPage {
     fun searchResultsShouldContainProperty(property: ShowPropertyItem) {
         searchResults.shouldHave(text(property.propertyName))
         searchResults.shouldHave(text(property.applicationName))
-        searchResults.shouldHave(text(property.propertyValue))
         searchResults.find(By.className("expand")).shouldHave(text("Expand"))
     }
 }
