@@ -1,14 +1,12 @@
 package com.configset.dashboard
 
-import kotlin.concurrent.thread
-
 object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
         val config = Config(System.getenv())
         val app = createApp(DependencyFactory(config))
-        Runtime.getRuntime().addShutdownHook(thread {
+        Runtime.getRuntime().addShutdownHook(Thread {
             app.stop()
         })
         app.start()
