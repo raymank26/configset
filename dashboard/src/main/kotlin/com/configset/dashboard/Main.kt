@@ -1,22 +1,49 @@
 package com.configset.dashboard
 
-import com.configset.sdk.extension.createLoggerStatic
-import org.koin.dsl.koinApplication
-
-private val LOG = createLoggerStatic<Main>()
+import kotlin.concurrent.thread
 
 object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
         val config = Config(System.getenv())
-        val koinApp = koinApplication {
-            modules(mainModule, remoteClientModule)
-        }.properties(mapOf(CONFIG_KEY to config))
-        Runtime.getRuntime().addShutdownHook(Thread {
-            koinApp.close()
-            LOG.info("Application has exited normally")
+        val app = createApp(DependencyFactory(config))
+        Runtime.getRuntime().addShutdownHook(thread {
+            app.stop()
         })
-        koinApp.koin.get<JavalinServer>().start()
+        app.start()
     }
+
+    fun createApp(dependencyFactory: DependencyFactory): App {
+        val objectMapper = dependencyFactory.objectMapper()
+        val authController = dependencyFactory.authController(objectMapper)
+        val javalinExceptionMapper = dependencyFactory.javalinExceptionMapper()
+        val authInterceptor = dependencyFactory.authInterceptor()
+        val templateRenderer = dependencyFactory.templateRenderer()
+        val configSetClient = dependencyFactory.configSetClient()
+        val serverApiGateway = dependencyFactory.serverApiGateway(configSetClient)
+        val listPropertiesService = dependencyFactory.listPropertyService(serverApiGateway)
+        val pagesController = dependencyFactory.pagesController(templateRenderer, listPropertiesService)
+        val javalinServer = dependencyFactory.javalinServer(
+            authController,
+            javalinExceptionMapper,
+            authInterceptor,
+            pagesController
+        )
+        return object : App {
+            override fun start() {
+                javalinServer.start()
+            }
+
+            override fun stop() {
+                javalinServer.stop()
+                configSetClient.stop()
+            }
+        }
+    }
+}
+
+interface App {
+    fun start()
+    fun stop()
 }

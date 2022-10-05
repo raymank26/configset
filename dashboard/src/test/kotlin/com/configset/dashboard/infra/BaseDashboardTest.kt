@@ -1,8 +1,9 @@
 package com.configset.dashboard.infra
 
+import com.configset.dashboard.App
 import com.configset.dashboard.Config
-import com.configset.dashboard.JavalinServer
-import com.configset.dashboard.mainModule
+import com.configset.dashboard.DependencyFactory
+import com.configset.dashboard.Main
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.test.fixtures.SERVER_PORT
@@ -19,13 +20,8 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
-import org.koin.core.KoinApplication
-import org.koin.dsl.koinApplication
-import org.koin.dsl.module
 
 abstract class BaseDashboardTest {
-
-    private lateinit var koinApp: KoinApplication
 
     lateinit var mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase
     lateinit var mockConfigServiceExt: ServerMockExtension
@@ -35,48 +31,47 @@ abstract class BaseDashboardTest {
     @JvmField
     val grpcCleanup = GrpcCleanupRule()
 
+    lateinit var app: App
+
     @Before
     fun before() {
         mockConfigService = spyk()
         mockConfigServiceExt = ServerMockExtension(mockConfigService)
-        grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor()
-            .addService(ServerInterceptors.intercept(mockConfigService, AuthCheckInterceptor()))
-            .build()
-            .start())
+        grpcCleanup.register(
+            InProcessServerBuilder.forName("mytest")
+                .directExecutor()
+                .addService(ServerInterceptors.intercept(mockConfigService, AuthCheckInterceptor()))
+                .build()
+                .start()
+        )
         val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
 
-        koinApp = koinApplication {
-            modules(mainModule, module {
-                single {
-                    ConfigSetClient(channel)
-                }
-            })
-        }.properties(mapOf(
-            Pair("config", Config(
-                mapOf(
-                    Pair("config_server.hostname", "localhost"),
-                    Pair("config_server.port", SERVER_PORT.toString()),
-                    Pair("dashboard.port", 9299.toString()),
-                    Pair("serve.static", "false"),
-                    Pair("authenticator_type", ""),
-                    Pair("auth.auth_uri", "http://localhost:23982/auth"),
-                    Pair("auth.redirect_uri", "http://localhost:9299/auth/redirect"),
-                    Pair("auth.request_token_uri", "http://localhost:23982/token"),
-                    Pair("auth.client_id", "sample_content_id"),
-                    Pair("auth.secret_key", "sample_secret_key"),
-                )
-            ))
-        ))
-        val server = koinApp.koin.get<JavalinServer>()
-        server.start()
-
+        val config = Config(
+            mapOf(
+                Pair("config_server.hostname", "localhost"),
+                Pair("config_server.port", SERVER_PORT.toString()),
+                Pair("dashboard.port", 9299.toString()),
+                Pair("serve.static", "false"),
+                Pair("authenticator_type", ""),
+                Pair("auth.auth_uri", "http://localhost:23982/auth"),
+                Pair("auth.redirect_uri", "http://localhost:9299/auth/redirect"),
+                Pair("auth.request_token_uri", "http://localhost:23982/token"),
+                Pair("auth.client_id", "sample_content_id"),
+                Pair("auth.secret_key", "sample_secret_key"),
+            )
+        )
+        app = Main.createApp(object : DependencyFactory(config) {
+            override fun configSetClient(): ConfigSetClient {
+                return ConfigSetClient(channel)
+            }
+        })
+        app.start()
         dashboardClient = DashboardClient()
     }
 
     @After
     fun after() {
-        koinApp.close()
+        app.stop()
     }
 }
 

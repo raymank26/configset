@@ -188,35 +188,31 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
             access.selectAllProperties()
                 .filter { !it.deleted }
-                .mapNotNull { property ->
-                    val hostName = hosts[property.hostId]?.name ?: return@mapNotNull null
-                    val appName = apps[property.appId]?.name ?: return@mapNotNull null
-                    if (searchPropertyRequest.applicationName != null && appName != searchPropertyRequest.applicationName) {
-                        return@mapNotNull null
-                    }
-                    if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(
-                            hostName,
-                            searchPropertyRequest.hostNameQuery
-                        )
+                .mapNotNull(fun(property: PropertyItemED): PropertyItem.Updated? {
+                    val hostName = hosts[property.hostId]?.name ?: return null
+                    val appName = apps[property.appId]?.name ?: return null
+                    if (searchPropertyRequest.applicationName != null
+                        && appName != searchPropertyRequest.applicationName
                     ) {
-                        return@mapNotNull null
+                        return null
                     }
-                    if (searchPropertyRequest.propertyNameQuery != null && !containsLowerCase(
-                            property.name,
-                            searchPropertyRequest.propertyNameQuery
-                        )
+                    if (searchPropertyRequest.hostNameQuery != null
+                        && !containsLowerCase(hostName, searchPropertyRequest.hostNameQuery)
                     ) {
-                        return@mapNotNull null
+                        return null
                     }
-                    if (searchPropertyRequest.propertyValueQuery != null && !containsLowerCase(
-                            property.value,
-                            searchPropertyRequest.propertyValueQuery
-                        )
+                    if (searchPropertyRequest.propertyNameQuery != null
+                        && !containsLowerCase(property.name, searchPropertyRequest.propertyNameQuery)
                     ) {
-                        return@mapNotNull null
+                        return null
                     }
-                    PropertyItem.Updated(appName, property.name, hostName, property.version, property.value)
-                }
+                    if (searchPropertyRequest.propertyValueQuery != null
+                        && !containsLowerCase(property.value, searchPropertyRequest.propertyValueQuery)
+                    ) {
+                        return null
+                    }
+                    return PropertyItem.Updated(appName, property.name, hostName, property.version, property.value)
+                })
         }
     }
 

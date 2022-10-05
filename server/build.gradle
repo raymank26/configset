@@ -21,7 +21,7 @@ dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.6'
     implementation 'org.slf4j:slf4j-api:1.7.21'
     implementation group: 'io.grpc', name: 'grpc-all', version: '1.25.0'
-    implementation "org.koin:koin-core:2.1.5"
+    implementation 'io.insert-koin:koin-core-jvm:3.1.2'
     implementation 'com.auth0:java-jwt:3.18.1'
 
     testImplementation 'org.awaitility:awaitility:4.0.2'
@@ -33,7 +33,7 @@ dependencies {
     testImplementation 'org.amshove.kluent:kluent:1.59'
 
     testFixturesImplementation 'junit:junit:4.12'
-    testFixturesImplementation "org.koin:koin-core:2.1.5"
+    testFixturesImplementation "io.insert-koin:koin-core-jvm:3.1.2"
     testFixturesImplementation 'org.amshove.kluent:kluent:1.59'
     testFixturesImplementation project(":sdk")
 }

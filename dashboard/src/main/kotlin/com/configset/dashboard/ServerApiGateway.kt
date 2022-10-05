@@ -166,10 +166,6 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
     private fun withClient(accessToken: String): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
         return configSetClient.getAuthBlockingClient(accessToken)
     }
-
-    fun stop() {
-        configSetClient.stop()
-    }
 }
 
 data class SearchPropertiesRequest(
@@ -190,5 +186,11 @@ data class ShowPropertyItem @JsonCreator constructor(
     val propertyValue: String,
     @JsonProperty("version")
     val version: Long,
+)
+
+data class TablePropertyItem(
+    val applicationName: String,
+    val propertyName: String,
+    val hostProperties: List<ShowPropertyItem>,
 )
 
