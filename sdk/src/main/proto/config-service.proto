@@ -156,6 +156,7 @@ message ShowPropertyItem {
     string propertyName = 3;
     string propertyValue = 4;
     int64 version = 5;
+  string id = 6;
 }
 
 message ListHostsResponse {

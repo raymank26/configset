@@ -1,20 +1,21 @@
 package com.configset.server.db.memory
 
 import com.configset.server.ApplicationED
-import com.configset.server.CreateApplicationResult
+import com.configset.server.CreateApplicationResul
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.HostED
 import com.configset.server.PropertyCreateResult
-import com.configset.server.PropertyItem
 import com.configset.server.SearchPropertyRequest
 import com.configset.server.db.ConfigurationDao
+import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
 import com.configset.server.db.common.containsLowerCase
+import java.util.concurrent.ThreadLocalRandom
 
 class InMemoryConfigurationDao : ConfigurationDao {
 
-    private val properties: MutableList<PropertyItem> = mutableListOf()
+    private val properties: MutableList<PropertyItemED> = mutableListOf()
     private val applications: MutableList<ApplicationED> = mutableListOf()
     private val hosts: MutableList<HostED> = mutableListOf()
     private var hostId = 0L
@@ -26,14 +27,14 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult {
+    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul {
         return processMutable {
             if (applications.find { it.name == appName } != null) {
-                CreateApplicationResult.ApplicationAlreadyExists
+                CreateApplicationResul.ApplicationAlreadyExists
             } else {
                 val ct = System.currentTimeMillis()
                 applications.add(ApplicationED(appId++, appName, 0L, ct, ct))
-                CreateApplicationResult.OK
+                CreateApplicationResul.OK
             }
         }
     }
@@ -56,35 +57,48 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
-    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
+    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
         return properties.firstOrNull { it.applicationName == applicationName && it.name == propertyName && it.hostName == hostName }
     }
 
     @Synchronized
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
-        return properties.filterIsInstance(PropertyItem.Updated::class.java).mapNotNull { property ->
-            if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
-                return@mapNotNull null
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+        return properties.filter { !it.deleted }
+            .mapNotNull { property ->
+                if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
+                    return@mapNotNull null
+                }
+                if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(
+                        property.hostName,
+                        searchPropertyRequest.hostNameQuery
+                    )
+                ) {
+                    return@mapNotNull null
+                }
+                if (searchPropertyRequest.propertyNameQuery != null && !containsLowerCase(
+                        property.name,
+                        searchPropertyRequest.propertyNameQuery
+                    )
+                ) {
+                    return@mapNotNull null
+                }
+                if (searchPropertyRequest.propertyValueQuery != null && !containsLowerCase(
+                        property.value,
+                        searchPropertyRequest.propertyValueQuery
+                    )
+                ) {
+                    return@mapNotNull null
+                }
+                property
             }
-            if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(property.hostName, searchPropertyRequest.hostNameQuery)) {
-                return@mapNotNull null
-            }
-            if (searchPropertyRequest.propertyNameQuery != null && !containsLowerCase(property.name, searchPropertyRequest.propertyNameQuery)) {
-                return@mapNotNull null
-            }
-            if (searchPropertyRequest.propertyValueQuery != null && !containsLowerCase(property.value, searchPropertyRequest.propertyValueQuery)) {
-                return@mapNotNull null
-            }
-            property
-        }
     }
 
     @Synchronized
     override fun listProperties(applicationName: String): List<String> {
         return properties
-                .filterIsInstance(PropertyItem.Updated::class.java)
-                .filter { it.applicationName == applicationName }
-                .map { it.name }.distinct()
+            .filter { !it.deleted }
+            .filter { it.applicationName == applicationName }
+            .map { it.name }.distinct()
     }
 
     @Synchronized
@@ -106,14 +120,27 @@ class InMemoryConfigurationDao : ConfigurationDao {
             val foundProperty =
                 properties.find { it.applicationName == appName && it.hostName == hostName && it.name == propertyName }
             if (foundProperty != null) {
-                if (foundProperty is PropertyItem.Updated && foundProperty.version != version) {
+                if (!foundProperty.deleted && foundProperty.version != version) {
                     return@cb PropertyCreateResult.UpdateConflict
                 } else {
                     properties.remove(foundProperty)
                 }
             }
             val newVersion = lastVersion + 1
-            properties.add(PropertyItem.Updated(appName, propertyName, hostName, newVersion, value))
+            val now = System.currentTimeMillis();
+            properties.add(
+                PropertyItemED(
+                    foundProperty?.id ?: ThreadLocalRandom.current().nextLong(),
+                    propertyName,
+                    value,
+                    hostName,
+                    appName,
+                    newVersion,
+                    false,
+                    foundProperty?.createdMs ?: now,
+                    foundProperty?.modifiedMs ?: now
+                )
+            )
 
             val app = applications.find { it.name == appName }!!
             applications.remove(app)
@@ -145,7 +172,13 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
             properties.remove(foundProperty)
             val newVersion = lastVersion + 1
-            properties.add(PropertyItem.Deleted(appName, propertyName, hostName, newVersion))
+            properties.add(
+                foundProperty.copy(
+                    deleted = true,
+                    version = newVersion,
+                    modifiedMs = System.currentTimeMillis()
+                )
+            )
 
             val app = applications.find { it.name == appName }!!
             applications.remove(app)
@@ -166,7 +199,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun getConfigurationSnapshotList(): List<PropertyItem> {
+    override fun getConfigurationSnapshotList(): List<PropertyItemED> {
         return properties
     }
 }

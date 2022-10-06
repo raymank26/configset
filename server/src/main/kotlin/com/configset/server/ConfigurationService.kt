@@ -2,6 +2,7 @@ package com.configset.server
 
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
+import com.configset.server.db.PropertyItemED
 import com.configset.server.db.RequestIdDao
 import com.configset.server.db.common.DbHandle
 
@@ -16,9 +17,9 @@ class ConfigurationService(
         return configurationDao.listApplications()
     }
 
-    fun createApplication(requestId: String, appName: String): CreateApplicationResult {
+    fun createApplication(requestId: String, appName: String): CreateApplicationResul {
         checkRequestId(requestId)
-        return executeMutable(requestId, CreateApplicationResult.OK) {
+        return executeMutable(requestId, CreateApplicationResul.OK) {
             configurationDao.createApplication(it, appName)
         }
     }
@@ -59,7 +60,7 @@ class ConfigurationService(
             lastKnownVersion)
     }
 
-    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
         return configurationDao.searchProperties(searchPropertyRequest)
     }
 
@@ -85,7 +86,7 @@ class ConfigurationService(
         }
     }
 
-    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
+    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
         return configurationDao.readProperty(applicationName, hostName, propertyName)
     }
 
@@ -109,33 +110,11 @@ interface WatchSubscriber {
     fun pushChanges(applicationName: String, changes: PropertiesChanges)
 }
 
-sealed class PropertyItem {
-
-    abstract val applicationName: String
-    abstract val name: String
-    abstract val version: Long
-    abstract val hostName: String
-
-    data class Updated(
-            override val applicationName: String,
-            override val name: String,
-            override val hostName: String,
-            override val version: Long,
-            val value: String
-    ) : PropertyItem()
-
-    data class Deleted(
-            override val applicationName: String,
-            override val name: String,
-            override val hostName: String,
-            override val version: Long
-    ) : PropertyItem()
-}
-
-sealed class CreateApplicationResult {
-    object OK : CreateApplicationResult()
-    object ApplicationAlreadyExists : CreateApplicationResult()
-}
+data class PropertyItem(
+    val applicationName: String,
+    val hostName: String,
+    val propertyItemED: PropertyItemED,
+)
 
 sealed class HostCreateResult {
     object OK : HostCreateResult()
@@ -155,10 +134,31 @@ sealed class DeletePropertyResult {
     object PropertyNotFound : DeletePropertyResult()
 }
 
-data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long, val createdMs: Long, val modifiedMs: Long)
+sealed class CreateApplicationResul {
+    object OK : CreateApplicationResul()
+    object ApplicationAlreadyExists : CreateApplicationResul()
+}
 
-data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)
+data class ApplicationED(
+    val id: Long?,
+    val name: String,
+    val lastVersion: Long,
+    val createdMs: Long,
+    val modifiedMs: Long,
+)
 
-data class SearchPropertyRequest(val applicationName: String?, val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)
+data class HostED(
+    val id: Long?,
+    val name: String,
+    val createdMs: Long,
+    val modifiedMs: Long,
+)
+
+data class SearchPropertyRequest(
+    val applicationName: String?,
+    val propertyNameQuery: String?,
+    val propertyValueQuery: String?,
+    val hostNameQuery: String?,
+)
 
 data class TableMetaED(val version: Long)

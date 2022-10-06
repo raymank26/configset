@@ -5,16 +5,36 @@
         <th></th>
         <th>Application</th>
         <th>Name</th>
+        <th>Host</th>
+        <th>Value</th>
+        <th></th>
     </tr>
     </thead>
     {% for property in properties %}
+    <tbody x-data="{ open{{ property.id }}: false }" class="property-item-row">
     <tr>
         <td>
-            <button class="expand">Expand</button>
+            <button class="expand" @click="open{{ property.id }} = true">Expand</button>
         </td>
         <td>{{ property.applicationName }}</td>
         <td>{{ property.propertyName }}</td>
+        <td>--</td>
+        <td>--</td>
+        <td></td>
     </tr>
+    {% for hostProperty in property.hostProperties %}
+    <tr x-show="open{{ property.id }}">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>{{ hostProperty.hostName }}</td>
+        <td>{{ hostProperty.propertyValue }}</td>
+        <td>
+            <button class="edit">Edit</button>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
     {% endfor %}
 </table>
 {% else %}

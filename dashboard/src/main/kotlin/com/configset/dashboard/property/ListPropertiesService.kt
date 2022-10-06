@@ -4,6 +4,7 @@ import com.configset.dashboard.SearchPropertiesRequest
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.ShowPropertyItem
 import com.configset.dashboard.TablePropertyItem
+import org.apache.commons.lang3.RandomStringUtils
 
 class ListPropertiesService(
         private val apiGateway: ServerApiGateway
@@ -18,7 +19,7 @@ class ListPropertiesService(
     ): List<TablePropertyItem> {
         return apiGateway.searchProperties(searchPropertiesRequest, accessToken)
             .groupBy { it.applicationName to it.propertyName }
-            .map { TablePropertyItem(it.key.first, it.key.second, it.value) }
+            .map { TablePropertyItem(RandomStringUtils.randomAlphabetic(10), it.key.first, it.key.second, it.value) }
     }
 
     fun getProperty(appName: String, hostName: String, propertyName: String, accessToken: String): ShowPropertyItem? {

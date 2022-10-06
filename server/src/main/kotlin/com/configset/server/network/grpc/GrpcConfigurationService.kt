@@ -23,7 +23,7 @@ import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import com.configset.sdk.proto.WatchRequest
 import com.configset.server.ConfigurationService
-import com.configset.server.CreateApplicationResult
+import com.configset.server.CreateApplicationResul
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.PropertiesChanges
@@ -35,10 +35,11 @@ import com.configset.server.auth.ApplicationOwner
 import com.configset.server.auth.HostCreator
 import com.configset.server.auth.Role
 import com.configset.server.auth.UserRoleService
+import com.configset.server.db.PropertyItemED
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
-import java.util.*
+import java.util.UUID
 
 
 class GrpcConfigurationService(
@@ -54,15 +55,20 @@ class GrpcConfigurationService(
     ) {
         requireRole(Admin)
         when (configurationService.createApplication(request.requestId, request.applicationName)) {
-            CreateApplicationResult.OK -> {
-                responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
-                    .setType(ApplicationCreatedResponse.Type.OK)
-                    .build())
+            CreateApplicationResul.OK -> {
+                responseObserver.onNext(
+                    ApplicationCreatedResponse.newBuilder()
+                        .setType(ApplicationCreatedResponse.Type.OK)
+                        .build()
+                )
             }
-            CreateApplicationResult.ApplicationAlreadyExists -> {
-                responseObserver.onNext(ApplicationCreatedResponse.newBuilder()
-                    .setType(ApplicationCreatedResponse.Type.ALREADY_EXISTS)
-                    .build())
+
+            CreateApplicationResul.ApplicationAlreadyExists -> {
+                responseObserver.onNext(
+                    ApplicationCreatedResponse.newBuilder()
+                        .setType(ApplicationCreatedResponse.Type.ALREADY_EXISTS)
+                        .build()
+                )
             }
         }
         responseObserver.onCompleted()
@@ -95,21 +101,67 @@ class GrpcConfigurationService(
     override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
         requireRole(ApplicationOwner(request.applicationName))
         val version = if (request.version == 0L) null else request.version
-        when (configurationService.updateProperty(request.requestId, request.applicationName, request.hostName, request.propertyName, request.propertyValue, version)) {
-            PropertyCreateResult.OK -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.OK).build())
-            PropertyCreateResult.HostNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.HOST_NOT_FOUND).build())
-            PropertyCreateResult.ApplicationNotFound -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND).build())
-            PropertyCreateResult.UpdateConflict -> responseObserver.onNext(UpdatePropertyResponse.newBuilder().setType(UpdatePropertyResponse.Type.UPDATE_CONFLICT).build())
+        when (configurationService.updateProperty(
+            request.requestId,
+            request.applicationName,
+            request.hostName,
+            request.propertyName,
+            request.propertyValue,
+            version
+        )) {
+            PropertyCreateResult.OK -> responseObserver.onNext(
+                UpdatePropertyResponse.newBuilder()
+                    .setType(UpdatePropertyResponse.Type.OK)
+                    .build()
+            )
+
+            PropertyCreateResult.HostNotFound -> responseObserver.onNext(
+                UpdatePropertyResponse.newBuilder()
+                    .setType(UpdatePropertyResponse.Type.HOST_NOT_FOUND)
+                    .build()
+            )
+
+            PropertyCreateResult.ApplicationNotFound -> responseObserver.onNext(
+                UpdatePropertyResponse.newBuilder()
+                    .setType(UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND)
+                    .build()
+            )
+
+            PropertyCreateResult.UpdateConflict -> responseObserver.onNext(
+                UpdatePropertyResponse.newBuilder()
+                    .setType(UpdatePropertyResponse.Type.UPDATE_CONFLICT)
+                    .build()
+            )
         }
         responseObserver.onCompleted()
     }
 
     override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
         requireRole(ApplicationOwner(request.applicationName))
-        when (configurationService.deleteProperty(request.requestId, request.applicationName, request.hostName, request.propertyName, request.version)) {
-            DeletePropertyResult.OK -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.OK).build())
-            DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND).build())
-            DeletePropertyResult.DeleteConflict -> responseObserver.onNext(DeletePropertyResponse.newBuilder().setType(DeletePropertyResponse.Type.DELETE_CONFLICT).build())
+        when (configurationService.deleteProperty(
+            request.requestId,
+            request.applicationName,
+            request.hostName,
+            request.propertyName,
+            request.version
+        )) {
+            DeletePropertyResult.OK -> responseObserver.onNext(
+                DeletePropertyResponse.newBuilder()
+                    .setType(DeletePropertyResponse.Type.OK)
+                    .build()
+            )
+
+            DeletePropertyResult.PropertyNotFound -> responseObserver.onNext(
+                DeletePropertyResponse.newBuilder()
+                    .setType(DeletePropertyResponse.Type.PROPERTY_NOT_FOUND)
+                    .build()
+            )
+
+            DeletePropertyResult.DeleteConflict -> responseObserver.onNext(
+                DeletePropertyResponse.newBuilder()
+                    .setType(DeletePropertyResponse.Type.DELETE_CONFLICT)
+                    .build()
+            )
         }
         responseObserver.onCompleted()
     }
@@ -120,17 +172,21 @@ class GrpcConfigurationService(
         val propertyValueQuery = request.propertyValue?.takeIf { it.isNotEmpty() }
         val hostNameQuery = request.hostName?.takeIf { it.isNotEmpty() }
 
-        val foundProperties: List<com.configset.server.PropertyItem.Updated> = configurationService.searchProperties(
-                SearchPropertyRequest(applicationName, propertyNameQuery, propertyValueQuery, hostNameQuery))
+        val foundProperties = configurationService.searchProperties(
+            SearchPropertyRequest(
+                applicationName,
+                propertyNameQuery, propertyValueQuery, hostNameQuery
+            )
+        )
 
         val searchItems = foundProperties.map { prop ->
             com.configset.sdk.proto.ShowPropertyItem.newBuilder()
-                    .setHostName(prop.hostName)
-                    .setApplicationName(prop.applicationName)
-                    .setPropertyName(prop.name)
-                    .setPropertyValue(prop.value)
-                    .setVersion(prop.version)
-                    .build()
+                .setHostName(prop.hostName)
+                .setApplicationName(prop.applicationName)
+                .setPropertyName(prop.name)
+                .setPropertyValue(prop.value)
+                .setVersion(prop.version)
+                .build()
         }
         val response = SearchPropertiesResponse.newBuilder().addAllItems(searchItems).build()
         responseObserver.onNext(response)
@@ -154,28 +210,30 @@ class GrpcConfigurationService(
                 .setLastVersion(changes.lastVersion).build()
     }
 
-    private fun convertPropertyItem(change: com.configset.server.PropertyItem): PropertyItem {
+    private fun convertPropertyItem(propertyItemId: PropertyItemED): PropertyItem {
         val itemBuilder = PropertyItem.newBuilder()
-                .setApplicationName(change.applicationName)
-                .setPropertyName(change.name)
-                .setVersion(change.version)
-        return when (change) {
-            is com.configset.server.PropertyItem.Updated -> {
+            .setApplicationName(propertyItemId.applicationName)
+            .setPropertyName(propertyItemId.name)
+            .setVersion(propertyItemId.version)
+        return when {
+            propertyItemId.deleted -> {
                 itemBuilder
-                        .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                        .setPropertyValue(change.value)
-                        .build()
+                    .setUpdateType(PropertyItem.UpdateType.DELETE)
+                    .build()
             }
-            is com.configset.server.PropertyItem.Deleted -> {
+
+            else -> {
                 itemBuilder
-                        .setUpdateType(PropertyItem.UpdateType.DELETE)
-                        .build()
+                    .setUpdateType(PropertyItem.UpdateType.UPDATE)
+                    .setPropertyValue(propertyItemId.value)
+                    .build()
             }
         }
     }
 
     override fun readProperty(request: ReadPropertyRequest, responseObserver: StreamObserver<ReadPropertyResponse>) {
-        val propertyItem: com.configset.server.PropertyItem? = configurationService.readProperty(request.applicationName, request.hostName, request.propertyName)
+        val propertyItem =
+            configurationService.readProperty(request.applicationName, request.hostName, request.propertyName)
         if (propertyItem == null) {
             responseObserver.onNext(ReadPropertyResponse.newBuilder().setHasItem(false).build())
         } else {

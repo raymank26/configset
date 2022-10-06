@@ -3,6 +3,7 @@ package com.configset.server
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.server.db.ConfigurationApplication
 import com.configset.server.db.ConfigurationProperty
+import com.configset.server.db.PropertyItemED
 
 private val LOG = createLoggerStatic<ConfigurationResolver>()
 
@@ -15,7 +16,7 @@ class ConfigurationResolver {
 
         val properties: ConfigurationApplication = snapshot[targetApplication] ?: return null
 
-        val collectedProperties = mutableListOf<PropertyItem>()
+        val collectedProperties = mutableListOf<PropertyItemED>()
 
         if (LOG.isDebugEnabled) {
             LOG.debug("Snapshot = $snapshot, app = $targetApplication, hostName = $hostName, defaultApplication = $defaultApplication," +
@@ -24,7 +25,8 @@ class ConfigurationResolver {
 
         var newLastVersion = lastVersion
         for (config: ConfigurationProperty in properties.config.values) {
-            val propertyItem: PropertyItem? = resolveProperty(config.hosts, hostName, defaultApplication, targetApplication)
+            val propertyItem: PropertyItemED? =
+                resolveProperty(config.hosts, hostName, defaultApplication, targetApplication)
             if (propertyItem != null && (lastVersion < propertyItem.version)) {
                 collectedProperties.add(propertyItem)
                 newLastVersion = propertyItem.version.coerceAtLeast(newLastVersion)
@@ -53,4 +55,4 @@ fun <T> resolveProperty(configMap: Map<String, T>, hostName: String, defaultAppl
     return configMap["host-$defaultApplication"] ?: configMap["host-$targetApplication"]
 }
 
-data class PropertiesChanges(val lastVersion: Long, val propertyItems: List<PropertyItem>)
+data class PropertiesChanges(val lastVersion: Long, val propertyItems: List<PropertyItemED>)

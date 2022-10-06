@@ -3,6 +3,8 @@ package com.configset.dashboard
 import com.codeborne.selenide.Condition.href
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
+import com.codeborne.selenide.Selenide.webdriver
+import com.codeborne.selenide.WebDriverConditions
 import com.configset.dashboard.pages.LeftNavPage
 import com.configset.dashboard.pages.SearchPage
 import com.configset.sdk.proto.SearchPropertiesRequest
@@ -97,5 +99,73 @@ class SearchPageTest : FunctionalTest() {
 
         // then
         SearchPage.searchResultsEmpty.shouldBe(visible)
+    }
+
+    @Test
+    fun `should expand table item to see Edit button`() {
+        // given
+        val request = SearchPropertiesRequest.newBuilder()
+            .setApplicationName("Sample app")
+            .setPropertyName("")
+            .setHostName("")
+            .setPropertyValue("")
+            .build()
+        val properties = listOf(
+            ShowPropertyItem.newBuilder()
+                .setApplicationName("Sample app")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sample host")
+                .setVersion(2)
+                .build(),
+        )
+        mockConfigServiceExt.whenSearchProperties(request)
+            .answer(properties)
+
+        // when
+        open("/")
+        SearchPage.applicationNameInput.value = "Sample app"
+        SearchPage.searchButton.click()
+        val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
+        rowElement.getExpandButton().click()
+
+        // then
+        val foundItem = rowElement.getPropertyItem("sample host", "bar")
+        foundItem.getEditButton().exists()
+    }
+
+    @Test
+    fun `should redirect to edit page`() {
+        // given
+        val request = SearchPropertiesRequest.newBuilder()
+            .setApplicationName("Sample app")
+            .setPropertyName("")
+            .setHostName("")
+            .setPropertyValue("")
+            .build()
+        val properties = listOf(
+            ShowPropertyItem.newBuilder()
+                .setApplicationName("Sample app")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sample host")
+                .setVersion(2)
+                .build(),
+        )
+        mockConfigServiceExt.whenSearchProperties(request)
+            .answer(properties)
+
+        // when
+        open("/")
+        SearchPage.applicationNameInput.value = "Sample app"
+        SearchPage.searchButton.click()
+        val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
+        rowElement.getExpandButton().click()
+        rowElement.getPropertyItem("sample host", "bar").getEditButton().click()
+
+        // then
+        webdriver().shouldHave(WebDriverConditions.url("$BASE_URL/edit?id="))
+        val foundItem = rowElement.getPropertyItem("sample host", "bar")
+        foundItem.getEditButton().exists()
     }
 }

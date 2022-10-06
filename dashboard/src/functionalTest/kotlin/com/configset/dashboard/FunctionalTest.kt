@@ -9,13 +9,15 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.junit.Before
 import org.openqa.selenium.Cookie
 
+const val BASE_URL = "http://localhost:9299"
+
 abstract class FunctionalTest : BaseDashboardTest() {
 
     @Before
     fun beforeUi() {
         Selenide.clearBrowserCookies()
         Configuration.proxyEnabled = true
-        Configuration.baseUrl = "http://localhost:9299"
+        Configuration.baseUrl = BASE_URL
         Configuration.proxyHost = "127.0.0.1"
         Configuration.proxyPort = 39823
     }

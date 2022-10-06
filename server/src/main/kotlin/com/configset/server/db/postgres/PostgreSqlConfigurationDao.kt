@@ -1,21 +1,18 @@
 package com.configset.server.db.postgres
 
-import com.configset.sdk.extension.createLogger
 import com.configset.server.ApplicationED
-import com.configset.server.CreateApplicationResult
+import com.configset.server.CreateApplicationResul
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.HostED
 import com.configset.server.PropertyCreateResult
-import com.configset.server.PropertyItem
 import com.configset.server.SearchPropertyRequest
 import com.configset.server.db.ConfigurationDao
+import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
-import com.configset.server.db.common.containsLowerCase
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
 import org.jdbi.v3.core.statement.StatementContext
-import org.jdbi.v3.core.transaction.TransactionIsolationLevel
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
@@ -23,8 +20,6 @@ import java.sql.ResultSet
 
 
 class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
-
-    private val logger = createLogger()
 
     init {
         dbi.registerRowMapper(ApplicationEDRowMapper())
@@ -42,14 +37,14 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult {
+    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul {
         return processMutable(handle) { access ->
             val createdApp = access.getApplicationByName(appName)
             if (createdApp != null) {
-                CreateApplicationResult.ApplicationAlreadyExists
+                CreateApplicationResul.ApplicationAlreadyExists
             } else {
                 access.insertApplication(appName, System.currentTimeMillis())
-                CreateApplicationResult.OK
+                CreateApplicationResul.OK
             }
         }
     }
@@ -72,16 +67,21 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
-        return dbi.withExtension<PropertyItem, JdbiAccess, Exception>(JdbiAccess::class.java) { access ->
-            val app = access.listApplications().find { it.name == applicationName } ?: return@withExtension null
-            val host = access.listHosts().find { it.name == hostName } ?: return@withExtension null
-            val property = access.readProperty(app.id!!, propertyName, host.id!!)
-            when {
-                property == null -> null
-                property.deleted -> PropertyItem.Deleted(applicationName, propertyName, hostName, property.version)
-                else -> PropertyItem.Updated(applicationName, propertyName, hostName, property.version, property.value)
-            }
+    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
+        return dbi.withHandle<PropertyItemED, Exception> {
+            it.createQuery(
+                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                | join ConfigurationApplication ca on ca.id = cp.appId
+                | join ConfigurationHost ch on ch.id = cp.hostId
+                | where ch.name = :hostName and ca.name = :appName and cp.name = :propertyName
+            """.trimMargin()
+            )
+                .bind("hostName", hostName)
+                .bind("appName", applicationName)
+                .bind("propertyName", propertyName)
+                .mapTo(PropertyItemED::class.java)
+                .findFirst()
+                .orElse(null)
         }
     }
 
@@ -98,11 +98,11 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 ?: return@cb PropertyCreateResult.ApplicationNotFound
             val host = access.getHostByName(hostName)
                 ?: return@cb PropertyCreateResult.HostNotFound
-            val property = access.getProperty(propertyName, host.id!!, app.id!!)
+            val property = readProperty(appName, hostName, propertyName)
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
-                access.insertProperty(propertyName, value, app.lastVersion + 1, app.id, host.id, ct)
+                access.insertProperty(propertyName, value, app.lastVersion + 1, app.id!!, host.id!!, ct)
                 access.incrementAppVersion(app.id)
                 return@cb PropertyCreateResult.OK
             } else if (property != null) {
@@ -115,9 +115,9 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         app.lastVersion + 1,
                         false,
                         ct,
-                        app.id,
+                        app.id!!,
                         propertyName,
-                        host.id
+                        host.id!!
                     )
                     access.incrementAppVersion(app.id)
                     return@cb PropertyCreateResult.OK
@@ -140,91 +140,78 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 ?: return@cb DeletePropertyResult.PropertyNotFound
             val host = access.getHostByName(hostName)
                 ?: return@cb DeletePropertyResult.PropertyNotFound
-            val property = access.getProperty(propertyName, host.id!!, app.id!!)
+            val property = readProperty(app.name, host.name, propertyName)
                 ?: return@cb DeletePropertyResult.PropertyNotFound
             if (property.version != version) {
                 return@cb DeletePropertyResult.DeleteConflict
             }
             access.markPropertyAsDeleted(property.id!!, app.lastVersion + 1)
-            access.incrementAppVersion(app.id)
+            access.incrementAppVersion(app.id!!)
             DeletePropertyResult.OK
         }
     }
 
-    override fun getConfigurationSnapshotList(): List<PropertyItem> {
-        return dbi.inTransaction<List<PropertyItem>, Exception>(TransactionIsolationLevel.SERIALIZABLE) { handle ->
-            val access = handle.attach(JdbiAccess::class.java)
-            val properties = access.selectAllProperties()
-            val hosts: Map<Long, HostED> = access.listHosts().associateBy { it.id!! }
-            val apps: Map<Long, ApplicationED> = access.listApplications().associateBy { it.id!! }
-            val res = mutableListOf<PropertyItem>()
-
-            for (property in properties) {
-                val app = apps[property.appId]
-                if (app == null) {
-                    logger.warn("Unable to find application by id = {}", property.appId)
-                    continue
-                }
-                val host = hosts[property.hostId]
-                if (host == null) {
-                    logger.warn("Unable to find host by id = {}", property.hostId)
-                    continue
-                }
-                val propertyItem = if (property.deleted) {
-                    PropertyItem.Deleted(app.name, property.name, host.name, property.version)
-                } else {
-                    PropertyItem.Updated(app.name, property.name, host.name, property.version, property.value)
-                }
-                res.add(propertyItem)
-            }
-            res
+    override fun getConfigurationSnapshotList(): List<PropertyItemED> {
+        return dbi.withHandle<List<PropertyItemED>, Exception> {
+            it.createQuery(
+                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                | join ConfigurationApplication ca on ca.id = cp.appId
+                | join ConfigurationHost ch on ch.id = cp.hostId
+            """.trimMargin()
+            )
+                .mapTo(PropertyItemED::class.java)
+                .list()
         }
     }
 
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
-        return dbi.withExtension<List<PropertyItem.Updated>, JdbiAccess, Exception>(JdbiAccess::class.java) { access ->
-            val hosts = access.listHosts().associateBy { it.id }
-            val apps = access.listApplications().associateBy { it.id }
+    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+        val conditionList = mutableListOf<String>()
+        if (searchPropertyRequest.propertyNameQuery != null) {
+            conditionList.add("cp.name ilike :propertyName")
+        }
+        if (searchPropertyRequest.propertyValueQuery != null) {
+            conditionList.add("cp.value ilike :propertyValue")
+        }
+        if (searchPropertyRequest.applicationName != null) {
+            conditionList.add("ca.name ilike :appName")
+        }
+        if (searchPropertyRequest.hostNameQuery != null) {
+            conditionList.add("ch.name ilike :hostName")
+        }
+        return dbi.withHandle<List<PropertyItemED>, Exception> {
+            it.createQuery(
+                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                | join ConfigurationApplication ca on ca.id = cp.appId
+                | join ConfigurationHost ch on ch.id = cp.hostId
+                | where ${conditionList.joinToString(" and ")}
+            """.trimMargin()
+            )
+                .bind("propertyName", likeWildcard(searchPropertyRequest.propertyNameQuery))
+                .bind("propertyValue", likeWildcard(searchPropertyRequest.propertyValueQuery))
+                .bind("appName", likeWildcard(searchPropertyRequest.applicationName))
+                .bind("hostName", likeWildcard(searchPropertyRequest.hostNameQuery))
+                .mapTo(PropertyItemED::class.java)
+                .list()
+        }
+    }
 
-            access.selectAllProperties()
-                .filter { !it.deleted }
-                .mapNotNull(fun(property: PropertyItemED): PropertyItem.Updated? {
-                    val hostName = hosts[property.hostId]?.name ?: return null
-                    val appName = apps[property.appId]?.name ?: return null
-                    if (searchPropertyRequest.applicationName != null
-                        && appName != searchPropertyRequest.applicationName
-                    ) {
-                        return null
-                    }
-                    if (searchPropertyRequest.hostNameQuery != null
-                        && !containsLowerCase(hostName, searchPropertyRequest.hostNameQuery)
-                    ) {
-                        return null
-                    }
-                    if (searchPropertyRequest.propertyNameQuery != null
-                        && !containsLowerCase(property.name, searchPropertyRequest.propertyNameQuery)
-                    ) {
-                        return null
-                    }
-                    if (searchPropertyRequest.propertyValueQuery != null
-                        && !containsLowerCase(property.value, searchPropertyRequest.propertyValueQuery)
-                    ) {
-                        return null
-                    }
-                    return PropertyItem.Updated(appName, property.name, hostName, property.version, property.value)
-                })
+    private fun likeWildcard(propertyNameQuery: String?): String? {
+        return propertyNameQuery?.let {
+            return "%$it%"
         }
     }
 
     override fun listProperties(applicationName: String): List<String> {
-        return dbi.withExtension<List<String>, JdbiAccess, Exception>(JdbiAccess::class.java) { access ->
-            val apps = access.listApplications().associateBy { it.id }
-            access.selectAllProperties()
-                .filter { !it.deleted }
-                .mapNotNull {
-                    val appName = apps[it.appId]?.name ?: return@mapNotNull null
-                    if (applicationName == appName) it.name else null
-                }.distinct()
+        return dbi.withHandle<List<String>, Exception> {
+            it.createQuery(
+                """select distinct cp.name from ConfigurationProperty cp
+                | join ConfigurationApplication ca on ca.id = cp.appId
+                | where ca.name = :appName and deleted = false
+            """.trimMargin()
+            )
+                .bind("appName", applicationName)
+                .mapTo(String::class.java)
+                .list()
         }
     }
 
@@ -260,20 +247,13 @@ private interface JdbiAccess {
     @SqlQuery("select * from ConfigurationHost")
     fun listHosts(): List<HostED>
 
-    @SqlQuery("select * from ConfigurationProperty where name = :name AND hostId = :hostId AND appId = :appId")
-    fun getProperty(
-        @Bind("name") name: String,
-        @Bind("hostId") hostId: Long,
-        @Bind("appId") appId: Long
-    ): PropertyItemED?
-
     @SqlUpdate(
         "insert into ConfigurationProperty (name, value, version, appId, hostId, deleted, createdMs, modifiedMs)" +
                 " values (:name, :value, :version, :appId, :hostId, false, :createdMs, :createdMs)"
     )
     fun insertProperty(
         @Bind("name") name: String, @Bind("value") value: String, @Bind("version") version: Long,
-        @Bind("appId") appId: Long, @Bind("hostId") hostId: Long, @Bind("createdMs") modifiedMs: Long
+        @Bind("appId") appId: Long, @Bind("hostId") hostId: Long, @Bind("createdMs") modifiedMs: Long,
     )
 
     @SqlUpdate(
@@ -283,50 +263,57 @@ private interface JdbiAccess {
     fun updateProperty(
         @Bind("id") id: Long, @Bind("value") value: String, @Bind("version") version: Long,
         @Bind("deleted") deleted: Boolean, @Bind("modifiedMs") modifiedMs: Long, @Bind("appId") appId: Long,
-        @Bind("name") name: String, @Bind("hostId") hostId: Long
+        @Bind("name") name: String, @Bind("hostId") hostId: Long,
     )
 
     @SqlUpdate("update ConfigurationProperty SET deleted = true, version = :version where id = :id")
     fun markPropertyAsDeleted(@Bind("id") id: Long, @Bind("version") version: Long)
-
-    @SqlQuery("select * from ConfigurationProperty")
-    fun selectAllProperties(): List<PropertyItemED>
-
-    @SqlQuery("select * from ConfigurationProperty where appId = :appId and name = :name and hostId = :hostId")
-    fun readProperty(
-        @Bind("appId") appId: Long,
-        @Bind("name") name: String,
-        @Bind("hostId") hostId: Long
-    ): PropertyItemED?
 }
-
-private data class PropertyItemED(
-    val id: Long?, val name: String, val value: String, val hostId: Long,
-    val appId: Long, val version: Long, val deleted: Boolean, val createdMs: Long, val modifiedMs: Long
-)
 
 
 private class ApplicationEDRowMapper : RowMapper<ApplicationED> {
     override fun map(rs: ResultSet, ctx: StatementContext): ApplicationED {
         return ApplicationED(
-            rs.getLong("id"), rs.getString("name"), rs.getLong("version"),
-            rs.getLong("createdMs"), rs.getLong("modifiedMs")
+            id = rs.getLong("id"),
+            name = rs.getString("name"),
+            lastVersion = rs.getLong("version"),
+            createdMs = rs.getLong("createdMs"),
+            modifiedMs = rs.getLong("modifiedMs")
         )
     }
 }
 
 private class HostEDRowMapper : RowMapper<HostED> {
     override fun map(rs: ResultSet, ctx: StatementContext?): HostED {
-        return HostED(rs.getLong("id"), rs.getString("name"), rs.getLong("createdMs"), rs.getLong("modifiedMs"))
+        return HostED(
+            id = rs.getLong("id"),
+            name = rs.getString("name"),
+            createdMs = rs.getLong("createdMs"),
+            modifiedMs = rs.getLong("modifiedMs")
+        )
     }
 }
 
 private class PropertyItemEDMapper : RowMapper<PropertyItemED> {
+
+    private lateinit var resultSetFetcherBuilder: ResultSetPrefixFetcherBuilder
+
     override fun map(rs: ResultSet, ctx: StatementContext): PropertyItemED {
+        if (!::resultSetFetcherBuilder.isInitialized) {
+            resultSetFetcherBuilder = ResultSetPrefixFetcherBuilder(rs)
+        }
+        val rsf = resultSetFetcherBuilder.getFetcher(rs)
         return PropertyItemED(
-            rs.getLong("id"), rs.getString("name"), rs.getString("value"), rs.getLong("hostId"),
-            rs.getLong("appId"), rs.getLong("version"), rs.getBoolean("deleted"), rs.getLong("createdMs"),
-            rs.getLong("modifiedMs")
+            id = rsf.getLong("cp.id"),
+            name = rsf.getString("cp.name"),
+            value = rsf.getString("cp.value"),
+            hostName = rsf.getString("ch.name"),
+            applicationName = rsf.getString("ca.name"),
+            version = rsf.getLong("cp.version"),
+            deleted = rsf.getBoolean("cp.deleted"),
+            createdMs = rsf.getLong("cp.createdms"),
+            modifiedMs = rsf.getLong("cp.modifiedms")
         )
     }
 }
+

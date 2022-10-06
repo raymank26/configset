@@ -189,6 +189,7 @@ data class ShowPropertyItem @JsonCreator constructor(
 )
 
 data class TablePropertyItem(
+    val id: String,
     val applicationName: String,
     val propertyName: String,
     val hostProperties: List<ShowPropertyItem>,
