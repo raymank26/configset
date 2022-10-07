@@ -20,19 +20,7 @@ class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
         }
     }
 
-    fun getFetcher(rs: ResultSet): ResultSetFetcher {
-        return ResultSetFetcher(this, rs)
-    }
-
     companion object {
-
-        private val registry = ConcurrentHashMap<Class<*>, ResultSetPrefixFetcherBuilder>()
-
-        fun getFetcher(cls: Class<*>, rs: ResultSet): ResultSetFetcher {
-            return registry.computeIfAbsent(cls) {
-                ResultSetPrefixFetcherBuilder(rs)
-            }.getFetcher(rs)
-        }
 
         // '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.*
         fun buildSelectExp(aliases: List<String>): String {
@@ -41,6 +29,37 @@ class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
                 parts.add("'' as table_${alias}, ${alias}.*")
             }
             return parts.joinToString(", ")
+        }
+    }
+}
+
+class ResultSetPrefixFetcher(
+    resultSetPrefixFetcherBuilder: ResultSetPrefixFetcherBuilder,
+    private val rs: ResultSet,
+) {
+
+    private val prefixMapping = resultSetPrefixFetcherBuilder.prefixMapping
+
+    fun getLong(name: String): Long {
+        return rs.getLong(prefixMapping[name]!!)
+    }
+
+    fun getBoolean(name: String): Boolean {
+        return rs.getBoolean(prefixMapping[name]!!)
+    }
+
+    fun getString(name: String): String {
+        return rs.getString(prefixMapping[name]!!)
+    }
+
+    companion object {
+
+        private val registry = ConcurrentHashMap<Class<*>, ResultSetPrefixFetcherBuilder>()
+
+        fun getFetcher(cls: Class<*>, rs: ResultSet): ResultSetPrefixFetcher {
+            return ResultSetPrefixFetcher(registry.computeIfAbsent(cls) {
+                ResultSetPrefixFetcherBuilder(rs)
+            }, rs)
         }
     }
 }

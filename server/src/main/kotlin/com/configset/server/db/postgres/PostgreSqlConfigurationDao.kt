@@ -302,7 +302,7 @@ private class PropertyItemEDMapper : RowMapper<PropertyItemED> {
     }
 
     override fun map(rs: ResultSet, ctx: StatementContext): PropertyItemED {
-        val rsf = ResultSetPrefixFetcherBuilder.getFetcher(this::class.java, rs)
+        val rsf = ResultSetPrefixFetcher.getFetcher(this::class.java, rs)
         return PropertyItemED(
             id = rsf.getLong("cp.id"),
             name = rsf.getString("cp.name"),
