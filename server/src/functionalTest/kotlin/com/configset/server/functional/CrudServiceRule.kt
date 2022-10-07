@@ -1,4 +1,4 @@
-package com.configset.test.fixtures
+package com.configset.server.functional
 
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.extension.createLogger
@@ -22,6 +22,11 @@ import com.configset.server.PropertiesWatchDispatcher
 import com.configset.server.createAppModules
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.memory.InMemoryConfigurationDao
+import com.configset.server.fixtures.ACCESS_TOKEN
+import com.configset.server.fixtures.SERVER_PORT
+import com.configset.server.fixtures.TEST_APP_NAME
+import com.configset.server.fixtures.TEST_DEFAULT_APP_NAME
+import com.configset.server.fixtures.TEST_HOST
 import com.configset.server.network.grpc.GrpcConfigurationServer
 import io.grpc.stub.StreamObserver
 import org.amshove.kluent.shouldBeEqualTo
@@ -36,12 +41,6 @@ import org.koin.dsl.koinApplication
 import java.util.UUID
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
-
-const val TEST_APP_NAME = "test-app"
-const val TEST_DEFAULT_APP_NAME = "my-app"
-const val TEST_HOST = "srvd1"
-const val SERVER_PORT = 8080
-const val ACCESS_TOKEN = "access-token"
 
 class CrudServiceRule : BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
 

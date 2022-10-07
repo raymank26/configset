@@ -1,4 +1,4 @@
-package com.configset.server.common
+package com.configset.server.fixtures
 
 import com.configset.server.db.postgres.DbMigrator
 import org.jdbi.v3.core.Jdbi

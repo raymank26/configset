@@ -1,12 +1,15 @@
-package com.configset.server.db
+package com.configset.server.functional.db
 
 import com.configset.server.ApplicationED
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.SearchPropertyRequest
+import com.configset.server.db.ConfigurationDao
+import com.configset.server.db.DbHandleFactory
+import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
-import com.configset.test.fixtures.TEST_APP_NAME
-import com.configset.test.fixtures.TEST_HOST
+import com.configset.server.fixtures.TEST_APP_NAME
+import com.configset.server.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldMatchAtLeastOneOf

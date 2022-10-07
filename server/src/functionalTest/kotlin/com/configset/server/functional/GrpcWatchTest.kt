@@ -1,9 +1,8 @@
-package com.configset.server
+package com.configset.server.functional
 
 import com.configset.sdk.proto.PropertyItem
-import com.configset.test.fixtures.CrudServiceRule
-import com.configset.test.fixtures.TEST_APP_NAME
-import com.configset.test.fixtures.TEST_DEFAULT_APP_NAME
+import com.configset.server.fixtures.TEST_APP_NAME
+import com.configset.server.fixtures.TEST_DEFAULT_APP_NAME
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

@@ -1,4 +1,4 @@
-package com.configset.server
+package com.configset.server.functional
 
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
@@ -10,12 +10,11 @@ import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
-import com.configset.test.fixtures.CrudServiceRule
-import com.configset.test.fixtures.TEST_APP_NAME
-import com.configset.test.fixtures.TEST_HOST
+import com.configset.server.fixtures.TEST_APP_NAME
+import com.configset.server.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -61,7 +60,7 @@ class GrpcCrudTest {
                 .setRequestId(serviceRule.createRequestId())
                 .setApplicationName(appName).build()
         )
-        Assert.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
+        Assertions.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
 
         val result: List<String> =
             serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationsList

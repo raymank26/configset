@@ -1,8 +1,10 @@
-package com.configset.server.db.memory
+package com.configset.server.functional.db.memory
 
-import com.configset.server.db.AbstractConfigurationDaoTest
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
+import com.configset.server.db.memory.InMemoryConfigurationDao
+import com.configset.server.db.memory.InMemoryDbHandleFactory
+import com.configset.server.functional.db.AbstractConfigurationDaoTest
 
 class InMemoryConfigurationDaoTest : AbstractConfigurationDaoTest() {
     override fun getDao(): ConfigurationDao {

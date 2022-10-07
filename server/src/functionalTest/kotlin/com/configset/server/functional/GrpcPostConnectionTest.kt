@@ -1,13 +1,18 @@
-package com.configset.server
+package com.configset.server.functional
 
-import com.configset.test.fixtures.CrudServiceRule
-import com.configset.test.fixtures.TEST_APP_NAME
-import com.configset.test.fixtures.TEST_HOST
+import com.configset.server.fixtures.TEST_APP_NAME
+import com.configset.server.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class GrpcPostConnectionTest {
+
+    companion object {
+        @JvmStatic
+        @RegisterExtension
+        val serviceRule = CrudServiceRule()
+    }
 
     @Test
     fun testSubscribeAfterCreation() {
@@ -21,11 +26,5 @@ class GrpcPostConnectionTest {
 
         val response = serviceRule.watchForChanges(1, serviceRule.updateDelayMs * 10)
         response.first().itemsCount shouldBeEqualTo 1
-    }
-
-    companion object {
-        @JvmStatic
-        @RegisterExtension
-        val serviceRule = CrudServiceRule()
     }
 }
