@@ -15,8 +15,7 @@ class PropertiesWatchDispatcher(
 ) {
 
     private val subscriptions: MutableMap<SubscriberId, ObserverState> = mutableMapOf()
-
-    private var configurationSnapshot: Map<String, ConfigurationApplication> = mapOf()
+    private var configurationSnapshot: MutableMap<String, ConfigurationApplication> = mutableMapOf()
 
     fun start() {
         scheduler.scheduleWithFixedDelay(updateDelayMs, updateDelayMs) {
@@ -26,41 +25,37 @@ class PropertiesWatchDispatcher(
     }
 
     @Synchronized
-    fun subscribeApplication(
+    fun subscribeToApplication(
         subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
         lastKnownVersion: Long,
+        subscriber: WatchSubscriber,
     ): PropertiesChanges? {
 
-        val changes = configurationResolver.getChanges(configurationSnapshot, applicationName, hostName,
-            defaultApplication, lastKnownVersion)
+        val changes = configurationResolver.getChanges(
+            configurationSnapshot, applicationName, hostName,
+            defaultApplication, lastKnownVersion
+        )
 
         subscriptions.compute(subscriberId) { _, value ->
             val newAppState = ApplicationState(applicationName, lastKnownVersion)
             if (value == null) {
-                ObserverState(hostName = hostName,
+                ObserverState(
+                    hostName = hostName,
                     defaultApplicationName = defaultApplication,
                     applications = setOf(newAppState),
-                    watchSubscriber = null)
+                    watchSubscriber = subscriber
+                )
             } else {
                 require(hostName == value.hostName)
                 require(defaultApplication == value.defaultApplicationName)
                 val updatedApps = value.applications.filter { it.appName != applicationName }.plus(newAppState).toSet()
-                ObserverState(hostName = hostName, defaultApplicationName = defaultApplication, applications = updatedApps,
-                        watchSubscriber = null)
+                ObserverState(
+                    hostName = hostName, defaultApplicationName = defaultApplication, applications = updatedApps,
+                    watchSubscriber = subscriber
+                )
             }
         }
         return changes
-    }
-
-
-    @Synchronized
-    fun watchChanges(subscriber: WatchSubscriber) {
-        subscriptions.compute(subscriber.getId()) { _, value ->
-            require(value != null)
-            value.watchSubscriber = subscriber
-            value
-        }
-        LOG.info("Subscriber with id = ${subscriber.getId()} is connected to watch")
     }
 
     @Synchronized
@@ -88,11 +83,12 @@ class PropertiesWatchDispatcher(
                     }
                 ConfigurationApplication(entry.key, nameToByHost)
             }
+            .toMutableMap()
     }
 
     private fun pushToClients() {
         for (observerState: ObserverState in subscriptions.values) {
-            val watchSubscriber = observerState.watchSubscriber ?: continue
+            val watchSubscriber = observerState.watchSubscriber
 
             for (appState: ApplicationState in observerState.applications) {
                 val changes = configurationResolver.getChanges(configurationSnapshot, appState.appName,
@@ -129,15 +125,21 @@ class PropertiesWatchDispatcher(
         appSubscription.lastVersion = version
         LOG.debug("Version updated for subscriber = $subscriberId, app = $applicationName, version = $version")
     }
+
+    @Synchronized
+    fun clear() {
+        subscriptions.clear()
+        configurationSnapshot.clear()
+    }
 }
 
 private typealias SubscriberId = String
 
 private data class ObserverState(
-        val hostName: String,
-        val defaultApplicationName: String,
-        val applications: Set<ApplicationState>,
-        var watchSubscriber: WatchSubscriber?
+    val hostName: String,
+    val defaultApplicationName: String,
+    val applications: Set<ApplicationState>,
+    var watchSubscriber: WatchSubscriber,
 )
 
 private data class ApplicationState(val appName: String, var lastVersion: Long)

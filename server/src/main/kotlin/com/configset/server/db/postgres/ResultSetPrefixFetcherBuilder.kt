@@ -1,6 +1,8 @@
 package com.configset.server.db.postgres
 
 import java.sql.ResultSet
+import java.util.concurrent.ConcurrentHashMap
+
 
 class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
 
@@ -22,4 +24,23 @@ class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
         return ResultSetFetcher(this, rs)
     }
 
+    companion object {
+
+        private val registry = ConcurrentHashMap<Class<*>, ResultSetPrefixFetcherBuilder>()
+
+        fun getFetcher(cls: Class<*>, rs: ResultSet): ResultSetFetcher {
+            return registry.computeIfAbsent(cls) {
+                ResultSetPrefixFetcherBuilder(rs)
+            }.getFetcher(rs)
+        }
+
+        // '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.*
+        fun buildSelectExp(aliases: List<String>): String {
+            val parts = mutableListOf<String>()
+            for (alias in aliases) {
+                parts.add("'' as table_${alias}, ${alias}.*")
+            }
+            return parts.joinToString(", ")
+        }
+    }
 }

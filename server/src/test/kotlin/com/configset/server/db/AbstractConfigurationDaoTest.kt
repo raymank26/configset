@@ -10,8 +10,8 @@ import com.configset.test.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldMatchAtLeastOneOf
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 abstract class AbstractConfigurationDaoTest {
 
@@ -21,7 +21,7 @@ abstract class AbstractConfigurationDaoTest {
     private lateinit var dao: ConfigurationDao
     private lateinit var dbHandleFactory: DbHandleFactory
 
-    @Before
+    @BeforeEach
     fun setUpDao() {
         dao = getDao()
         dbHandleFactory = getDbHandleFactory()

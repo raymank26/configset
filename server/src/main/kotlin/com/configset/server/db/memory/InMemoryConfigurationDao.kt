@@ -202,4 +202,12 @@ class InMemoryConfigurationDao : ConfigurationDao {
     override fun getConfigurationSnapshotList(): List<PropertyItemED> {
         return properties
     }
+
+    fun cleanup() {
+        properties.clear()
+        applications.clear()
+        hosts.clear()
+        hostId = 0L
+        appId = 0L
+    }
 }

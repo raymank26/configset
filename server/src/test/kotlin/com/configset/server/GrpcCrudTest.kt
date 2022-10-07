@@ -16,19 +16,18 @@ import com.configset.test.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 
 class GrpcCrudTest {
-
-    @JvmField
-    @Rule
-    val serviceRule = CrudServiceRule()
 
     @Test
     fun testCreateHost() {
         val expectedHostName = "someHost"
-        serviceRule.blockingClient.createHost(CreateHostRequest.newBuilder().setRequestId(serviceRule.createRequestId()).setHostName(expectedHostName).build())
+        serviceRule.blockingClient.createHost(
+            CreateHostRequest.newBuilder().setRequestId(serviceRule.createRequestId()).setHostName(expectedHostName)
+                .build()
+        )
         val response = serviceRule.blockingClient.listHosts(EmptyRequest.getDefaultInstance()).hostNamesList.map { it }
         response.contains(expectedHostName) shouldBe true
     }
@@ -57,12 +56,15 @@ class GrpcCrudTest {
     @Test
     fun testCreateApplication() {
         val appName = "Some name"
-        val response = serviceRule.blockingClient.createApplication(ApplicationCreateRequest.newBuilder()
+        val response = serviceRule.blockingClient.createApplication(
+            ApplicationCreateRequest.newBuilder()
                 .setRequestId(serviceRule.createRequestId())
-                .setApplicationName(appName).build())
+                .setApplicationName(appName).build()
+        )
         Assert.assertEquals(ApplicationCreatedResponse.Type.OK, response.type)
 
-        val result: List<String> = serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationsList
+        val result: List<String> =
+            serviceRule.blockingClient.listApplications(EmptyRequest.getDefaultInstance()).applicationsList
         result shouldBeEqualTo listOf(appName)
     }
 
@@ -71,11 +73,13 @@ class GrpcCrudTest {
         serviceRule.createApplication(TEST_APP_NAME)
         serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, null, "test", "value")
         serviceRule.deleteProperty(TEST_APP_NAME, TEST_HOST, "test", 1)
-        val res = serviceRule.blockingClient.searchProperties(SearchPropertiesRequest.newBuilder()
+        val res = serviceRule.blockingClient.searchProperties(
+            SearchPropertiesRequest.newBuilder()
                 .setApplicationName(TEST_APP_NAME)
                 .setHostName(TEST_HOST)
                 .setPropertyName("test")
-                .build())
+                .build()
+        )
         res.itemsCount shouldBeEqualTo 0
     }
 
@@ -84,24 +88,28 @@ class GrpcCrudTest {
         serviceRule.createApplication(TEST_APP_NAME)
         serviceRule.updateProperty(TEST_APP_NAME, TEST_HOST, null, "test", "value")
         serviceRule.deleteProperty(TEST_APP_NAME, TEST_HOST, "test", 1123, DeletePropertyResponse.Type.DELETE_CONFLICT)
-        val res = serviceRule.blockingClient.searchProperties(SearchPropertiesRequest.newBuilder()
+        val res = serviceRule.blockingClient.searchProperties(
+            SearchPropertiesRequest.newBuilder()
                 .setApplicationName(TEST_APP_NAME)
                 .setHostName(TEST_HOST)
                 .setPropertyName("test")
-                .build())
+                .build()
+        )
         res.itemsCount shouldBeEqualTo 1
     }
 
     @Test
     fun testAddPropertyNoApplication() {
-        val result = serviceRule.blockingClient.updateProperty(UpdatePropertyRequest.newBuilder()
+        val result = serviceRule.blockingClient.updateProperty(
+            UpdatePropertyRequest.newBuilder()
                 .setRequestId(serviceRule.createRequestId())
                 .setApplicationName("Some app")
                 .setHostName("Some host")
                 .setPropertyName("Prop name")
                 .setPropertyValue("Some value")
                 .setVersion(123L)
-                .build())
+                .build()
+        )
 
         result.type shouldBeEqualTo UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND
     }
@@ -114,13 +122,22 @@ class GrpcCrudTest {
 
     @Test
     fun testDeletePropertyNotFoundWithoutApp() {
-        val res = serviceRule.blockingClient.deleteProperty(DeletePropertyRequest.newBuilder()
+        val res = serviceRule.blockingClient.deleteProperty(
+            DeletePropertyRequest.newBuilder()
                 .setRequestId(serviceRule.createRequestId())
                 .setApplicationName("test-app")
                 .setPropertyName("Prop")
                 .setHostName("host")
                 .setVersion(1)
-                .build())
+                .build()
+        )
         res.type shouldBeEqualTo DeletePropertyResponse.Type.PROPERTY_NOT_FOUND
+    }
+
+    companion object {
+
+        @RegisterExtension
+        @JvmStatic
+        val serviceRule = CrudServiceRule()
     }
 }

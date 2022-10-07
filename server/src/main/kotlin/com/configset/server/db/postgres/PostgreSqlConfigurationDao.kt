@@ -10,6 +10,7 @@ import com.configset.server.SearchPropertyRequest
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
+import com.configset.server.db.postgres.PropertyItemEDMapper.Companion.PROPERTY_ED_SELECT_EXP
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
 import org.jdbi.v3.core.statement.StatementContext
@@ -70,7 +71,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
         return dbi.withHandle<PropertyItemED, Exception> {
             it.createQuery(
-                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
                 | where ch.name = :hostName and ca.name = :appName and cp.name = :propertyName
@@ -154,7 +155,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     override fun getConfigurationSnapshotList(): List<PropertyItemED> {
         return dbi.withHandle<List<PropertyItemED>, Exception> {
             it.createQuery(
-                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
             """.trimMargin()
@@ -180,7 +181,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
         return dbi.withHandle<List<PropertyItemED>, Exception> {
             it.createQuery(
-                """select '' as table_cp, cp.*, '' as table_ch, ch.*, '' as table_ca, ca.* from ConfigurationProperty cp
+                """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
                 | where ${conditionList.joinToString(" and ")}
@@ -296,13 +297,12 @@ private class HostEDRowMapper : RowMapper<HostED> {
 
 private class PropertyItemEDMapper : RowMapper<PropertyItemED> {
 
-    private lateinit var resultSetFetcherBuilder: ResultSetPrefixFetcherBuilder
+    companion object {
+        val PROPERTY_ED_SELECT_EXP = ResultSetPrefixFetcherBuilder.buildSelectExp(listOf("ca", "ch", "cp"))
+    }
 
     override fun map(rs: ResultSet, ctx: StatementContext): PropertyItemED {
-        if (!::resultSetFetcherBuilder.isInitialized) {
-            resultSetFetcherBuilder = ResultSetPrefixFetcherBuilder(rs)
-        }
-        val rsf = resultSetFetcherBuilder.getFetcher(rs)
+        val rsf = ResultSetPrefixFetcherBuilder.getFetcher(this::class.java, rs)
         return PropertyItemED(
             id = rsf.getLong("cp.id"),
             name = rsf.getString("cp.name"),

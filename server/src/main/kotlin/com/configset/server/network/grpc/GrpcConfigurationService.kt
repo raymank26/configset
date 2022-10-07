@@ -244,35 +244,48 @@ class GrpcConfigurationService(
 
     override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
         val subscriberId = UUID.randomUUID().toString()
-        var subscribed = false
         return object : StreamObserver<WatchRequest> {
             override fun onNext(value: WatchRequest) {
                 when (value.type) {
                     WatchRequest.Type.UPDATE_RECEIVED -> {
                         val updateReceived = value.updateReceived
-                        configurationService.updateLastVersion(subscriberId, updateReceived.applicationName, updateReceived.version)
+                        configurationService.updateLastVersion(
+                            subscriberId,
+                            updateReceived.applicationName,
+                            updateReceived.version
+                        )
                     }
                     WatchRequest.Type.SUBSCRIBE_APPLICATION -> {
                         val subscribeRequest = value.subscribeApplicationRequest
-                        log.debug("Subscriber with id = $subscriberId call subscribe for app = ${subscribeRequest.applicationName}" +
-                                ", lastVersion = ${subscribeRequest.lastKnownVersion}" +
-                                ", hostName = ${subscribeRequest.hostName}")
-                        val changesToPush = configurationService.subscribeApplication(subscriberId,
-                            subscribeRequest.defaultApplicationName, subscribeRequest.hostName,
-                            subscribeRequest.applicationName, subscribeRequest.lastKnownVersion)
-                        if (!subscribed) {
-                            configurationService.watchChanges(object : WatchSubscriber {
-                                override fun getId(): String {
-                                    return subscriberId
-                                }
+                        log.debug(
+                            """Subscriber with id = $subscriberId calls subscribe for 
+                            |app = ${subscribeRequest.applicationName},
+                            |lastVersion = ${subscribeRequest.lastKnownVersion},
+                            |hostName = ${subscribeRequest.hostName}""".trimMargin()
+                        )
+                        val subscriber = object : WatchSubscriber {
+                            override fun getId(): String {
+                                return subscriberId
+                            }
 
-                                override fun pushChanges(applicationName: String, changes: PropertiesChanges) {
-                                    responseObserver.onNext(toPropertiesChangesResponse(applicationName, changes))
-                                }
-                            })
-                            subscribed = true
+                            override fun pushChanges(applicationName: String, changes: PropertiesChanges) {
+                                responseObserver.onNext(toPropertiesChangesResponse(applicationName, changes))
+                            }
                         }
-                        responseObserver.onNext(toPropertiesChangesResponse(subscribeRequest.applicationName, changesToPush))
+                        val changesToPush = configurationService.subscribeToApplication(
+                            subscriberId,
+                            subscribeRequest.defaultApplicationName,
+                            subscribeRequest.hostName,
+                            subscribeRequest.applicationName,
+                            subscribeRequest.lastKnownVersion,
+                            subscriber
+                        )
+                        responseObserver.onNext(
+                            toPropertiesChangesResponse(
+                                subscribeRequest.applicationName,
+                                changesToPush
+                            )
+                        )
                     }
                     else -> log.warn("Unrecognized message type = ${value.type}")
                 }

@@ -35,29 +35,49 @@ class ConfigurationService(
         return configurationDao.listHosts()
     }
 
-    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+    fun updateProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        value: String,
+        version: Long?,
+    ): PropertyCreateResult {
         checkRequestId(requestId)
         return executeMutable(requestId, PropertyCreateResult.OK) {
             configurationDao.updateProperty(it, appName, propertyName, value, version, hostName)
         }
     }
 
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
+    fun deleteProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
+    ): DeletePropertyResult {
         checkRequestId(requestId)
         return executeMutable(requestId, DeletePropertyResult.OK) {
             configurationDao.deleteProperty(it, appName, hostName, propertyName, version)
         }
     }
 
-    fun subscribeApplication(
-        subscriberId: String, defaultApplicationName: String, hostName: String,
-        applicationName: String, lastKnownVersion: Long,
+    fun subscribeToApplication(
+        subscriberId: String,
+        defaultApplicationName: String,
+        hostName: String,
+        applicationName: String,
+        lastKnownVersion: Long,
+        subscriber: WatchSubscriber,
     ): PropertiesChanges? {
-        return propertiesWatchDispatcher.subscribeApplication(subscriberId,
+        return propertiesWatchDispatcher.subscribeToApplication(
+            subscriberId,
             defaultApplicationName,
             hostName,
             applicationName,
-            lastKnownVersion)
+            lastKnownVersion,
+            subscriber
+        )
     }
 
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
@@ -70,10 +90,6 @@ class ConfigurationService(
 
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
         propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
-    }
-
-    fun watchChanges(subscriber: WatchSubscriber) {
-        propertiesWatchDispatcher.watchChanges(subscriber)
     }
 
     fun unsubscribe(subscriberId: String) {

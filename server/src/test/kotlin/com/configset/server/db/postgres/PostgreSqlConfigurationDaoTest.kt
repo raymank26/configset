@@ -4,13 +4,9 @@ import com.configset.server.common.PostgresqlTestRule
 import com.configset.server.db.AbstractConfigurationDaoTest
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
-import org.junit.Rule
+import org.junit.jupiter.api.extension.RegisterExtension
 
 class PostgreSqlConfigurationDaoTest : AbstractConfigurationDaoTest() {
-
-    @Rule
-    @JvmField
-    val postgresSqlRule = PostgresqlTestRule()
 
     override fun getDao(): ConfigurationDao {
         return PostgreSqlConfigurationDao(postgresSqlRule.getDBI())
@@ -18,5 +14,11 @@ class PostgreSqlConfigurationDaoTest : AbstractConfigurationDaoTest() {
 
     override fun getDbHandleFactory(): DbHandleFactory {
         return PostgresDbHandleFactory(postgresSqlRule.getDBI())
+    }
+
+    companion object {
+        @JvmStatic
+        @RegisterExtension
+        val postgresSqlRule = PostgresqlTestRule()
     }
 }

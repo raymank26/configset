@@ -25,14 +25,16 @@ dependencies {
     implementation 'com.auth0:java-jwt:3.18.1'
 
     testImplementation 'org.awaitility:awaitility:4.0.2'
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     testImplementation group: 'io.mockk', name: 'mockk', version: '1.9.3'
     testImplementation "org.testcontainers:testcontainers:1.15.3"
     testImplementation "org.testcontainers:postgresql:1.15.3"
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.25.1"
     testImplementation 'org.amshove.kluent:kluent:1.59'
 
-    testFixturesImplementation 'junit:junit:4.12'
+    testFixturesImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testFixturesRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     testFixturesImplementation "io.insert-koin:koin-core-jvm:3.1.2"
     testFixturesImplementation 'org.amshove.kluent:kluent:1.59'
     testFixturesImplementation project(":sdk")
@@ -40,6 +42,10 @@ dependencies {
 
 run {
     jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5004"]
+}
+
+test {
+    useJUnitPlatform()
 }
 
 version = "0.0.3"

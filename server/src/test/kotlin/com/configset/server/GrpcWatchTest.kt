@@ -5,28 +5,25 @@ import com.configset.test.fixtures.CrudServiceRule
 import com.configset.test.fixtures.TEST_APP_NAME
 import com.configset.test.fixtures.TEST_DEFAULT_APP_NAME
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Assert
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.Timeout
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 
 class GrpcWatchTest {
 
-    @JvmField
-    @Rule
-    val serviceRule = CrudServiceRule()
+    companion object {
+        @JvmStatic
+        @RegisterExtension
+        val serviceRule = CrudServiceRule()
+    }
 
-    @JvmField
-    @Rule
-    var globalTimeout: Timeout = Timeout.seconds(10)
-    
     @Test
     fun testReceiveInitialProperties() {
         serviceRule.createApplication(TEST_APP_NAME)
         serviceRule.updateProperty(TEST_APP_NAME, "host-$TEST_DEFAULT_APP_NAME", 1, "name", "value")
         serviceRule.subscribeTestApplication(lastKnownVersion = null)
 
-        val receivedItems = serviceRule.watchForChanges(1, 5000).first().itemsList
+        val receivedItems = serviceRule.watchForChanges(1, 50000).first().itemsList
         receivedItems.size shouldBeEqualTo 1
     }
 
@@ -46,10 +43,22 @@ class GrpcWatchTest {
 
         Thread.sleep(serviceRule.updateDelayMs * 2)
 
-        Assert.assertEquals(listOf(PropertyItem.newBuilder().setApplicationName(TEST_APP_NAME).setPropertyName("name")
-                .setPropertyValue("value").setVersion(1).build(),
-                PropertyItem.newBuilder().setApplicationName(TEST_APP_NAME).setPropertyName("name2").setPropertyValue("value2").setVersion(2).build()
-        ), receivedItems)
+        Assertions.assertEquals(
+            listOf(
+                PropertyItem.newBuilder()
+                    .setApplicationName(TEST_APP_NAME)
+                    .setPropertyName("name")
+                    .setPropertyValue("value")
+                    .setVersion(1)
+                    .build(),
+                PropertyItem.newBuilder()
+                    .setApplicationName(TEST_APP_NAME)
+                    .setPropertyName("name2")
+                    .setPropertyValue("value2")
+                    .setVersion(2)
+                    .build()
+            ), receivedItems
+        )
 
         serviceRule.deleteProperty(TEST_APP_NAME, "srvd1", "name", 1)
 
