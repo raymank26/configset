@@ -12,13 +12,13 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.PostgreSQLContainer
 
-private val LOG = LoggerFactory.getLogger(PostgresqlTestRule::class.java)
+private val LOG = LoggerFactory.getLogger(PostgresqlExtension::class.java)
 
 /**
  * @author anton.ermak
  * Date: 2019-08-27.
  */
-class PostgresqlTestRule : BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
+class PostgresqlExtension : BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
 
     private lateinit var container: KPostgreSQLContainer
     private lateinit var dbi: Jdbi

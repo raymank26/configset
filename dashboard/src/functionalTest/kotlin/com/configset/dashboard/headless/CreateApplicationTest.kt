@@ -1,13 +1,12 @@
-package com.configset.dashboard
+package com.configset.dashboard.headless
 
-import com.configset.dashboard.infra.BaseDashboardTest
-import com.configset.dashboard.infra.expectRight
+import com.configset.dashboard.FunctionalTest
+import com.configset.dashboard.expectRight
 import com.configset.sdk.proto.ApplicationCreatedResponse
-import org.amshove.kluent.any
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
-class CreateApplicationTest : BaseDashboardTest() {
+class CreateApplicationTest : FunctionalTest() {
 
     @Test
     fun testNoApplications() {
@@ -20,7 +19,10 @@ class CreateApplicationTest : BaseDashboardTest() {
 
     @Test
     fun createApplication() {
-        mockConfigServiceExt.whenCreateApplication(any()).answer(ApplicationCreatedResponse.Type.OK)
+        mockConfigServiceExt.whenCreateApplication {
+            any()
+        }.answer(ApplicationCreatedResponse.Type.OK)
+
         dashboardClient.createApplication("testApp")
             .expectRight()
     }

@@ -1,4 +1,4 @@
-package com.configset.dashboard.infra
+package com.configset.dashboard
 
 import arrow.core.Either
 import org.junit.Assert

@@ -1,6 +1,8 @@
 plugins {
     id 'com.bmuschko.docker-java-application' version '6.4.0'
     id 'com.bmuschko.docker-remote-api' version '6.4.0'
+    id 'java-test-fixtures'
+    id 'org.unbroken-dome.test-sets' version '4.0.0'
 }
 
 
@@ -11,20 +13,8 @@ apply plugin: 'application'
 
 mainClassName = "com.configset.dashboard.Main"
 
-sourceSets {
-    functionalTest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
-
-        compileClasspath += sourceSets.test.output
-        runtimeClasspath += sourceSets.test.output
-    }
-}
-
-configurations {
-    functionalTestImplementation.extendsFrom implementation
-    functionalTestImplementation.extendsFrom testImplementation
-    functionalTestImplementation.extendsFrom runtimeOnly
+testSets {
+    functionalTest
 }
 
 dependencies {
@@ -44,7 +34,9 @@ dependencies {
 
     testImplementation(testFixtures(project(":server")))
     testImplementation 'org.awaitility:awaitility:4.0.2'
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
     testImplementation group: 'io.mockk', name: 'mockk', version: '1.9.3'
     testImplementation 'org.testcontainers:testcontainers:1.17.3'
     testImplementation "org.testcontainers:postgresql:1.12.2"
@@ -128,4 +120,10 @@ task dockerBuildDefaultImage(type: DockerBuildImage) {
     dependsOn "dockerPrepareDefaultCtx"
     images.set(["configset-dashboard:${version}", 'configset-dashboard:latest'])
 }
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+
+check.dependsOn functionalTest
 

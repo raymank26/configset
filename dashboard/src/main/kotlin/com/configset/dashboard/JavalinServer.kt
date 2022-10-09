@@ -1,8 +1,10 @@
 package com.configset.dashboard
 
+import com.configset.dashboard.application.ApplicationController
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.PagesController
+import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.sdk.extension.createLoggerStatic
 import io.javalin.Javalin
@@ -16,6 +18,8 @@ class JavalinServer(
     private val javalinExceptionMapper: JavalinExceptionMapper,
     private val authInterceptor: AuthInterceptor,
     private val pagesController: PagesController,
+    private val applicationController: ApplicationController,
+    private val propertyController: PropertyController,
 ) {
 
     private val app = Javalin.create { config ->
@@ -35,12 +39,12 @@ class JavalinServer(
             authController.bind()
 
             path("api") {
-//                path("application") {
-//                    applicationController.bind()
-//                }
-//                path("property") {
-//                    propertyController.bind()
-//                }
+                path("application") {
+                    applicationController.bind()
+                }
+                path("property") {
+                    propertyController.bind()
+                }
             }
         }
         app.start(serverConfig.dashboardPort)

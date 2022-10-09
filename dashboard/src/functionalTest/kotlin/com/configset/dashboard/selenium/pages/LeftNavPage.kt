@@ -1,4 +1,4 @@
-package com.configset.dashboard.pages
+package com.configset.dashboard.selenium.pages
 
 import com.codeborne.selenide.Selenide.element
 

@@ -1,11 +1,11 @@
-package com.configset.dashboard
+package com.configset.dashboard.selenium
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverRunner
-import com.configset.dashboard.pages.LeftNavPage
+import com.configset.dashboard.selenium.pages.LeftNavPage
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -15,27 +15,31 @@ import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.temporaryRedirect
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.verify
-import com.github.tomakehurst.wiremock.junit.WireMockRule
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension
 import org.amshove.kluent.shouldMatchAtLeastOneOf
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.temporal.ChronoUnit.DAYS
 import java.util.Date
 
-class AuthorisationTest : FunctionalTest() {
+class AuthorisationTest : SeleniumTest() {
 
-    @JvmField
-    @Rule
-    var wireMockRule: WireMockRule = WireMockRule(23982)
+    companion object {
+        @JvmStatic
+        @RegisterExtension
+        var wireMock: WireMockExtension = WireMockExtension.newInstance()
+            .options(WireMockConfiguration.options().port(23982))
+            .build()
+    }
 
-    @Before
+    @BeforeEach
     fun setupWiremock() {
-        wireMockRule.stubFor(
+        wireMock.stubFor(
             get(urlPathEqualTo("/auth"))
                 .withQueryParam("client_id", equalTo("sample_content_id"))
                 .withQueryParam("redirect_uri", equalTo("http://localhost:9299/auth/redirect"))
@@ -44,7 +48,7 @@ class AuthorisationTest : FunctionalTest() {
                 .willReturn(temporaryRedirect("http://localhost:9299/auth/redirect?code=sample_code"))
         )
 
-        wireMockRule.stubFor(
+        wireMock.stubFor(
             post("/token")
                 .withRequestBody(equalTo(
                     mapOf(
@@ -77,8 +81,8 @@ class AuthorisationTest : FunctionalTest() {
         LeftNavPage.search.shouldBe(visible)
         WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.access_token" }
         WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.username" }
-        verify(getRequestedFor(urlPathEqualTo("/auth")))
-        verify(postRequestedFor(urlEqualTo("/token")))
+        wireMock.verify(getRequestedFor(urlPathEqualTo("/auth")))
+        wireMock.verify(postRequestedFor(urlEqualTo("/token")))
     }
 
     private fun createIdTokenJwt(): String {

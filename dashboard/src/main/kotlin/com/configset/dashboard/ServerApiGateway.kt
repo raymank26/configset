@@ -188,10 +188,14 @@ data class ShowPropertyItem @JsonCreator constructor(
     val version: Long,
 )
 
-data class TablePropertyItem(
+data class TablePropertyItem @JsonCreator constructor(
+    @JsonProperty("id")
     val id: String,
+    @JsonProperty("applicationName")
     val applicationName: String,
+    @JsonProperty("propertyName")
     val propertyName: String,
+    @JsonProperty("hostProperties")
     val hostProperties: List<ShowPropertyItem>,
 )
 

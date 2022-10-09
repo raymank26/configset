@@ -22,11 +22,27 @@ object Main {
         val serverApiGateway = dependencyFactory.serverApiGateway(configSetClient)
         val listPropertiesService = dependencyFactory.listPropertyService(serverApiGateway)
         val pagesController = dependencyFactory.pagesController(templateRenderer, listPropertiesService)
+        val applicationController = dependencyFactory.applicationController(serverApiGateway)
+        val requestIdProducer = dependencyFactory.requestIdProducer()
+        val propertyImportService = dependencyFactory.propertyImportService(
+            serverApiGateway,
+            requestIdProducer
+        )
+        val crudPropertyService = dependencyFactory.crudPropertyService(
+            serverApiGateway,
+            requestIdProducer
+        )
+        val propertyController = dependencyFactory.propertyController(
+            crudPropertyService,
+            listPropertiesService, propertyImportService
+        )
         val javalinServer = dependencyFactory.javalinServer(
             authController,
             javalinExceptionMapper,
             authInterceptor,
-            pagesController
+            pagesController,
+            applicationController,
+            propertyController,
         )
         return object : App {
             override fun start() {

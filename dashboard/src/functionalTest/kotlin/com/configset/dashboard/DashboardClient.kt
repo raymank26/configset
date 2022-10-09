@@ -1,10 +1,8 @@
-package com.configset.dashboard.infra
+package com.configset.dashboard
 
 import arrow.core.Either
 import arrow.core.left
-import com.configset.dashboard.ShowPropertyItem
 import com.configset.sdk.extension.createLoggerStatic
-import com.configset.test.fixtures.ACCESS_TOKEN
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -13,7 +11,7 @@ import okhttp3.FormBody
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
+import java.util.UUID
 
 private val LOG = createLoggerStatic<DashboardClient>()
 
@@ -21,7 +19,9 @@ val OBJECT_MAPPER = ObjectMapper()
 
 class DashboardClient {
 
-    private val okHttp = OkHttpClient()
+    private val okHttp = OkHttpClient().newBuilder()
+        .followRedirects(false)
+        .build()
 
     fun buildGetRequest(
         endpoint: String,
@@ -38,12 +38,18 @@ class DashboardClient {
         }
         return Request.Builder()
             .url(urlBuilder.build())
-            .header("Authorization", "Bearer $ACCESS_TOKEN")
+            .header("Cookie", "auth.access_token=23489293849sdflksjdf")
     }
 
     fun <T> executeRequest(request: Request, responseClass: JavaType): Either<DashboardHttpFailure, T?> {
         val response = okHttp.newCall(request)
             .execute()
+        if (response.code == 404) {
+            return DashboardHttpFailure(400, "Not found").left()
+        }
+        if (response.code == 302) {
+            return DashboardHttpFailure(403, "Auth required").left()
+        }
         if (response.code / 100 != 2) {
             val errorDetails = response.body?.byteStream().use {
                 OBJECT_MAPPER.readTree(it)
@@ -64,15 +70,20 @@ class DashboardClient {
         return Either.Right(res)
     }
 
-    fun getProperty(appName: String, hostName: String): Either<DashboardHttpFailure, ShowPropertyItem?> {
+    fun getProperty(
+        appName: String,
+        hostName: String,
+        propertyName: String,
+    ): Either<DashboardHttpFailure, ShowPropertyItem?> {
         return executeGetRequest(
             "/property/get",
             OBJECT_MAPPER.typeFactory.constructType(ShowPropertyItem::class.java),
             mapOf(
                 Pair("applicationName", appName),
                 Pair("hostName", hostName),
-                Pair("propertyName", "propertyName")
-            ))
+                Pair("propertyName", propertyName)
+            )
+        )
     }
 
     fun updateProperty(
@@ -94,7 +105,7 @@ class DashboardClient {
     fun searchProperties(
         applicationName: String? = null, hostName: String? = null, propertyName: String? = null,
         propertyValue: String? = null,
-    ): Either<DashboardHttpFailure, List<ShowPropertyItem>> {
+    ): Either<DashboardHttpFailure, List<TablePropertyItem>> {
         val queryParams = mutableMapOf<String, String>()
         if (applicationName != null) {
             queryParams["applicationName"] = applicationName
@@ -110,8 +121,8 @@ class DashboardClient {
         }
         val responseClass = OBJECT_MAPPER
             .typeFactory
-            .constructCollectionType(ArrayList::class.java, ShowPropertyItem::class.java)
-        return executeGetRequest<List<ShowPropertyItem>>("/property/search", responseClass, queryParams)
+            .constructCollectionType(ArrayList::class.java, TablePropertyItem::class.java)
+        return executeGetRequest<List<TablePropertyItem>>("/property/search", responseClass, queryParams)
             .map { it!! }
     }
 
@@ -174,8 +185,9 @@ class DashboardClient {
         val formBody = FormBody.Builder()
         bodyParams.forEach { (key, value) -> formBody.add(key, value) }
         formBody.add("requestId", requestId)
-        val response = okHttp.newCall(Request.Builder().url("http://localhost:9299/api$endpoint")
-            .header("Authorization", "Bearer $ACCESS_TOKEN")
+        val response = okHttp.newCall(
+            Request.Builder().url("http://localhost:9299/api$endpoint")
+                .header("Cookie", "auth.access_token=23489293849sdflksjdf")
             .post(formBody.build())
             .build()).execute()
         if (response.code / 100 != 2) {

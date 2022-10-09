@@ -1,31 +1,22 @@
-package com.configset.dashboard
+package com.configset.dashboard.headless
 
-import com.configset.dashboard.infra.BaseDashboardTest
-import com.configset.dashboard.infra.OBJECT_MAPPER
-import com.configset.dashboard.infra.expectLeft
-import com.configset.dashboard.infra.expectRight
+import com.configset.dashboard.FunctionalTest
+import com.configset.dashboard.OBJECT_MAPPER
+import com.configset.dashboard.expectLeft
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
-class AuthenticationTest : BaseDashboardTest() {
+class AuthenticationTest : FunctionalTest() {
 
     @Test
     fun `should check auth header`() {
         val res = dashboardClient.buildGetRequest("/application/list")
-        res.removeHeader("Authorization")
+        res.removeHeader("Cookie")
         dashboardClient.executeRequest<Any?>(res.build(), OBJECT_MAPPER.constructType(Any::class.java))
             .expectLeft()
             .httpCode shouldBeEqualTo 403
-    }
-
-    @Test
-    fun `should exclude config API call`() {
-        val res = dashboardClient.buildGetRequest("/config")
-        res.removeHeader("Authorization")
-        dashboardClient.getConfig()
-            .expectRight()
     }
 
     @Test

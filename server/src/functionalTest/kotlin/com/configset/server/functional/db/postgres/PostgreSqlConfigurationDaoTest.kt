@@ -4,7 +4,7 @@ import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
 import com.configset.server.db.postgres.PostgreSqlConfigurationDao
 import com.configset.server.db.postgres.PostgresDbHandleFactory
-import com.configset.server.fixtures.PostgresqlTestRule
+import com.configset.server.fixtures.PostgresqlExtension
 import com.configset.server.functional.db.AbstractConfigurationDaoTest
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -21,6 +21,6 @@ class PostgreSqlConfigurationDaoTest : AbstractConfigurationDaoTest() {
     companion object {
         @JvmStatic
         @RegisterExtension
-        val postgresSqlRule = PostgresqlTestRule()
+        val postgresSqlRule = PostgresqlExtension()
     }
 }

@@ -1,10 +1,12 @@
 package com.configset.dashboard
 
+import com.configset.dashboard.application.ApplicationController
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.PagesController
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
+import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.property.PropertyImportService
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
@@ -18,8 +20,18 @@ open class DependencyFactory(private val config: Config) {
         javalinExceptionMapper: JavalinExceptionMapper,
         authInterceptor: AuthInterceptor,
         pagesController: PagesController,
+        applicationController: ApplicationController,
+        propertyController: PropertyController,
     ): JavalinServer {
-        return JavalinServer(authController, config, javalinExceptionMapper, authInterceptor, pagesController)
+        return JavalinServer(
+            authController,
+            config,
+            javalinExceptionMapper,
+            authInterceptor,
+            pagesController,
+            applicationController,
+            propertyController
+        )
     }
 
     fun propertyImportService(
@@ -73,6 +85,18 @@ open class DependencyFactory(private val config: Config) {
         listPropertiesService: ListPropertiesService,
     ): PagesController {
         return PagesController(templateRenderer, listPropertiesService)
+    }
+
+    fun applicationController(serverApiGateway: ServerApiGateway): ApplicationController {
+        return ApplicationController(serverApiGateway)
+    }
+
+    fun propertyController(
+        crudPropertyService: CrudPropertyService,
+        listPropertiesService: ListPropertiesService,
+        propertyImportService: PropertyImportService,
+    ): PropertyController {
+        return PropertyController(crudPropertyService, listPropertiesService, propertyImportService)
     }
 
     open fun configSetClient(): ConfigSetClient {
