@@ -123,6 +123,9 @@ task dockerBuildDefaultImage(type: DockerBuildImage) {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    options {
+        systemProperties(System.getProperties())
+    }
 }
 
 check.dependsOn functionalTest
