@@ -11,7 +11,7 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
 import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ObservableConfPropertyTest {
 
@@ -24,7 +24,8 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.INTEGER,
-            dynamicValue = DynamicValue(expected, ChangingObservable()))
+            dynamicValue = DynamicValue(expected, ChangingObservable())
+        )
         property.getValue() shouldBeEqualTo expected.toInt()
     }
 
@@ -41,7 +42,8 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable()))
+            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable())
+        )
 
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
     }
@@ -57,8 +59,10 @@ class ObservableConfPropertyTest {
             converter = Converters.STRING,
             dynamicValue = linkedPropertyObservable
         )
-        val targetPropertyObservable = DynamicValue<String?>("some value \${linkApp\\linkName} suffix",
-            ChangingObservable())
+        val targetPropertyObservable = DynamicValue<String?>(
+            "some value \${linkApp\\linkName} suffix",
+            ChangingObservable()
+        )
         val targetProperty = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { appName, propName ->
@@ -69,7 +73,8 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = targetPropertyObservable)
+            dynamicValue = targetPropertyObservable
+        )
 
         targetPropertyObservable.observable.push("new value")
 
@@ -103,7 +108,8 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable()))
+            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable())
+        )
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
 
         var subscriberInvocations = 0
@@ -128,7 +134,8 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.INTEGER,
-            dynamicValue = DynamicValue("Non integer", ChangingObservable()))
+            dynamicValue = DynamicValue("Non integer", ChangingObservable())
+        )
 
         property.getValue().shouldBeNull()
     }

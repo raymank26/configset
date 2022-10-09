@@ -5,14 +5,14 @@ import com.configset.client.repository.ConfigApplication
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class ApplicationRegistryTest {
 
     private lateinit var applicationRegistry: ApplicationRegistry
 
-    @Before
+    @BeforeEach
     fun setup() {
         val initial = listOf(
             PropertyItem("some-app", "good.property", 1, "good value"),

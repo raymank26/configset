@@ -5,19 +5,22 @@ import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
 import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.WatchRequest
+import io.grpc.ManagedChannel
+import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
-import io.grpc.testing.GrpcCleanupRule
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.concurrent.thread
 
-class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
+class ClientTestUtil {
 
-    var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
+    lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private var updateVersion = AtomicLong()
     private val cmdQueue = LinkedBlockingQueue<Payload>()
+    private lateinit var channel: ManagedChannel
+    private lateinit var server: Server
 
     private val service = object : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
@@ -70,10 +73,10 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
         }
     }
 
-    init {
-        grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor().addService(service).build().start())
-        val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
+    fun start() {
+        server = InProcessServerBuilder.forName("mytest")
+            .directExecutor().addService(service).build().start()
+        channel = InProcessChannelBuilder.forName("mytest").directExecutor().build()
         asyncClient = ConfigSetClient(channel).asyncClient
     }
 
@@ -112,13 +115,20 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
                 .setPropertyName(propertyName)
                 .setVersion(version)
                 .setUpdateType(PropertyItem.UpdateType.DELETE)
-                .build())
-            .build())
+                .build()
+            )
+            .build()
+        )
         )
     }
 
     fun dropConnection() {
         cmdQueue.add(Payload.DropConnection)
+    }
+
+    fun stop() {
+        channel.shutdown()
+        server.shutdown()
     }
 }
 

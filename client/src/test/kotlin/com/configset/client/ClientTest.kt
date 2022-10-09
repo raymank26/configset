@@ -4,7 +4,7 @@ import com.configset.client.converter.Converters
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ClientTest : BaseClientTest() {
 

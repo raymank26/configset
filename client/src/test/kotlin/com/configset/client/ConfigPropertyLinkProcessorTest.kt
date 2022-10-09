@@ -3,7 +3,7 @@ package com.configset.client
 import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class ConfigPropertyLinkProcessorTest {
     private val processor = ConfigPropertyLinkProcessor.INSTANCE

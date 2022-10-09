@@ -2,7 +2,7 @@ package com.configset.client
 
 import com.configset.client.converter.Converters
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class LocalConfigurationRegistryTest {
 
