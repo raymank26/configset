@@ -1,8 +1,9 @@
 package com.configset.client
 
+import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
 import org.junit.Test
-import kotlin.test.assertFails
 
 class ConfigPropertyLinkProcessorTest {
     private val processor = ConfigPropertyLinkProcessor.INSTANCE
@@ -25,29 +26,29 @@ class ConfigPropertyLinkProcessorTest {
 
     @Test
     fun testFailsEndPar() {
-        assertFails {
+        invoking {
             processor.parse("prefix\${my-app1\\some-value1")
-        }
+        } shouldThrow Exception::class
     }
 
     @Test
     fun testFailEmptyPar() {
-        assertFails {
+        invoking {
             processor.parse("\${}")
-        }
+        } shouldThrow Exception::class
     }
 
     @Test
     fun testNoAppName() {
-        assertFails {
+        invoking {
             processor.parse("\${\\name}")
-        }
+        } shouldThrow Exception::class
     }
 
     @Test
     fun testNoAppValue() {
-        assertFails {
+        invoking {
             processor.parse("\${appName\\}")
-        }
+        } shouldThrow Exception::class
     }
 }

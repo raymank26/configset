@@ -2,10 +2,11 @@ package com.configset.client
 
 import com.configset.client.converter.Converters
 import com.configset.client.repository.ConfigApplication
+import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertFails
 
 class ApplicationRegistryTest {
 
@@ -28,8 +29,8 @@ class ApplicationRegistryTest {
 
     @Test
     fun testRecursiveAccess() {
-        assertFails {
+        invoking {
             applicationRegistry.getConfProperty("recursive.property", Converters.STRING)
-        }
+        } shouldThrow (Exception::class)
     }
 }

@@ -10,8 +10,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
+import org.junit.Assert
 import org.junit.Test
-import kotlin.test.fail
 
 class ObservableConfPropertyTest {
 
@@ -123,7 +123,7 @@ class ObservableConfPropertyTest {
         val property = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ ->
-                fail("should not be called")
+                Assert.fail("should not be called") as Nothing
             },
             name = "property.name",
             defaultValue = null,

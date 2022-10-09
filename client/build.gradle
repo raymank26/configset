@@ -8,7 +8,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     testImplementation(testFixtures(project(":server")))
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
     testImplementation 'junit:junit:4.12'
     testImplementation "org.testcontainers:testcontainers:1.15.3"
     testImplementation "org.testcontainers:toxiproxy:1.15.3"
