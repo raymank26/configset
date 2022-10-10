@@ -7,6 +7,7 @@ import com.configset.server.db.memory.InMemoryDbHandleFactory
 import com.configset.server.functional.db.AbstractConfigurationDaoTest
 
 class InMemoryConfigurationDaoTest : AbstractConfigurationDaoTest() {
+
     override fun getDao(): ConfigurationDao {
         return InMemoryConfigurationDao()
     }

@@ -5,7 +5,7 @@ import com.codeborne.selenide.Condition.text
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.element
 import com.codeborne.selenide.SelenideElement
-import com.configset.sdk.proto.ShowPropertyItem
+import com.configset.sdk.proto.PropertyItem
 import org.openqa.selenium.By
 
 object SearchPage {
@@ -17,7 +17,7 @@ object SearchPage {
     val searchResultsEmpty = element("#properties-search-result-empty")
     private val searchResults = element("#properties-search-result")
 
-    fun searchResultsShouldContainProperty(property: ShowPropertyItem) {
+    fun searchResultsShouldContainProperty(property: PropertyItem) {
         searchResults.shouldHave(text(property.propertyName))
         searchResults.shouldHave(text(property.applicationName))
         searchResults.find(By.className("expand")).shouldHave(text("Expand"))
@@ -54,8 +54,8 @@ class PropertyResultRow(private val selenideElement: SelenideElement) {
 
 class PropertyItemRow(private val selenideElement: SelenideElement) {
 
-    fun getEditButton(): SelenideElement {
-        return selenideElement.find(By.className("edit")).apply {
+    fun getUpdateButton(): SelenideElement {
+        return selenideElement.find(By.className("update-property")).apply {
             shouldBe(visible)
         }
     }

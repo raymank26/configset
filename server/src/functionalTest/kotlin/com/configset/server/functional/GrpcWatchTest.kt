@@ -48,12 +48,14 @@ class GrpcWatchTest {
                     .setApplicationName(TEST_APP_NAME)
                     .setPropertyName("name")
                     .setPropertyValue("value")
+                    .setHostName("srvd1")
                     .setVersion(1)
                     .build(),
                 PropertyItem.newBuilder()
                     .setApplicationName(TEST_APP_NAME)
                     .setPropertyName("name2")
                     .setPropertyValue("value2")
+                    .setHostName("host-my-app")
                     .setVersion(2)
                     .build()
             ), receivedItems

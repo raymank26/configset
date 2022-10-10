@@ -15,23 +15,23 @@ class PropertyController(
 ) {
 
     fun bind() {
-        post("update") { ctx ->
-            val appName = ctx.formParamSafe("applicationName")
-            val hostName = ctx.formParamSafe("hostName")
-            val propertyName = ctx.formParamSafe("propertyName")
-            val propertyValue = ctx.formParamSafe("propertyValue")
-            val version = ctx.formParam("version")?.toLong()
-            val requestId = ctx.requestId()
-
-            crudPropertyService.updateProperty(
-                requestId,
-                appName,
-                hostName,
-                propertyName,
-                propertyValue,
-                version,
-                ctx.accessToken())
-        }
+//        post("update") { ctx ->
+//            val appName = ctx.formParamSafe("applicationName")
+//            val hostName = ctx.formParamSafe("hostName")
+//            val propertyName = ctx.formParamSafe("propertyName")
+//            val propertyValue = ctx.formParamSafe("propertyValue")
+//            val version = ctx.formParam("version")?.toLong()
+//            val requestId = ctx.requestId()
+//
+//            crudPropertyService.updateProperty(
+//                requestId,
+//                appName,
+//                hostName,
+//                propertyName,
+//                propertyValue,
+//                version,
+//                ctx.accessToken())
+//        }
 
         post("delete") { ctx ->
             val appName = ctx.formParamSafe("applicationName")

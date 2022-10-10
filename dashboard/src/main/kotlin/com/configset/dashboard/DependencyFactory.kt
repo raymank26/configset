@@ -83,8 +83,10 @@ open class DependencyFactory(private val config: Config) {
     fun pagesController(
         templateRenderer: TemplateRenderer,
         listPropertiesService: ListPropertiesService,
+        crudPropertyService: CrudPropertyService,
+        requestIdProducer: RequestIdProducer
     ): PagesController {
-        return PagesController(templateRenderer, listPropertiesService)
+        return PagesController(templateRenderer, listPropertiesService, crudPropertyService, requestIdProducer)
     }
 
     fun applicationController(serverApiGateway: ServerApiGateway): ApplicationController {

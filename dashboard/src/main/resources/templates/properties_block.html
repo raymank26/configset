@@ -29,8 +29,8 @@
         <td></td>
         <td>{{ hostProperty.hostName }}</td>
         <td>{{ hostProperty.propertyValue }}</td>
-        <td>
-            <button class="edit">Edit</button>
+        <td><a class="update-property"
+               href="/update?applicationName={{property.applicationName|e}}&propertyName={{property.propertyName|e}}&hostName={{hostProperty.hostName|e}}">Update</a>
         </td>
     </tr>
     {% endfor %}

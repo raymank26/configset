@@ -83,8 +83,17 @@ class GrpcConfigurationService(
     override fun createHost(request: CreateHostRequest, responseObserver: StreamObserver<CreateHostResponse>) {
         requireRole(HostCreator)
         when (configurationService.createHost(request.requestId, request.hostName)) {
-            HostCreateResult.OK -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
-            HostCreateResult.HostAlreadyExists -> responseObserver.onNext(CreateHostResponse.newBuilder().setType(CreateHostResponse.Type.OK).build())
+            HostCreateResult.OK -> responseObserver.onNext(
+                CreateHostResponse.newBuilder()
+                    .setType(CreateHostResponse.Type.OK)
+                    .build()
+            )
+
+            HostCreateResult.HostAlreadyExists -> responseObserver.onNext(
+                CreateHostResponse.newBuilder()
+                    .setType(CreateHostResponse.Type.OK)
+                    .build()
+            )
         }
         responseObserver.onCompleted()
     }
@@ -98,7 +107,10 @@ class GrpcConfigurationService(
         responseObserver.onCompleted()
     }
 
-    override fun updateProperty(request: UpdatePropertyRequest, responseObserver: StreamObserver<UpdatePropertyResponse>) {
+    override fun updateProperty(
+        request: UpdatePropertyRequest,
+        responseObserver: StreamObserver<UpdatePropertyResponse>,
+    ) {
         requireRole(ApplicationOwner(request.applicationName))
         val version = if (request.version == 0L) null else request.version
         when (configurationService.updateProperty(
@@ -136,7 +148,10 @@ class GrpcConfigurationService(
         responseObserver.onCompleted()
     }
 
-    override fun deleteProperty(request: DeletePropertyRequest, responseObserver: StreamObserver<DeletePropertyResponse>) {
+    override fun deleteProperty(
+        request: DeletePropertyRequest,
+        responseObserver: StreamObserver<DeletePropertyResponse>,
+    ) {
         requireRole(ApplicationOwner(request.applicationName))
         when (configurationService.deleteProperty(
             request.requestId,
@@ -180,13 +195,7 @@ class GrpcConfigurationService(
         )
 
         val searchItems = foundProperties.map { prop ->
-            com.configset.sdk.proto.ShowPropertyItem.newBuilder()
-                .setHostName(prop.hostName)
-                .setApplicationName(prop.applicationName)
-                .setPropertyName(prop.name)
-                .setPropertyValue(prop.value)
-                .setVersion(prop.version)
-                .build()
+            convertPropertyItem(prop)
         }
         val response = SearchPropertiesResponse.newBuilder().addAllItems(searchItems).build()
         responseObserver.onNext(response)
@@ -207,37 +216,39 @@ class GrpcConfigurationService(
             convertPropertyItem(change)
         }
         return PropertiesChangesResponse.newBuilder().setApplicationName(appName).addAllItems(preparedItems)
-                .setLastVersion(changes.lastVersion).build()
+            .setLastVersion(changes.lastVersion).build()
     }
 
-    private fun convertPropertyItem(propertyItemId: PropertyItemED): PropertyItem {
-        val itemBuilder = PropertyItem.newBuilder()
-            .setApplicationName(propertyItemId.applicationName)
-            .setPropertyName(propertyItemId.name)
-            .setVersion(propertyItemId.version)
-        return when {
-            propertyItemId.deleted -> {
-                itemBuilder
-                    .setUpdateType(PropertyItem.UpdateType.DELETE)
-                    .build()
-            }
-
-            else -> {
-                itemBuilder
-                    .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                    .setPropertyValue(propertyItemId.value)
-                    .build()
-            }
-        }
+    private fun convertPropertyItem(item: PropertyItemED): PropertyItem {
+        return PropertyItem.newBuilder()
+            .setApplicationName(item.applicationName)
+            .setPropertyName(item.name)
+            .setPropertyValue(item.value)
+            .setVersion(item.version)
+            .setDeleted(item.deleted)
+            .setHostName(item.hostName)
+            .build()
     }
 
     override fun readProperty(request: ReadPropertyRequest, responseObserver: StreamObserver<ReadPropertyResponse>) {
-        val propertyItem =
-            configurationService.readProperty(request.applicationName, request.hostName, request.propertyName)
+        val propertyItem = configurationService.readProperty(
+            request.applicationName,
+            request.hostName,
+            request.propertyName
+        )
         if (propertyItem == null) {
-            responseObserver.onNext(ReadPropertyResponse.newBuilder().setHasItem(false).build())
+            responseObserver.onNext(
+                ReadPropertyResponse.newBuilder()
+                    .setHasItem(false)
+                    .build()
+            )
         } else {
-            responseObserver.onNext(ReadPropertyResponse.newBuilder().setHasItem(true).setItem(convertPropertyItem(propertyItem)).build())
+            responseObserver.onNext(
+                ReadPropertyResponse.newBuilder()
+                    .setHasItem(true)
+                    .setItem(convertPropertyItem(propertyItem))
+                    .build()
+            )
         }
         responseObserver.onCompleted()
     }

@@ -1,10 +1,12 @@
 package com.configset.dashboard.auth
 
+import com.auth0.jwt.JWT
 import com.configset.dashboard.AuthenticationConfig
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 
 class AuthInterceptor(
     private val excludePaths: List<String>,
@@ -38,6 +40,13 @@ class AuthInterceptor(
     }
 
     private fun getValidAccessToken(ctx: Context): String? {
-        return ctx.cookie("auth.access_token")
+        return ctx.cookie("auth.access_token")?.let {
+            val jwtToken = JWT.decode(it)
+            return if (jwtToken.expiresAt.toInstant() < Instant.now()) {
+                null
+            } else {
+                return it
+            }
+        }
     }
 }

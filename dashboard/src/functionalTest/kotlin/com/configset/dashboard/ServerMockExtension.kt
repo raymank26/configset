@@ -14,7 +14,6 @@ import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.ReadPropertyResponse
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.SearchPropertiesResponse
-import com.configset.sdk.proto.ShowPropertyItem
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.stub.StreamObserver
@@ -159,9 +158,9 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenSearchProperties(request: MockKMatcherScope.() -> SearchPropertiesRequest): ServerMockContext<List<ShowPropertyItem>> {
-        return object : ServerMockContext<List<ShowPropertyItem>>() {
-            override fun answer(response: List<ShowPropertyItem>) {
+    fun whenSearchProperties(request: MockKMatcherScope.() -> SearchPropertiesRequest): ServerMockContext<List<PropertyItem>> {
+        return object : ServerMockContext<List<PropertyItem>>() {
+            override fun answer(response: List<PropertyItem>) {
                 every { mockConfigService.searchProperties(request(), any()) } answers {
 
                     @Suppress("UNCHECKED_CAST")

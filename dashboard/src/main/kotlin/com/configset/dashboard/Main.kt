@@ -21,14 +21,19 @@ object Main {
         val configSetClient = dependencyFactory.configSetClient()
         val serverApiGateway = dependencyFactory.serverApiGateway(configSetClient)
         val listPropertiesService = dependencyFactory.listPropertyService(serverApiGateway)
-        val pagesController = dependencyFactory.pagesController(templateRenderer, listPropertiesService)
-        val applicationController = dependencyFactory.applicationController(serverApiGateway)
         val requestIdProducer = dependencyFactory.requestIdProducer()
-        val propertyImportService = dependencyFactory.propertyImportService(
+        val crudPropertyService = dependencyFactory.crudPropertyService(
             serverApiGateway,
             requestIdProducer
         )
-        val crudPropertyService = dependencyFactory.crudPropertyService(
+        val pagesController = dependencyFactory.pagesController(
+            templateRenderer,
+            listPropertiesService,
+            crudPropertyService,
+            requestIdProducer
+        )
+        val applicationController = dependencyFactory.applicationController(serverApiGateway)
+        val propertyImportService = dependencyFactory.propertyImportService(
             serverApiGateway,
             requestIdProducer
         )

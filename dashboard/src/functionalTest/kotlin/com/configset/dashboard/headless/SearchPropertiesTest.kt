@@ -2,8 +2,8 @@ package com.configset.dashboard.headless
 
 import com.configset.dashboard.FunctionalTest
 import com.configset.dashboard.expectRight
+import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.SearchPropertiesRequest
-import com.configset.sdk.proto.ShowPropertyItem
 import io.mockk.slot
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ class SearchPropertiesTest : FunctionalTest() {
             capture(searchPropertiesRequest)
         }.answer(
             listOf(
-                ShowPropertyItem
+                PropertyItem
                     .newBuilder()
                     .setHostName("srvd1")
                     .setApplicationName("testApp")

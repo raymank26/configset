@@ -6,7 +6,6 @@ import com.configset.sdk.proto.CreateHostRequest
 import com.configset.sdk.proto.DeletePropertyRequest
 import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.EmptyRequest
-import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
@@ -48,7 +47,7 @@ class GrpcCrudTest {
             it.applicationName shouldBeEqualTo TEST_APP_NAME
             it.propertyValue shouldBeEqualTo "value2"
             it.version shouldBeEqualTo 2
-            it.updateType shouldBeEqualTo PropertyItem.UpdateType.UPDATE
+            it.deleted shouldBeEqualTo false
         }
     }
 

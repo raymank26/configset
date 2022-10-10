@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block main %}
+<form action="/api/property/update" method="post">
+    <div>
+        <label>
+            <span>Application name</span>
+            <input name="applicationName" value="{{ property.applicationName if property else ''}}"/>
+        </label>
+    </div>
+    <div>
+        <label>
+            <span>Host value</span>
+            <input name="hostName" value="{{ property.hostName if property else '' }}"/>
+        </label>
+    </div>
+    <div>
+        <label>
+            <span>Property name</span>
+            <input name="propertyName" value="{{ property.propertyName if property else '' }}"/>
+        </label>
+    </div>
+    <div>
+        <label>
+            <span>Property value</span>
+            <input name="propertyValue" value="{{ property.propertyValue if property else '' }}"/>
+        </label>
+    </div>
+    {% if error %}
+    <div>
+        <p>{{ error }}
+        <p>
+    </div>
+    {% endif %}
+    <input type="hidden" name="requestId" value="{{requestId}}"/>
+    <input type="hidden" name="version" value="{{property.version}}"/>
+    <button type="submit">Update</button>
+</form>
+{% endblock %}

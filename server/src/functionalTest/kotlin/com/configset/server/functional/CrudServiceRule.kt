@@ -217,8 +217,11 @@ class CrudServiceRule : BeforeAllCallback, BeforeEachCallback, AfterEachCallback
 
     fun readProperty(appName: String, hostName: String, propertyName: String): PropertyItem? {
         val response = blockingClient.readProperty(
-            ReadPropertyRequest.newBuilder().setApplicationName(appName)
-                .setHostName(hostName).setPropertyName(propertyName).build()
+            ReadPropertyRequest.newBuilder()
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .build()
         )
         return if (response.hasItem) {
             response.item

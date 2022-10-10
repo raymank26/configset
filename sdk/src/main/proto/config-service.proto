@@ -21,16 +21,13 @@ message SubscriberInfoRequest {
 }
 
 message PropertyItem {
-    UpdateType updateType = 1;
-    string applicationName = 2;
-    string propertyName = 3;
-    string propertyValue = 4;
-    int64 version = 5;
-
-    enum UpdateType {
-        UPDATE = 0;
-        DELETE = 1;
-    }
+  string id = 1;
+  string applicationName = 2;
+  string hostName = 3;
+  string propertyName = 4;
+  string propertyValue = 5;
+  int64 version = 6;
+  bool deleted = 7;
 }
 
 message EmptyRequest {
@@ -139,7 +136,7 @@ message SearchPropertiesRequest {
 }
 
 message SearchPropertiesResponse {
-    repeated ShowPropertyItem items = 1;
+  repeated PropertyItem items = 1;
 }
 
 message ListPropertiesRequest {
@@ -148,15 +145,6 @@ message ListPropertiesRequest {
 
 message ListPropertiesResponse {
     repeated string propertyNames = 1;
-}
-
-message ShowPropertyItem {
-    string applicationName = 1;
-    string hostName = 2;
-    string propertyName = 3;
-    string propertyValue = 4;
-    int64 version = 5;
-  string id = 6;
 }
 
 message ListHostsResponse {

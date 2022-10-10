@@ -15,7 +15,7 @@ class TemplateRenderer(private val templatesFilePath: String?) {
     }
 
 
-    fun render(templateName: String, params: Map<String, Any> = emptyMap()): String {
+    fun render(templateName: String, params: Map<String, Any?> = emptyMap()): String {
         return jinjava.render(loadTemplate(templateName), params)
     }
 

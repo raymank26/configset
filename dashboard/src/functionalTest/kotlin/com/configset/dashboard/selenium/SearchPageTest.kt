@@ -7,8 +7,8 @@ import com.codeborne.selenide.Selenide.webdriver
 import com.codeborne.selenide.WebDriverConditions
 import com.configset.dashboard.selenium.pages.LeftNavPage
 import com.configset.dashboard.selenium.pages.SearchPage
+import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.SearchPropertiesRequest
-import com.configset.sdk.proto.ShowPropertyItem
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -51,14 +51,14 @@ class SearchPageTest : SeleniumTest() {
             .setPropertyValue("")
             .build()
         val properties = listOf(
-            ShowPropertyItem.newBuilder()
+            PropertyItem.newBuilder()
                 .setApplicationName("Sample app")
                 .setPropertyName("Foo")
                 .setPropertyValue("bar")
                 .setHostName("sample host")
                 .setVersion(2)
                 .build(),
-            ShowPropertyItem.newBuilder()
+            PropertyItem.newBuilder()
                 .setApplicationName("Sample app")
                 .setPropertyName("Next property")
                 .setPropertyValue("Next property value")
@@ -113,7 +113,7 @@ class SearchPageTest : SeleniumTest() {
             .setPropertyValue("")
             .build()
         val properties = listOf(
-            ShowPropertyItem.newBuilder()
+            PropertyItem.newBuilder()
                 .setApplicationName("Sample app")
                 .setPropertyName("Foo")
                 .setPropertyValue("bar")
@@ -134,10 +134,10 @@ class SearchPageTest : SeleniumTest() {
 
         // then
         val foundItem = rowElement.getPropertyItem("sample host", "bar")
-        foundItem.getEditButton().exists()
+        foundItem.getUpdateButton().exists()
     }
 
-    //    @Test
+    @Test
     fun `should redirect to edit page`() {
         // given
         val request = SearchPropertiesRequest.newBuilder()
@@ -147,7 +147,7 @@ class SearchPageTest : SeleniumTest() {
             .setPropertyValue("")
             .build()
         val properties = listOf(
-            ShowPropertyItem.newBuilder()
+            PropertyItem.newBuilder()
                 .setApplicationName("Sample app")
                 .setPropertyName("Foo")
                 .setPropertyValue("bar")
@@ -158,6 +158,17 @@ class SearchPageTest : SeleniumTest() {
         mockConfigServiceExt.whenSearchProperties {
             eq(request)
         }.answer(properties)
+        mockConfigServiceExt.whenReadProperty {
+            any()
+        }.answer(
+            PropertyItem.newBuilder()
+                .setApplicationName("Sample app")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sample host")
+                .setVersion(2)
+                .build()
+        )
 
         // when
         open("/")
@@ -165,11 +176,9 @@ class SearchPageTest : SeleniumTest() {
         SearchPage.searchButton.click()
         val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
         rowElement.getExpandButton().click()
-        rowElement.getPropertyItem("sample host", "bar").getEditButton().click()
+        rowElement.getPropertyItem("sample host", "bar").getUpdateButton().click()
 
         // then
-        webdriver().shouldHave(WebDriverConditions.url("$BASE_URL/edit?id="))
-        val foundItem = rowElement.getPropertyItem("sample host", "bar")
-        foundItem.getEditButton().exists()
+        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/update"))
     }
 }

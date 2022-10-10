@@ -31,6 +31,9 @@ dependencies {
     implementation "com.hubspot.jinjava:jinjava:$jinjavaVersion"
     implementation "com.google.guava:guava:$guavaVersion"
     implementation "com.auth0:java-jwt:$authZeroVersion"
+    implementation "io.arrow-kt:arrow-core:$arrowCore"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+
 
     testImplementation(testFixtures(project(":server")))
     testImplementation "org.awaitility:awaitility:$awaitilityVersion"
@@ -43,7 +46,6 @@ dependencies {
     testImplementation "com.github.tomakehurst:wiremock-jre8:$wiremockVersion"
 
     testImplementation "org.amshove.kluent:kluent:$kluentVersion"
-    testImplementation "io.arrow-kt:arrow-core:$arrowCore"
     testImplementation "com.codeborne:selenide:$selenideVersion"
     testImplementation "com.codeborne:selenide-proxy:$selenideVersion"
 }

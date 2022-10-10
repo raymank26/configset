@@ -1,13 +1,17 @@
 package com.configset.dashboard.selenium
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.codeborne.selenide.Configuration
 import com.codeborne.selenide.Selenide
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverRunner
 import com.configset.dashboard.FunctionalTest
-import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.BeforeEach
 import org.openqa.selenium.Cookie
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
 
 const val BASE_URL = "http://localhost:9299"
 
@@ -23,7 +27,10 @@ abstract class SeleniumTest : FunctionalTest() {
     }
 
     fun createAccessToken(): String {
-        return RandomStringUtils.randomAlphabetic(16)
+        return JWT.create()
+            .withPayload(mapOf("foo" to "bar"))
+            .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
+            .sign(Algorithm.HMAC256("123981823"))
     }
 
     fun authenticated() {
