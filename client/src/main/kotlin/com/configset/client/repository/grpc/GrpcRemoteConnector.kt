@@ -5,7 +5,6 @@ import com.configset.client.PropertyItem
 import com.configset.sdk.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
-import com.configset.sdk.proto.PropertyItem.UpdateType
 import com.configset.sdk.proto.SubscribeApplicationRequest
 import com.configset.sdk.proto.UpdateReceived
 import com.configset.sdk.proto.WatchRequest
@@ -78,8 +77,7 @@ class GrpcRemoteConnector(
         val updates: MutableList<PropertyItem> = ArrayList()
         val lastVersion = value.lastVersion
         for (propertyItemProto in value.itemsList) {
-            val propValue =
-                if (propertyItemProto.updateType == UpdateType.DELETE) null else propertyItemProto.propertyValue
+            val propValue = if (propertyItemProto.deleted) null else propertyItemProto.propertyValue
             updates.add(PropertyItem(propertyItemProto.applicationName, propertyItemProto.propertyName,
                 propertyItemProto.version, propValue))
         }

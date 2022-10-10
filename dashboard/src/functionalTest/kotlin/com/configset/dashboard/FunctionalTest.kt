@@ -3,6 +3,7 @@ package com.configset.dashboard
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.server.fixtures.SERVER_PORT
+import io.grpc.ManagedChannel
 import io.grpc.Metadata
 import io.grpc.Server
 import io.grpc.ServerCall
@@ -27,6 +28,7 @@ abstract class FunctionalTest {
         lateinit var dashboardClient: DashboardClient
 
         private lateinit var grpcServer: Server
+        private lateinit var channel: ManagedChannel
         private lateinit var app: App
 
         @JvmStatic
@@ -40,7 +42,7 @@ abstract class FunctionalTest {
                 .addService(ServerInterceptors.intercept(mockConfigService, AuthCheckInterceptor()))
                 .build()
                 .start()
-            val channel = InProcessChannelBuilder
+            channel = InProcessChannelBuilder
                 .forName("mytest")
                 .directExecutor()
                 .build()
@@ -72,6 +74,7 @@ abstract class FunctionalTest {
         @JvmStatic
         fun after() {
             app.stop()
+            channel.shutdownNow()
             grpcServer.shutdownNow()
         }
     }
