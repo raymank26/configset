@@ -46,7 +46,7 @@ class CrudPropertyService(
         propertyName: String,
         version: Long,
         accessToken: String,
-    ) {
+    ): Either<ServerApiGatewayErrorType, Unit> {
         return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, accessToken)
     }
 }

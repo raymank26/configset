@@ -24,7 +24,7 @@ class ListPropertiesService(
 
     fun getProperty(appName: String, hostName: String, propertyName: String, accessToken: String): ShowPropertyItem? {
         return apiGateway.readProperty(appName, hostName, propertyName, accessToken)?.let {
-            ShowPropertyItem(appName, hostName, propertyName, it.propertyValue, it.version)
+            ShowPropertyItem(it.id, appName, hostName, propertyName, it.propertyValue, it.version)
         }
     }
 }

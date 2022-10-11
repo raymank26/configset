@@ -11,6 +11,7 @@ import com.configset.dashboard.util.escapeHtml
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.requestId
+import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.apibuilder.ApiBuilder.post
@@ -57,6 +58,32 @@ class PagesController(
                     )
                 )
             )
+        }
+
+        delete("delete") { ctx ->
+            val appName = ctx.formParamSafe("applicationName")
+            val propertyName = ctx.formParamSafe("propertyName")
+            val hostName = ctx.formParamSafe("hostName")
+            val result = crudPropertyService.deleteProperty(
+                requestId = requestIdProducer.nextRequestId(),
+                appName = appName,
+                hostName = hostName,
+                propertyName = propertyName,
+                version = ctx.formParamSafe("version").toLong(),
+                accessToken = ctx.accessToken()
+            )
+            when (result) {
+                is Either.Left -> ctx.html(result.value.name)
+                is Either.Right ->
+                    ctx.header("HX-Redirect", buildString {
+                        append("/?applicationName=")
+                        append(appName.escapeHtml())
+                        append("&propertyName=")
+                        append(propertyName.escapeHtml())
+                        append("&hostName=")
+                        append(hostName.escapeHtml())
+                    })
+            }
         }
 
         post("update") { ctx ->

@@ -73,7 +73,14 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             .build())
 
         return response.itemsList.map { item ->
-            ShowPropertyItem(item.applicationName, item.hostName, item.propertyName, item.propertyValue, item.version)
+            ShowPropertyItem(
+                id = item.id,
+                applicationName = item.applicationName,
+                hostName = item.hostName,
+                propertyName = item.propertyName,
+                propertyValue = item.propertyValue,
+                version = item.version
+            )
         }
     }
 
@@ -162,19 +169,20 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         propertyName: String,
         version: Long,
         accessToken: String,
-    ) {
-        val response = withClient(accessToken).deleteProperty(DeletePropertyRequest.newBuilder()
-            .setRequestId(requestId)
-            .setApplicationName(appName)
-            .setHostName(hostName)
-            .setPropertyName(propertyName)
-            .setVersion(version)
-            .build()
+    ): Either<ServerApiGatewayErrorType, Unit> {
+        val response = withClient(accessToken).deleteProperty(
+            DeletePropertyRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .setVersion(version)
+                .build()
         )
         return when (response.type) {
-            DeletePropertyResponse.Type.OK -> Unit
-            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ServerApiGatewayErrorType.PROPERTY_NOT_FOUND.throwException()
-            DeletePropertyResponse.Type.DELETE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.throwException()
+            DeletePropertyResponse.Type.OK -> Unit.right()
+            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ServerApiGatewayErrorType.PROPERTY_NOT_FOUND.left()
+            DeletePropertyResponse.Type.DELETE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.left()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
@@ -192,6 +200,8 @@ data class SearchPropertiesRequest(
 )
 
 data class ShowPropertyItem @JsonCreator constructor(
+    @JsonProperty("id")
+    val id: String,
     @JsonProperty("applicationName")
     val applicationName: String,
     @JsonProperty("hostName")

@@ -25,13 +25,13 @@ class PropertyController(
             val requestId = ctx.requestId()
 
             crudPropertyService.updateProperty(
-                requestId,
-                appName,
-                hostName,
-                propertyName,
-                propertyValue,
-                version,
-                ctx.accessToken()
+                requestId = requestId,
+                appName = appName,
+                hostName = hostName,
+                propertyName = propertyName,
+                propertyValue = propertyValue,
+                version = version,
+                accessToken = ctx.accessToken()
             ).tapLeft {
                 it.throwException()
             }

@@ -184,7 +184,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
-                | where ${conditionList.joinToString(" and ")}
+                | where ${conditionList.joinToString(" and ")} and not cp.deleted
             """.trimMargin()
             )
                 .bind("propertyName", likeWildcard(searchPropertyRequest.propertyNameQuery))

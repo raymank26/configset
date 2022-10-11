@@ -221,6 +221,7 @@ class GrpcConfigurationService(
 
     private fun convertPropertyItem(item: PropertyItemED): PropertyItem {
         return PropertyItem.newBuilder()
+            .setId(item.id!!.toString())
             .setApplicationName(item.applicationName)
             .setPropertyName(item.name)
             .setPropertyValue(item.value)
