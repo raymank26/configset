@@ -13,6 +13,7 @@ import com.configset.server.db.common.DbHandle
 import com.configset.server.db.postgres.PropertyItemEDMapper.Companion.PROPERTY_ED_SELECT_EXP
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
+import org.jdbi.v3.core.statement.SqlStatements
 import org.jdbi.v3.core.statement.StatementContext
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.statement.SqlQuery
@@ -27,6 +28,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         dbi.registerRowMapper(HostEDRowMapper())
         dbi.registerRowMapper(PropertyItemEDMapper())
         dbi.registerRowMapper(PropertyItemEDMapper())
+        dbi.getConfig(SqlStatements::class.java).setUnusedBindingAllowed(true)
     }
 
     override fun initialize() {
@@ -167,6 +169,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
     override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
         val conditionList = mutableListOf<String>()
+        conditionList.add("true")
         if (searchPropertyRequest.propertyNameQuery != null) {
             conditionList.add("cp.name ilike :propertyName")
         }

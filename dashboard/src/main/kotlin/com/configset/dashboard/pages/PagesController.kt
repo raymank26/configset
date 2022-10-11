@@ -45,6 +45,15 @@ class PagesController(
                 }
             }
         }
+        get("create") { ctx ->
+            ctx.html(
+                templateRenderer.render(
+                    "update_property.html", mapOf(
+                        "requestId" to requestIdProducer.nextRequestId()
+                    )
+                )
+            )
+        }
         get("update") { ctx ->
             val property = listPropertiesService.getProperty(
                 appName = ctx.queryParamSafe("applicationName"),
