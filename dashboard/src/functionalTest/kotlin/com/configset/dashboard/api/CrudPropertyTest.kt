@@ -1,4 +1,4 @@
-package com.configset.dashboard.headless
+package com.configset.dashboard.api
 
 import arrow.core.Either
 import com.configset.dashboard.DashboardHttpFailure

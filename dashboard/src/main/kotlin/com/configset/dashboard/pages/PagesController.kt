@@ -40,49 +40,6 @@ class PagesController(
                     )
                     ctx.html(templateRenderer.render("properties_block.html", mapOf("properties" to properties)))
                 }
-                post("update") { ctx ->
-                    val requestId = ctx.requestId()
-                    val appName = ctx.formParamSafe("applicationName")
-                    val hostName = ctx.formParamSafe("hostName")
-                    val propertyName = ctx.formParamSafe("propertyName")
-
-                    val result = crudPropertyService.updateProperty(
-                        requestId = requestId,
-                        appName = appName,
-                        hostName = hostName,
-                        propertyName = propertyName,
-                        propertyValue = ctx.formParamSafe("propertyValue"),
-                        version = ctx.formParamSafe("version").toLongOrNull(),
-                        ctx.accessToken()
-                    )
-                    when (result) {
-                        is Either.Left -> {
-                            val property = listPropertiesService.getProperty(
-                                appName = appName,
-                                hostName = hostName,
-                                propertyName = propertyName,
-                                accessToken = ctx.accessToken()
-                            )
-                            ctx.html(
-                                templateRenderer.render(
-                                    "update_property.html", mapOf(
-                                        "property" to property,
-                                        "error" to result.value
-                                    )
-                                )
-                            )
-                        }
-
-                        is Either.Right -> ctx.redirect(buildString {
-                            append("/?applicationName=")
-                            append(appName.escapeHtml())
-                            append("propertyName=")
-                            append(propertyName.escapeHtml())
-                            append("hostName=")
-                            append(hostName.escapeHtml())
-                        })
-                    }
-                }
             }
         }
         get("update") { ctx ->
@@ -100,6 +57,50 @@ class PagesController(
                     )
                 )
             )
+        }
+
+        post("update") { ctx ->
+            val requestId = ctx.requestId()
+            val appName = ctx.formParamSafe("applicationName")
+            val hostName = ctx.formParamSafe("hostName")
+            val propertyName = ctx.formParamSafe("propertyName")
+
+            val result = crudPropertyService.updateProperty(
+                requestId = requestId,
+                appName = appName,
+                hostName = hostName,
+                propertyName = propertyName,
+                propertyValue = ctx.formParamSafe("propertyValue"),
+                version = ctx.formParamSafe("version").toLongOrNull(),
+                ctx.accessToken()
+            )
+            when (result) {
+                is Either.Left -> {
+                    val property = listPropertiesService.getProperty(
+                        appName = appName,
+                        hostName = hostName,
+                        propertyName = propertyName,
+                        accessToken = ctx.accessToken()
+                    )
+                    ctx.html(
+                        templateRenderer.render(
+                            "update_property.html", mapOf(
+                                "property" to property,
+                                "error" to result.value
+                            )
+                        )
+                    )
+                }
+
+                is Either.Right -> ctx.redirect(buildString {
+                    append("/?applicationName=")
+                    append(appName.escapeHtml())
+                    append("propertyName=")
+                    append(propertyName.escapeHtml())
+                    append("hostName=")
+                    append(hostName.escapeHtml())
+                })
+            }
         }
     }
 }

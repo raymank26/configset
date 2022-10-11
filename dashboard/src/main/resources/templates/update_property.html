@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block main %}
-<form action="/api/property/update" method="post">
+<form action="/update" method="post">
     <div>
         <label>
             <span>Application name</span>
@@ -27,13 +27,13 @@
         </label>
     </div>
     {% if error %}
-    <div>
+    <div class="property-update-error">
         <p>{{ error }}
         <p>
     </div>
     {% endif %}
     <input type="hidden" name="requestId" value="{{requestId}}"/>
     <input type="hidden" name="version" value="{{property.version}}"/>
-    <button type="submit">Update</button>
+    <button class="property-update-button" type="submit">Update</button>
 </form>
 {% endblock %}

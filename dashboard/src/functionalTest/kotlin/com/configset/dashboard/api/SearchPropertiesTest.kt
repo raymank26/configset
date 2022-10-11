@@ -1,4 +1,4 @@
-package com.configset.dashboard.headless
+package com.configset.dashboard.api
 
 import com.configset.dashboard.FunctionalTest
 import com.configset.dashboard.expectRight

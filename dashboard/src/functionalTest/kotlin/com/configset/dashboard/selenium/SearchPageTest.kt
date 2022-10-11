@@ -1,14 +1,20 @@
 package com.configset.dashboard.selenium
 
 import com.codeborne.selenide.Condition.href
+import com.codeborne.selenide.Condition.value
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.Selenide.webdriver
 import com.codeborne.selenide.WebDriverConditions
 import com.configset.dashboard.selenium.pages.LeftNavPage
 import com.configset.dashboard.selenium.pages.SearchPage
+import com.configset.dashboard.selenium.pages.UpdatePropertyPage
 import com.configset.sdk.proto.PropertyItem
+import com.configset.sdk.proto.ReadPropertyRequest
 import com.configset.sdk.proto.SearchPropertiesRequest
+import com.configset.sdk.proto.UpdatePropertyResponse
+import io.mockk.slot
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -180,5 +186,98 @@ class SearchPageTest : SeleniumTest() {
 
         // then
         webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/update"))
+    }
+
+    @Test
+    fun `should fill property form`() {
+        // given
+        val propertyReadRequestSlot = slot<ReadPropertyRequest>()
+        mockConfigServiceExt.whenReadProperty {
+            capture(propertyReadRequestSlot)
+        }.answer(
+            PropertyItem.newBuilder()
+                .setApplicationName("sampleApp")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sampleHost")
+                .setVersion(2)
+                .build()
+        )
+
+        // when
+        open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+
+        // then
+        UpdatePropertyPage.applicationNameInput.apply {
+            shouldBe(visible)
+            shouldHave(value("sampleApp"))
+        }
+        UpdatePropertyPage.hostNameInput.apply {
+            shouldBe(visible)
+            shouldHave(value("sampleHost"))
+        }
+        UpdatePropertyPage.propertyNameInput.apply {
+            shouldBe(visible)
+            shouldHave(value("Foo"))
+        }
+        UpdatePropertyPage.propertyValueInput.apply {
+            shouldBe(visible)
+            shouldHave(value("bar"))
+        }
+        propertyReadRequestSlot.captured.also {
+            it.applicationName shouldBeEqualTo "sampleApp"
+            it.propertyName shouldBeEqualTo "Foo"
+            it.hostName shouldBeEqualTo "sampleHost"
+        }
+    }
+
+    @Test
+    fun `should update property and redirect back`() {
+        // given
+        mockConfigServiceExt.whenReadProperty { any() }
+            .answer(
+                PropertyItem.newBuilder()
+                    .setApplicationName("sampleApp")
+                    .setPropertyName("Foo")
+                    .setPropertyValue("bar")
+                    .setHostName("sampleHost")
+                    .setVersion(2)
+                    .build()
+            )
+        mockConfigServiceExt.whenUpdateProperty { any() }
+            .answer(UpdatePropertyResponse.Type.OK)
+
+        // when
+        open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+        UpdatePropertyPage.propertyValueInput.value = "new value"
+        UpdatePropertyPage.updateButton.click()
+
+        // then
+        SearchPage.searchButton.shouldBe(visible)
+    }
+
+    @Test
+    fun `should show error on property update`() {
+        // given
+        mockConfigServiceExt.whenReadProperty { any() }
+            .answer(
+                PropertyItem.newBuilder()
+                    .setApplicationName("sampleApp")
+                    .setPropertyName("Foo")
+                    .setPropertyValue("bar")
+                    .setHostName("sampleHost")
+                    .setVersion(2)
+                    .build()
+            )
+        mockConfigServiceExt.whenUpdateProperty { any() }
+            .answer(UpdatePropertyResponse.Type.UPDATE_CONFLICT)
+
+        // when
+        open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+        UpdatePropertyPage.propertyValueInput.value = "new value"
+        UpdatePropertyPage.updateButton.click()
+
+        // then
+        UpdatePropertyPage.errorContainer.shouldBe(visible)
     }
 }
