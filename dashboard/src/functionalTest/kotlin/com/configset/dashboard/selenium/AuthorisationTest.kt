@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverRunner
+import com.configset.dashboard.AccessTokenTestUtils
 import com.configset.dashboard.selenium.pages.LeftNavPage
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -64,7 +65,7 @@ class AuthorisationTest : SeleniumTest() {
                 .willReturn(
                     jsonResponse(
                         """{
-                        |"access_token": "${createAccessToken()}",
+                        |"access_token": "${AccessTokenTestUtils.createAccessToken()}",
                         |"id_token": "${createIdTokenJwt()}" 
                         |}""".trimMargin(), 200
                     )
