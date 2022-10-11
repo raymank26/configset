@@ -41,10 +41,11 @@ object Main {
             crudPropertyService,
             listPropertiesService, propertyImportService
         )
+        val requestExtender = dependencyFactory.requestExtender(objectMapper)
         val javalinServer = dependencyFactory.javalinServer(
             authController,
             javalinExceptionMapper,
-            authInterceptor,
+            listOf(authInterceptor, requestExtender),
             pagesController,
             applicationController,
             propertyController,

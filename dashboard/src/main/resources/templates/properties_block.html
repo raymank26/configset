@@ -36,10 +36,8 @@
                 <button class="delete-property"
                         hx-confirm="Are you sure you want to delete this property?"
                         hx-vals='{"applicationName": "{{property.applicationName}}", "propertyName": "{{property.propertyName}}", "hostName": "{{hostProperty.hostName}}", "version": "{{hostProperty.version}}"}'
-                        hx-target="#delete-error-{{ hostProperty.id }}"
                         hx-delete="/delete">Delete
                 </button>
-                <div id="delete-error-{{ hostProperty.id }}"></div>
             </div>
         </td>
     </tr>

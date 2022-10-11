@@ -9,6 +9,8 @@ import com.configset.dashboard.util.RequestIdProducer
 import com.configset.dashboard.util.accessToken
 import com.configset.dashboard.util.escapeHtml
 import com.configset.dashboard.util.formParamSafe
+import com.configset.dashboard.util.htmxRedirect
+import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.requestId
 import io.javalin.apibuilder.ApiBuilder.delete
@@ -73,9 +75,9 @@ class PagesController(
                 accessToken = ctx.accessToken()
             )
             when (result) {
-                is Either.Left -> ctx.html(result.value.name)
+                is Either.Left -> ctx.htmxShowAlert(result.value.name)
                 is Either.Right ->
-                    ctx.header("HX-Redirect", buildString {
+                    ctx.htmxRedirect(buildString {
                         append("/?applicationName=")
                         append(appName.escapeHtml())
                         append("&propertyName=")

@@ -12,13 +12,14 @@ import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
 import com.configset.sdk.client.ConfigSetClient
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.javalin.http.Handler
 
 open class DependencyFactory(private val config: Config) {
 
     fun javalinServer(
         authController: AuthController,
         javalinExceptionMapper: JavalinExceptionMapper,
-        authInterceptor: AuthInterceptor,
+        interceptors: List<Handler>,
         pagesController: PagesController,
         applicationController: ApplicationController,
         propertyController: PropertyController,
@@ -27,7 +28,7 @@ open class DependencyFactory(private val config: Config) {
             authController,
             config,
             javalinExceptionMapper,
-            authInterceptor,
+            interceptors,
             pagesController,
             applicationController,
             propertyController
@@ -99,6 +100,10 @@ open class DependencyFactory(private val config: Config) {
         propertyImportService: PropertyImportService,
     ): PropertyController {
         return PropertyController(crudPropertyService, listPropertiesService, propertyImportService)
+    }
+
+    fun requestExtender(objectMapper: ObjectMapper): RequestExtender {
+        return RequestExtender(objectMapper)
     }
 
     open fun configSetClient(): ConfigSetClient {

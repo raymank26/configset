@@ -7,6 +7,7 @@ class Config(properties: Map<String, String>) {
     val port = properties["config_server.port"]?.toInt() ?: 8988
     val dashboardPort = properties["dashboard.port"]?.toInt() ?: 8188
     val templatesFilePath = properties["templates.file.path"]
+    val jsFilePath = properties["js.file.path"]
 
     val authenticationConfig = AuthenticationConfig(properties)
 }

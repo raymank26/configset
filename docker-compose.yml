@@ -24,6 +24,7 @@ services:
       - "config_server.port=8080"
       - "client.keycloack_url=http://localhost:8077"
       - "templates.file.path=/templates"
+      - "js.file.path=/js"
       - "auth.auth_uri=http://localhost:8077/auth/realms/demo/protocol/openid-connect/auth"
       - "auth.request_token_uri=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/token"
       - "auth.redirect_uri=http://localhost:8188/auth/redirect"
@@ -31,6 +32,7 @@ services:
       - "auth.secret_key=ffcb474e-52e2-43a3-8aba-3b677679c1f1"
     volumes:
       - "./dashboard/src/main/resources/templates:/templates"
+      - "./dashboard/src/main/resources/js:/js"
   keycloack:
     image: "quay.io/keycloak/keycloak:15.0.1"
     ports:
