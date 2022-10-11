@@ -15,6 +15,7 @@ object SearchPage {
     val hostNameInput = element(By.name("hostname"))
     val searchButton = element(By.name("search"))
     val searchResultsEmpty = element("#properties-search-result-empty")
+    val addPropertyLink = element(By.className("add-property"))
     private val searchResults = element("#properties-search-result")
 
     fun searchResultsShouldContainProperty(property: PropertyItem) {
