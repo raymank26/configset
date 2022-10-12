@@ -1,10 +1,9 @@
 package com.configset.server.functional
 
-import com.configset.sdk.proto.PropertyItem
 import com.configset.server.fixtures.TEST_APP_NAME
 import com.configset.server.fixtures.TEST_DEFAULT_APP_NAME
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.jupiter.api.Assertions
+import org.amshove.kluent.shouldContainAny
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -18,16 +17,21 @@ class GrpcWatchTest {
 
     @Test
     fun testReceiveInitialProperties() {
+        // given
         serviceRule.createApplication(TEST_APP_NAME)
         serviceRule.updateProperty(TEST_APP_NAME, "host-$TEST_DEFAULT_APP_NAME", 1, "name", "value")
         serviceRule.subscribeTestApplication(lastKnownVersion = null)
 
+        // when
         val receivedItems = serviceRule.watchForChanges(1, 50000).first().itemsList
+
+        // then
         receivedItems.size shouldBeEqualTo 1
     }
 
     @Test
     fun testWatch() {
+        // given
         serviceRule.subscribeTestApplication(lastKnownVersion = null)
 
         serviceRule.createApplication(TEST_APP_NAME)
@@ -37,32 +41,26 @@ class GrpcWatchTest {
         serviceRule.updateProperty(TEST_APP_NAME, "host-$TEST_DEFAULT_APP_NAME", 2, "name2", "value2")
         serviceRule.updateProperty(TEST_APP_NAME, "srvd2", 3, "name3", "value3") // should be skipped
 
+        // when
         val receivedItems = serviceRule.watchForChanges(1, 5000).first().itemsList
+
+        // then
         receivedItems.size shouldBeEqualTo 2
 
-        Thread.sleep(serviceRule.updateDelayMs * 2)
-
-        Assertions.assertEquals(
-            listOf(
-                PropertyItem.newBuilder()
-                    .setApplicationName(TEST_APP_NAME)
-                    .setPropertyName("name")
-                    .setPropertyValue("value")
-                    .setHostName("srvd1")
-                    .setVersion(1)
-                    .build(),
-                PropertyItem.newBuilder()
-                    .setApplicationName(TEST_APP_NAME)
-                    .setPropertyName("name2")
-                    .setPropertyValue("value2")
-                    .setHostName("host-my-app")
-                    .setVersion(2)
-                    .build()
-            ), receivedItems
-        )
+        receivedItems shouldContainAny {
+            it.applicationName == TEST_APP_NAME
+                    && it.propertyName == "name"
+                    && it.propertyValue == "value"
+                    && it.hostName == "srvd1"
+                    && it.version == 1L
+        } shouldContainAny {
+            it.applicationName == TEST_APP_NAME
+                    && it.propertyName == "name2"
+                    && it.propertyValue == "value2"
+                    && it.hostName == "host-my-app"
+                    && it.version == 2L
+        }
 
         serviceRule.deleteProperty(TEST_APP_NAME, "srvd1", "name", 1)
-
-        serviceRule.watchForChanges(1, 5000)
     }
 }
