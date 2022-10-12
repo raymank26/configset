@@ -60,4 +60,10 @@ class PropertyItemRow(private val selenideElement: SelenideElement) {
             shouldBe(visible)
         }
     }
+
+    fun getDeleteButton(): SelenideElement {
+        return selenideElement.find(By.className("delete-property")).apply {
+            shouldBe(visible)
+        }
+    }
 }

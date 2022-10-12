@@ -14,5 +14,4 @@ object AccessTokenTestUtils {
             .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
             .sign(Algorithm.HMAC256("123981823"))
     }
-
 }

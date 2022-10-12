@@ -4,8 +4,11 @@ import com.codeborne.selenide.Condition
 import com.codeborne.selenide.Selenide
 import com.configset.dashboard.selenium.pages.SearchPage
 import com.configset.dashboard.selenium.pages.UpdatePropertyPage
+import com.configset.sdk.proto.DeletePropertyRequest
+import com.configset.sdk.proto.DeletePropertyResponse
 import com.configset.sdk.proto.PropertyItem
 import com.configset.sdk.proto.ReadPropertyRequest
+import com.configset.sdk.proto.SearchPropertiesRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import io.mockk.slot
 import org.amshove.kluent.shouldBeEqualTo
@@ -111,5 +114,99 @@ class PropertyCrudTest : SeleniumTest() {
 
         // then
         UpdatePropertyPage.errorContainer.shouldBe(Condition.visible)
+    }
+
+    @Test
+    fun `should delete property and redirect back`() {
+        // given
+        val request = SearchPropertiesRequest.newBuilder()
+            .setApplicationName("Sample app")
+            .setPropertyName("")
+            .setHostName("")
+            .setPropertyValue("")
+            .build()
+        val properties = listOf(
+            PropertyItem.newBuilder()
+                .setApplicationName("Sample app")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sample host")
+                .setVersion(2)
+                .build(),
+        )
+        mockConfigServiceExt.whenSearchProperties {
+            eq(request)
+        }.answer(properties)
+
+        val deletePropertyRequest = slot<DeletePropertyRequest>()
+        mockConfigServiceExt.whenDeleteProperty {
+            capture(deletePropertyRequest)
+        }.answer(
+            DeletePropertyResponse.newBuilder()
+                .setType(DeletePropertyResponse.Type.OK)
+                .build()
+        )
+
+        // when
+        Selenide.open("/")
+        SearchPage.applicationNameInput.value = "Sample app"
+        SearchPage.searchButton.click()
+        val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
+        rowElement.getExpandButton().click()
+        val foundItem = rowElement.getPropertyItem("sample host", "bar")
+        foundItem.getDeleteButton().click()
+        Selenide.switchTo().alert().accept()
+
+        // then
+        SearchPage.searchButton.shouldBe(Condition.visible)
+        deletePropertyRequest.captured.also {
+            it.applicationName shouldBeEqualTo properties[0].applicationName
+            it.hostName shouldBeEqualTo properties[0].hostName
+            it.propertyName shouldBeEqualTo properties[0].propertyName
+        }
+    }
+
+    @Test
+    fun `should show error on property delete`() {
+        // given
+        val request = SearchPropertiesRequest.newBuilder()
+            .setApplicationName("Sample app")
+            .setPropertyName("")
+            .setHostName("")
+            .setPropertyValue("")
+            .build()
+        val properties = listOf(
+            PropertyItem.newBuilder()
+                .setApplicationName("Sample app")
+                .setPropertyName("Foo")
+                .setPropertyValue("bar")
+                .setHostName("sample host")
+                .setVersion(2)
+                .build(),
+        )
+        mockConfigServiceExt.whenSearchProperties {
+            eq(request)
+        }.answer(properties)
+
+        mockConfigServiceExt.whenDeleteProperty {
+            any()
+        }.answer(
+            DeletePropertyResponse.newBuilder()
+                .setType(DeletePropertyResponse.Type.DELETE_CONFLICT)
+                .build()
+        )
+
+        // when
+        Selenide.open("/")
+        SearchPage.applicationNameInput.value = "Sample app"
+        SearchPage.searchButton.click()
+        val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
+        rowElement.getExpandButton().click()
+        val foundItem = rowElement.getPropertyItem("sample host", "bar")
+        foundItem.getDeleteButton().click()
+        Selenide.switchTo().alert().accept()
+
+        // then
+        Selenide.switchTo().alert().text.shouldBeEqualTo("CONFLICT")
     }
 }
