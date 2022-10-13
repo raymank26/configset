@@ -29,7 +29,7 @@ services:
       - "auth.request_token_uri=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/token"
       - "auth.redirect_uri=http://localhost:8188/auth/redirect"
       - "auth.client_id=demo-clientId"
-      - "auth.secret_key=ffcb474e-52e2-43a3-8aba-3b677679c1f1"
+      - "auth.secret_key=c830229a-00fa-4008-a736-6dde3301db50"
     volumes:
       - "./dashboard/src/main/resources/templates:/templates"
       - "./dashboard/src/main/resources/js:/js"
@@ -37,6 +37,12 @@ services:
     image: "quay.io/keycloak/keycloak:15.0.1"
     ports:
       - "8077:8080"
+    volumes:
+      - keycloak-data-volume:/var/lib/keycloak/data
     environment:
       - "KEYCLOAK_USER=admin"
       - "KEYCLOAK_PASSWORD=admin"
+
+volumes:
+  keycloak-data-volume:
+    external: false

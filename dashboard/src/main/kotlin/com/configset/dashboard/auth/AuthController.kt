@@ -2,6 +2,7 @@ package com.configset.dashboard.auth
 
 import com.auth0.jwt.JWT
 import com.configset.dashboard.AuthenticationConfig
+import com.configset.dashboard.util.escapeHtml
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.apibuilder.ApiBuilder.get
@@ -10,7 +11,7 @@ import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
+import java.util.Base64
 
 class AuthController(
     private val authenticationConfig: AuthenticationConfig,
@@ -39,7 +40,10 @@ class AuthController(
                             .build()
                     ).build()
             ).execute()
-            require(response.code == 200)
+            if (response.code != 200) {
+                ctx.redirect("/")
+                return@get
+            }
             val responseJson = response.body!!.byteStream().use {
                 objectMapper.readTree(it)
             }
@@ -50,13 +54,14 @@ class AuthController(
             val payloadJson = String(Base64.getDecoder().decode(idTokenDecoded.payload))
             val username = readFirst(
                 objectMapper.readTree(payloadJson),
-                setOf("name", "preferred_username", "nickname")
+                setOf("preferred_username", "name", "nickname")
             )
 
             ctx.cookie(Cookie("auth.access_token", accessToken).apply {
                 isHttpOnly = true
             })
-            ctx.cookie(Cookie("auth.username", username))
+
+            ctx.cookie(Cookie("auth.username", username.escapeHtml()))
 
             ctx.redirect("/")
         }

@@ -5,25 +5,36 @@
     <div>
         <label>
             <span>Application name</span>
-            <input name="applicationName" value="{{ property.applicationName if property else ''}}"/>
+            <input name="applicationName"
+                   value="{{ property.applicationName if property else ''}}"
+                   {% if property %} readonly {% endif %}
+            />
         </label>
     </div>
     <div>
         <label>
             <span>Host value</span>
-            <input name="hostName" value="{{ property.hostName if property else '' }}"/>
+            <input name="hostName"
+                   value="{{ property.hostName if property else '' }}"
+                   {% if property %} readonly {% endif %}
+            />
         </label>
     </div>
     <div>
         <label>
             <span>Property name</span>
-            <input name="propertyName" value="{{ property.propertyName if property else '' }}"/>
+            <input name="propertyName"
+                   value="{{ property.propertyName if property else '' }}"
+                   {% if property %} readonly {% endif %}
+            />
         </label>
     </div>
     <div>
         <label>
             <span>Property value</span>
-            <input name="propertyValue" value="{{ property.propertyValue if property else '' }}"/>
+            <input name="propertyValue"
+                   value="{{ property.propertyValue if property else '' }}"
+            />
         </label>
     </div>
     {% if error %}

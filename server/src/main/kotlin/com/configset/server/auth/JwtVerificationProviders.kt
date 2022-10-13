@@ -12,7 +12,7 @@ import java.net.http.HttpResponse
 import java.security.KeyFactory
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.X509EncodedKeySpec
-import java.util.*
+import java.util.Base64
 
 private val objectMapper = ObjectMapper()
 
@@ -22,13 +22,16 @@ class RemoteJwtVerificationProvider(
 ) {
 
     fun createVerification(): Verification {
-        val response = retry(maxRetries = Integer.MAX_VALUE) {
-            httpClient.send(HttpRequest.newBuilder().GET()
-                .uri(URI(realmUrl))
-                .build(), HttpResponse.BodyHandlers.ofString())
+        val publicKeyContent = retry(maxRetries = Integer.MAX_VALUE) {
+            val response = httpClient.send(
+                HttpRequest.newBuilder().GET()
+                    .uri(URI(realmUrl))
+                    .build(), HttpResponse.BodyHandlers.ofString()
+            )
+            val tree = objectMapper.readTree(response.body())
+            require(tree.get("public_key") != null) { "Cannot find `public_key` in OAuth provider response" }
+            tree["public_key"].asText()
         }
-        val tree = objectMapper.readTree(response.body())
-        val publicKeyContent = tree["public_key"].asText()
 
         return JwtVerificationProvider(publicKeyContent).createVerification()
     }
