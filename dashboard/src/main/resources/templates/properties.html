@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block main %}
+<form>
+    <label>
+        <span>Application name</span>
+        <input name="applicationName" value="{{applicationName}}"/>
+    </label>
+    <label>
+        <span>Host name</span>
+        <input name="hostName" value="{{hostName}}"/>
+    </label>
+    <label>
+        <span>Property name</span>
+        <input name="propertyName" value="{{propertyName}}"/>
+    </label>
+    <label>
+        <span>Property value</span>
+        <input name="propertyValue" value="{{propertyValue}}"/>
+    </label>
+    <button type="submit" class="search-properties-button">Search</button>
+    <a class="create-property" href="/properties/create">Add property</a>
+</form>
+
+<div id="properties-search-result">
+    {% if showProperties %}
+    {% include "properties_search_result_block.html" %}
+    {% endif %}
+</div>
+{% endblock %}

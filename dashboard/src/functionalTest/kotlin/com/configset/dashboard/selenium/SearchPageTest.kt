@@ -20,9 +20,18 @@ class SearchPageTest : SeleniumTest() {
     }
 
     @Test
-    fun `should have main elements`() {
+    fun `should redirect to properties`() {
         // when
         open("/")
+
+        // then
+        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/properties"))
+    }
+
+    @Test
+    fun `should have main elements`() {
+        // when
+        open("/properties")
 
         // then
         SearchPage.applicationNameInput.shouldBe(visible)
@@ -30,7 +39,7 @@ class SearchPageTest : SeleniumTest() {
         SearchPage.propertyValueInput.shouldBe(visible)
         SearchPage.hostNameInput.shouldBe(visible)
         SearchPage.searchButton.shouldBe(visible)
-        SearchPage.addPropertyLink.shouldBe(visible)
+        SearchPage.createPropertyLink.shouldBe(visible)
 
         LeftNavPage.search.apply {
             shouldHave(href("/"))
@@ -73,7 +82,7 @@ class SearchPageTest : SeleniumTest() {
         }.answer(properties)
 
         // when
-        open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
 
@@ -96,7 +105,7 @@ class SearchPageTest : SeleniumTest() {
         }.answer(emptyList())
 
         // when
-        open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
 
@@ -127,7 +136,7 @@ class SearchPageTest : SeleniumTest() {
         }.answer(properties)
 
         // when
-        open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
         val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
@@ -172,7 +181,7 @@ class SearchPageTest : SeleniumTest() {
         )
 
         // when
-        open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
         val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
@@ -180,7 +189,7 @@ class SearchPageTest : SeleniumTest() {
         rowElement.getPropertyItem("sample host", "bar").getUpdateButton().click()
 
         // then
-        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/update"))
+        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/properties/update"))
     }
 
     @Test
@@ -189,9 +198,9 @@ class SearchPageTest : SeleniumTest() {
         authenticated()
 
         // when
-        SearchPage.addPropertyLink.click()
+        SearchPage.createPropertyLink.click()
 
         // then
-        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/create"))
+        webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/properties/create"))
     }
 }

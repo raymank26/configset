@@ -9,13 +9,13 @@ import com.configset.sdk.proto.PropertyItem
 import org.openqa.selenium.By
 
 object SearchPage {
-    val applicationNameInput = element(By.name("application-name"))
-    val propertyNameInput = element(By.name("property-name"))
-    val propertyValueInput = element(By.name("property-value"))
-    val hostNameInput = element(By.name("hostname"))
-    val searchButton = element(By.name("search"))
+    val applicationNameInput = element(By.name("applicationName"))
+    val propertyNameInput = element(By.name("propertyName"))
+    val propertyValueInput = element(By.name("propertyValue"))
+    val hostNameInput = element(By.name("hostName"))
+    val searchButton = element(By.className("search-properties-button"))
     val searchResultsEmpty = element("#properties-search-result-empty")
-    val addPropertyLink = element(By.className("add-property"))
+    val createPropertyLink = element(By.className("create-property"))
     private val searchResults = element("#properties-search-result")
 
     fun searchResultsShouldContainProperty(property: PropertyItem) {

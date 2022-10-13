@@ -1,5 +1,5 @@
 {% if properties|length %}
-<table class="table">
+<table x-cloak x-data='{}' class="table">
     <thead>
     <tr>
         <th></th>
@@ -31,12 +31,12 @@
         <td>{{ hostProperty.propertyValue }}</td>
         <td>
             <a class="update-property"
-               href="/update?applicationName={{property.applicationName|e}}&propertyName={{property.propertyName|e}}&hostName={{hostProperty.hostName|e}}">Update</a>
+               href="/properties/update?applicationName={{property.applicationName|e}}&propertyName={{property.propertyName|e}}&hostName={{hostProperty.hostName|e}}">Update</a>
             <div style="display: inline-block">
                 <button class="delete-property"
                         hx-confirm="Are you sure you want to delete this property?"
                         hx-vals='{"applicationName": "{{property.applicationName}}", "propertyName": "{{property.propertyName}}", "hostName": "{{hostProperty.hostName}}", "version": "{{hostProperty.version}}"}'
-                        hx-delete="/delete">Delete
+                        hx-delete="/properties/delete">Delete
                 </button>
             </div>
         </td>

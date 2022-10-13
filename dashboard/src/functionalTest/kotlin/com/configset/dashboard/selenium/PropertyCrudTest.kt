@@ -2,6 +2,7 @@ package com.configset.dashboard.selenium
 
 import com.codeborne.selenide.Condition
 import com.codeborne.selenide.Selenide
+import com.codeborne.selenide.Selenide.open
 import com.configset.dashboard.selenium.pages.SearchPage
 import com.configset.dashboard.selenium.pages.UpdatePropertyPage
 import com.configset.sdk.proto.DeletePropertyRequest
@@ -39,7 +40,7 @@ class PropertyCrudTest : SeleniumTest() {
         )
 
         // when
-        Selenide.open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+        open("/properties/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
 
         // then
         UpdatePropertyPage.applicationNameInput.apply {
@@ -83,7 +84,7 @@ class PropertyCrudTest : SeleniumTest() {
             .answer(UpdatePropertyResponse.Type.OK)
 
         // when
-        Selenide.open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+        open("/properties/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
         UpdatePropertyPage.propertyValueInput.value = "new value"
         UpdatePropertyPage.updateButton.click()
 
@@ -108,7 +109,7 @@ class PropertyCrudTest : SeleniumTest() {
             .answer(UpdatePropertyResponse.Type.UPDATE_CONFLICT)
 
         // when
-        Selenide.open("/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
+        open("/properties/update?applicationName=sampleApp&propertyName=Foo&hostName=sampleHost")
         UpdatePropertyPage.propertyValueInput.value = "new value"
         UpdatePropertyPage.updateButton.click()
 
@@ -148,7 +149,7 @@ class PropertyCrudTest : SeleniumTest() {
         )
 
         // when
-        Selenide.open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
         val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
@@ -197,7 +198,7 @@ class PropertyCrudTest : SeleniumTest() {
         )
 
         // when
-        Selenide.open("/")
+        open("/properties")
         SearchPage.applicationNameInput.value = "Sample app"
         SearchPage.searchButton.click()
         val rowElement = SearchPage.findSearchResultRow(properties[0].applicationName, properties[0].propertyName)
