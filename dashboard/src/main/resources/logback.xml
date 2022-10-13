@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.configset" level="DEBUG" additivity="false">
+    <logger name="org.eclipse.jetty" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 
