@@ -111,12 +111,14 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
     }
 
     fun readProperty(appName: String, hostName: String, propertyName: String, accessToken: String): PropertyItem? {
-        val response = withClient(accessToken).readProperty(
-            ReadPropertyRequest.newBuilder()
-                .setApplicationName(appName)
-            .setHostName(hostName)
-            .setPropertyName(propertyName)
-            .build())
+        val response = withClient(accessToken)
+            .readProperty(
+                ReadPropertyRequest.newBuilder()
+                    .setApplicationName(appName)
+                    .setHostName(hostName)
+                    .setPropertyName(propertyName)
+                    .build()
+            )
         return if (response.hasItem) {
             response.item
         } else {

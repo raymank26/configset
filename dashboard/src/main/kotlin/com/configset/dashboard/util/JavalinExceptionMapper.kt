@@ -26,6 +26,7 @@ class JavalinExceptionMapper {
                 ctx.status(HttpStatus.FORBIDDEN_403)
             } else {
                 LOG.warn("Unknown gRPC exception", e)
+                ctx.htmxShowAlert("Server error")
                 ctx.status(HttpStatus.INTERNAL_SERVER_ERROR_500)
             }
         }

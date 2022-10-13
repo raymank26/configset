@@ -89,10 +89,6 @@ class PagesController(
                     ctx.htmxRedirect(buildString {
                         append("/?applicationName=")
                         append(appName.escapeHtml())
-                        append("&propertyName=")
-                        append(propertyName.escapeHtml())
-                        append("&hostName=")
-                        append(hostName.escapeHtml())
                     })
             }
         }
@@ -102,14 +98,16 @@ class PagesController(
             val appName = ctx.formParamSafe("applicationName")
             val hostName = ctx.formParamSafe("hostName")
             val propertyName = ctx.formParamSafe("propertyName")
+            val propertyValue = ctx.formParamSafe("propertyValue")
+            val version = ctx.formParamSafe("version").toLongOrNull()
 
             val result = crudPropertyService.updateProperty(
                 requestId = requestId,
                 appName = appName,
                 hostName = hostName,
                 propertyName = propertyName,
-                propertyValue = ctx.formParamSafe("propertyValue"),
-                version = ctx.formParamSafe("version").toLongOrNull(),
+                propertyValue = propertyValue,
+                version = version,
                 ctx.accessToken()
             )
             when (result) {
@@ -133,9 +131,9 @@ class PagesController(
                 is Either.Right -> ctx.redirect(buildString {
                     append("/?applicationName=")
                     append(appName.escapeHtml())
-                    append("propertyName=")
+                    append("&propertyName=")
                     append(propertyName.escapeHtml())
-                    append("hostName=")
+                    append("&hostName=")
                     append(hostName.escapeHtml())
                 })
             }

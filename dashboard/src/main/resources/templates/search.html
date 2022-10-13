@@ -1,24 +1,69 @@
 {% extends "base.html" %}
 
 {% block main %}
-<form>
+<form x-data="{
+    applicationName: '',
+    hostName: '',
+    propertyName: '',
+    propertyValue: '',
+
+    init() {
+        let triggered;
+        let that = this;
+        let updateSearch = function () {
+            let searchParams = new URLSearchParams(location.search);
+            that.applicationName = searchParams.get('applicationName');
+            that.hostName = searchParams.get('hostName');
+            that.propertyName = searchParams.get('propertyName');
+            that.propertyValue = searchParams.get('propertyValue');
+            that.$nextTick(() => {
+                if (that.applicationName || that.hostName || that.propertyName || that.propertyValue) {
+                    var event = new CustomEvent('click', {
+                        detail: {
+                            skipHistoryPush: true
+                        }
+                    });
+                    $refs.searchButton.dispatchEvent(event);
+                }
+            });
+        }
+        htmx.onLoad(function () {
+            if (!triggered) {
+                triggered = true;
+                updateSearch();
+            }
+        });
+        $refs.searchButton.addEventListener('click', function (e) {
+            let searchParams = new URLSearchParams(window.location.search);
+            setToSearchParams(searchParams, 'applicationName', that.applicationName);
+            setToSearchParams(searchParams, 'hostName', that.hostName);
+            setToSearchParams(searchParams, 'propertyName', that.propertyName);
+            setToSearchParams(searchParams, 'propertyValue', that.propertyValue);
+            if (!e.detail.skipHistoryPush) {
+                history.pushState({}, null, '/?' + searchParams.toString());
+            }
+        });
+        addEventListener('popstate', updateSearch);
+    }
+}">
     <label>
         <span>Application name</span>
-        <input name="application-name"/>
+        <input name="application-name" x-model="applicationName"/>
     </label>
     <label>
         <span>Host value</span>
-        <input name="hostname"/>
+        <input name="hostname" x-model="hostName"/>
     </label>
     <label>
         <span>Property name</span>
-        <input name="property-name"/>
+        <input name="property-name" x-model="propertyName"/>
     </label>
     <label>
         <span>Property value</span>
-        <input name="property-value"/>
+        <input name="property-value" x-model="propertyValue"/>
     </label>
     <button type="submit"
+            x-ref="searchButton"
             name="search"
             hx-post="/api/property/search"
             hx-trigger="click"
