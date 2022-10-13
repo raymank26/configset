@@ -12,6 +12,7 @@ services:
       - "db_type=postgres"
       - "authenticator_type=oauth"
       - "oauth_provider_url=http://keycloack:8080/auth/realms/demo"
+      - "client_id=demo-clientId"
       - "jdbc_url=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
       - "log.level=DEBUG"
   dashboard:

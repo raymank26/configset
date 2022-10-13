@@ -24,7 +24,9 @@ class AppConfiguration(private val properties: Map<String, String>) {
             }
             "oauth" -> AuthConfiguration(
                 baseUrl = readProperty("oauth_provider_url"),
-                timeoutMs = readProperty("oauth_timeout_ms", "2000").toLong())
+                timeoutMs = readProperty("oauth_timeout_ms", "2000").toLong(),
+                clientId = readProperty("client_id")
+            )
             else -> error("unknown type $type")
         }
     }
@@ -62,4 +64,8 @@ enum class DaoType {
 sealed interface AuthenticatorConfig
 
 data class StubAuthenticatorConfig(val adminAccessToken: String) : AuthenticatorConfig
-data class AuthConfiguration(val baseUrl: String, val timeoutMs: Long) : AuthenticatorConfig
+data class AuthConfiguration(
+    val baseUrl: String,
+    val timeoutMs: Long,
+    val clientId: String,
+) : AuthenticatorConfig

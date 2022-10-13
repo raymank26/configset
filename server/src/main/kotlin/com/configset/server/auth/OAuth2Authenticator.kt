@@ -7,6 +7,7 @@ private val log = createLoggerStatic<OAuth2Authenticator>()
 
 class OAuth2Authenticator(
     private val verificationAlgorithm: JWTVerifier,
+    private val clientId: String,
 ) : Authenticator {
 
     override fun getUserInfo(accessToken: String): UserInfo {
@@ -14,7 +15,7 @@ class OAuth2Authenticator(
             val decodedJwt = verificationAlgorithm.verify(accessToken)
             val roles = (decodedJwt.claims["resource_access"]
                 ?.asMap()
-                ?.get("demo-clientId") as? LinkedHashMap<*, *>)
+                ?.get(clientId) as? LinkedHashMap<*, *>)
                 ?.get("roles") as? List<String>
             requireNotNull(roles)
 

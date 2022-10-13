@@ -112,7 +112,7 @@ private fun createAuthModule(config: AppConfiguration): Module {
         is AuthConfiguration -> module {
             single<Authenticator> {
                 val jwtVerificationProvider = RemoteJwtVerificationProvider(HttpClient.newHttpClient(), c.baseUrl)
-                OAuth2Authenticator(jwtVerificationProvider.createVerification().build())
+                OAuth2Authenticator(jwtVerificationProvider.createVerification().build(), c.clientId)
             }
         }
         is StubAuthenticatorConfig -> module {
