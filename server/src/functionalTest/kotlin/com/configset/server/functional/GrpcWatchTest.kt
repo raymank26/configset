@@ -23,7 +23,7 @@ class GrpcWatchTest {
         serviceRule.subscribeTestApplication(lastKnownVersion = null)
 
         // when
-        val receivedItems = serviceRule.watchForChanges(1, 50000).first().itemsList
+        val receivedItems = serviceRule.watchForChanges(1, 5000).first().itemsList
 
         // then
         receivedItems.size shouldBeEqualTo 1

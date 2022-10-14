@@ -1,13 +1,11 @@
 package com.configset.dashboard
 
-import com.configset.dashboard.application.ApplicationController
 import com.configset.dashboard.auth.AuthController
-import com.configset.dashboard.pages.PagesController
-import com.configset.dashboard.property.PropertyController
+import com.configset.dashboard.pages.ApplicationsController
+import com.configset.dashboard.pages.PropertiesController
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.sdk.extension.createLoggerStatic
 import io.javalin.Javalin
-import io.javalin.apibuilder.ApiBuilder.path
 import io.javalin.http.Handler
 import io.javalin.http.staticfiles.Location
 
@@ -18,9 +16,8 @@ class JavalinServer(
     private val serverConfig: Config,
     private val javalinExceptionMapper: JavalinExceptionMapper,
     private val interceptors: List<Handler>,
-    private val pagesController: PagesController,
-    private val applicationController: ApplicationController,
-    private val propertyController: PropertyController,
+    private val propertiesController: PropertiesController,
+    private val applicationsController: ApplicationsController,
 ) {
 
     private val app = Javalin.create { config ->
@@ -39,17 +36,9 @@ class JavalinServer(
             app.before(it)
         }
         app.routes {
-            pagesController.bind()
+            propertiesController.bind()
+            applicationsController.bind()
             authController.bind()
-
-            path("api") {
-                path("application") {
-                    applicationController.bind()
-                }
-                path("property") {
-                    propertyController.bind()
-                }
-            }
         }
         app.start(serverConfig.dashboardPort)
         LOG.info("Server started")

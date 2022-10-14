@@ -2,6 +2,7 @@ package com.configset.dashboard
 
 import com.google.common.io.Resources
 import com.hubspot.jinjava.Jinjava
+import io.javalin.http.Context
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -15,7 +16,7 @@ class TemplateRenderer(private val templatesFilePath: String?) {
     }
 
 
-    fun render(templateName: String, params: Map<String, Any?> = emptyMap()): String {
+    fun render(ctx: Context, templateName: String, params: Map<String, Any?> = emptyMap()): String {
         return jinjava.render(loadTemplate(templateName), params)
     }
 

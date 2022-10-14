@@ -7,18 +7,18 @@ import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.dashboard.util.accessToken
 import com.configset.dashboard.util.escapeHtml
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.requestId
+import com.configset.dashboard.util.userInfo
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
 
-class PagesController(
+class PropertiesController(
     private val templateRenderer: TemplateRenderer,
     private val listPropertiesService: ListPropertiesService,
     private val crudPropertyService: CrudPropertyService,
@@ -49,12 +49,12 @@ class PagesController(
                         propertyNameQuery = propertyName,
                         propertyValueQuery = propertyValue
                     ),
-                    ctx.accessToken()
+                    ctx.userInfo()
                 ) to true
             }
             ctx.html(
                 templateRenderer.render(
-                    "properties.html", mapOf(
+                    ctx, "properties.html", mapOf(
                         "properties" to properties,
                         "showProperties" to showProperties,
                         "applicationName" to applicationName,
@@ -68,7 +68,7 @@ class PagesController(
         get("properties/create") { ctx ->
             ctx.html(
                 templateRenderer.render(
-                    "update_property.html", mapOf(
+                    ctx, "update_property.html", mapOf(
                         "requestId" to requestIdProducer.nextRequestId()
                     )
                 )
@@ -79,11 +79,11 @@ class PagesController(
                 appName = ctx.queryParamSafe("applicationName"),
                 hostName = ctx.queryParamSafe("hostName"),
                 propertyName = ctx.queryParamSafe("propertyName"),
-                accessToken = ctx.accessToken()
+                userInfo = ctx.userInfo()
             )
             ctx.html(
                 templateRenderer.render(
-                    "update_property.html", mapOf(
+                    ctx, "update_property.html", mapOf(
                         "property" to property,
                         "requestId" to requestIdProducer.nextRequestId()
                     )
@@ -101,7 +101,7 @@ class PagesController(
                 hostName = hostName,
                 propertyName = propertyName,
                 version = ctx.formParamSafe("version").toLong(),
-                accessToken = ctx.accessToken()
+                userInfo = ctx.userInfo()
             )
             when (result) {
                 is Either.Left -> ctx.htmxShowAlert(result.value.name)
@@ -128,7 +128,7 @@ class PagesController(
                 propertyName = propertyName,
                 propertyValue = propertyValue,
                 version = version,
-                ctx.accessToken()
+                userInfo = ctx.userInfo()
             )
             when (result) {
                 is Either.Left -> {
@@ -136,11 +136,11 @@ class PagesController(
                         appName = appName,
                         hostName = hostName,
                         propertyName = propertyName,
-                        accessToken = ctx.accessToken()
+                        userInfo = ctx.userInfo()
                     )
                     ctx.html(
                         templateRenderer.render(
-                            "update_property.html", mapOf(
+                            ctx, "update_property.html", mapOf(
                                 "property" to property,
                                 "error" to result.value
                             )

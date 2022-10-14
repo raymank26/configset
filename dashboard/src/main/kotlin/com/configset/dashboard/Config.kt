@@ -13,6 +13,7 @@ class Config(properties: Map<String, String>) {
 }
 
 class AuthenticationConfig(properties: Map<String, String>) {
+    val realmUri: String = requireProp(properties, "auth.realm_uri")
     val authUri = requireProp(properties, "auth.auth_uri")
     val requestTokenUri = requireProp(properties, "auth.request_token_uri")
     val authRedirectUri = requireProp(properties, "auth.redirect_uri")

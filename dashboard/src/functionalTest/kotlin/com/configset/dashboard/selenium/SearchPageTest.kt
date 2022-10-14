@@ -41,12 +41,12 @@ class SearchPageTest : SeleniumTest() {
         SearchPage.searchButton.shouldBe(visible)
         SearchPage.createPropertyLink.shouldBe(visible)
 
-        LeftNavPage.search.apply {
-            shouldHave(href("/"))
+        LeftNavPage.properties.apply {
+            shouldHave(href("/properties"))
             shouldBe(visible)
         }
-        LeftNavPage.hosts.apply {
-            shouldHave(href("/hosts"))
+        LeftNavPage.applications.apply {
+            shouldHave(href("/applications"))
             shouldBe(visible)
         }
     }

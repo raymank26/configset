@@ -16,7 +16,8 @@ object Main {
         val objectMapper = dependencyFactory.objectMapper()
         val authController = dependencyFactory.authController(objectMapper)
         val javalinExceptionMapper = dependencyFactory.javalinExceptionMapper()
-        val authInterceptor = dependencyFactory.authInterceptor()
+        val authenticationProvider = dependencyFactory.authenticationProvider(objectMapper);
+        val authInterceptor = dependencyFactory.authInterceptor(authenticationProvider)
         val templateRenderer = dependencyFactory.templateRenderer()
         val configSetClient = dependencyFactory.configSetClient()
         val serverApiGateway = dependencyFactory.serverApiGateway(configSetClient)
@@ -26,29 +27,27 @@ object Main {
             serverApiGateway,
             requestIdProducer
         )
-        val pagesController = dependencyFactory.pagesController(
+        val propertiesController = dependencyFactory.propertiesController(
             templateRenderer,
             listPropertiesService,
             crudPropertyService,
             requestIdProducer
         )
-        val applicationController = dependencyFactory.applicationController(serverApiGateway)
-        val propertyImportService = dependencyFactory.propertyImportService(
+        val applicationsController = dependencyFactory.applicationsController(
             serverApiGateway,
-            requestIdProducer
+            templateRenderer
         )
-        val propertyController = dependencyFactory.propertyController(
-            crudPropertyService,
-            listPropertiesService, propertyImportService
-        )
+//        val propertyImportService = dependencyFactory.propertyImportService(
+//            serverApiGateway,
+//            requestIdProducer
+//        )
         val requestExtender = dependencyFactory.requestExtender(objectMapper)
         val javalinServer = dependencyFactory.javalinServer(
             authController,
             javalinExceptionMapper,
             listOf(authInterceptor, requestExtender),
-            pagesController,
-            applicationController,
-            propertyController,
+            propertiesController,
+            applicationsController
         )
         return object : App {
             override fun start() {

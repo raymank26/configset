@@ -1,5 +1,7 @@
 package com.configset.server.auth
 
+import com.configset.sdk.auth.UserInfo
+
 class UserRoleService {
 
     fun hasRole(userInfo: UserInfo, role: Role): Boolean {

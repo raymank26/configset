@@ -1,8 +1,11 @@
 package com.configset.dashboard
 
+import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.sdk.auth.UserInfo
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.server.fixtures.SERVER_PORT
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.grpc.ManagedChannel
 import io.grpc.Metadata
 import io.grpc.Server
@@ -18,6 +21,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import java.time.Instant
 
 abstract class FunctionalTest {
 
@@ -54,6 +58,7 @@ abstract class FunctionalTest {
                     Pair("dashboard.port", 9299.toString()),
                     Pair("serve.static", "false"),
                     Pair("authenticator_type", ""),
+                    Pair("auth.realm_uri", ""),
                     Pair("auth.auth_uri", "http://localhost:23982/auth"),
                     Pair("auth.redirect_uri", "http://localhost:9299/auth/redirect"),
                     Pair("auth.request_token_uri", "http://localhost:23982/token"),
@@ -64,6 +69,19 @@ abstract class FunctionalTest {
             app = Main.createApp(object : DependencyFactory(config) {
                 override fun configSetClient(): ConfigSetClient {
                     return ConfigSetClient(channel)
+                }
+
+                override fun authenticationProvider(objectMapper: ObjectMapper): AuthenticationProvider {
+                    return object : AuthenticationProvider {
+                        override fun authenticate(accessToken: String): UserInfo {
+                            return object : UserInfo {
+                                override val accessToken: String = accessToken
+                                override val userName: String = "test.user"
+                                override val roles: Set<String> = setOf()
+                                override fun accessTokenExpired(instant: Instant): Boolean = false
+                            }
+                        }
+                    }
                 }
             })
             app.start()

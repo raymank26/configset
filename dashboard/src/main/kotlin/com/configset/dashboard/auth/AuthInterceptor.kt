@@ -1,7 +1,9 @@
 package com.configset.dashboard.auth
 
-import com.auth0.jwt.JWT
 import com.configset.dashboard.AuthenticationConfig
+import com.configset.dashboard.util.userInfoOrNull
+import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.sdk.auth.UserInfo
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import java.net.URLEncoder
@@ -11,6 +13,7 @@ import java.time.Instant
 class AuthInterceptor(
     private val excludePaths: List<String>,
     private val authenticationConfig: AuthenticationConfig,
+    private val authenticationProvider: AuthenticationProvider,
 ) : Handler {
 
     override fun handle(ctx: Context) {
@@ -20,8 +23,8 @@ class AuthInterceptor(
             }
         }
 
-        val validAccessToken = getValidAccessToken(ctx)
-        if (validAccessToken == null) {
+        val userInfo = getValidUserInfoOrNull(ctx)
+        if (userInfo == null) {
             val redirectUriEncoded = URLEncoder.encode(authenticationConfig.authRedirectUri, StandardCharsets.UTF_8)
             val scopeEncoded = URLEncoder.encode("openid profile", StandardCharsets.UTF_8)
             return ctx.redirect(buildString {
@@ -35,18 +38,23 @@ class AuthInterceptor(
                 append("&response_type=code")
             })
         } else {
-            ctx.attribute("access_token", validAccessToken)
+            ctx.attribute("user_info", userInfo)
         }
     }
 
-    private fun getValidAccessToken(ctx: Context): String? {
-        return ctx.cookie("auth.access_token")?.let {
-            val jwtToken = JWT.decode(it)
-            return if (jwtToken.expiresAt.toInstant() < Instant.now()) {
-                null
-            } else {
-                return it
-            }
+    private fun getValidUserInfoOrNull(ctx: Context): UserInfo? {
+        val accessToken = ctx.cookie("auth.access_token")
+        val userInfo = ctx.userInfoOrNull();
+        val now = Instant.now()
+        if (accessToken != null
+            && userInfo != null
+            && accessToken == userInfo.accessToken
+            && !userInfo.accessTokenExpired(now)
+        ) {
+            return userInfo
+        }
+        return accessToken?.let {
+            return authenticationProvider.authenticate(accessToken)
         }
     }
 }

@@ -79,7 +79,7 @@ class AuthorisationTest : SeleniumTest() {
         open("/")
 
         // then
-        LeftNavPage.search.shouldBe(visible)
+        LeftNavPage.properties.shouldBe(visible)
         WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.access_token" }
         WebDriverRunner.getWebDriver().manage().cookies.shouldMatchAtLeastOneOf { it.name == "auth.username" }
         wireMock.verify(getRequestedFor(urlPathEqualTo("/auth")))

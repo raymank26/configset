@@ -1,6 +1,6 @@
 package com.configset.server.network.grpc
 
-import com.configset.server.auth.Authenticator
+import com.configset.sdk.auth.AuthenticationProvider
 import io.grpc.Server
 import io.grpc.ServerInterceptors
 import io.grpc.netty.NettyServerBuilder
@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 class GrpcConfigurationServer(
     grpcConfigurationService: GrpcConfigurationService,
-    authenticator: Authenticator,
+    authenticator: AuthenticationProvider,
     port: Int,
 ) {
 

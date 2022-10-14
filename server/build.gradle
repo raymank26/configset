@@ -19,6 +19,7 @@ dependencies {
     implementation group: 'org.jdbi', name: 'jdbi3-core', version: "$jdbiVersion"
     implementation group: 'org.jdbi', name: 'jdbi3-sqlobject', version: "$jdbiVersion"
     implementation group: 'org.jdbi', name: 'jdbi3-postgres', version: "$jdbiVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
 
     implementation group: 'org.postgresql', name: 'postgresql', version: "$postgreSqlVersion"
 

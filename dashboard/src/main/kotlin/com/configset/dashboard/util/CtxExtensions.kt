@@ -1,13 +1,15 @@
 package com.configset.dashboard.util
 
 import com.configset.dashboard.RequestExtender.Companion.objectMapper
+import com.configset.sdk.auth.UserInfo
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.javalin.http.Context
 
 fun Context.requestId() = this.formParam("requestId") ?: throw BadRequest("requestId")
 
-fun Context.accessToken() = this.attribute("access_token") as? String
-    ?: error("No Authentication header found")
+fun Context.userInfoOrNull() = this.attribute("user_info") as? UserInfo
+
+fun Context.userInfo() = userInfoOrNull() ?: error("No userInfo found")
 
 fun Context.formParamSafe(name: String) = this.formParam(name) ?: throw BadRequest("param.not.found", name)
 

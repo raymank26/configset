@@ -3,6 +3,7 @@ package com.configset.dashboard
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.configset.sdk.auth.UserInfo
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
@@ -24,12 +25,13 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
     fun createApplication(
         requestId: String,
         appName: String,
-        accessToken: String,
+        userInfo: UserInfo,
     ) {
-        val res = withClient(accessToken).createApplication(ApplicationCreateRequest.newBuilder()
-            .setRequestId(requestId)
-            .setApplicationName(appName)
-            .build()
+        val res = withClient(userInfo).createApplication(
+            ApplicationCreateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .build()
         )
 
         return when (res.type) {
@@ -39,32 +41,33 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun listApplications(accessToken: String): List<String> {
-        val response = withClient(accessToken).listApplications(EmptyRequest.getDefaultInstance())
+    fun listApplications(userInfo: UserInfo): List<String> {
+        val response = withClient(userInfo).listApplications(EmptyRequest.getDefaultInstance())
         return response.applicationsList.map { it }
     }
 
-    fun listHosts(accessToken: String): List<String> {
-        return withClient(accessToken).listHosts(EmptyRequest.getDefaultInstance())
+    fun listHosts(userInfo: UserInfo): List<String> {
+        return withClient(userInfo).listHosts(EmptyRequest.getDefaultInstance())
             .hostNamesList
             .map { it }
     }
 
     fun searchProperties(
         searchPropertiesRequest: SearchPropertiesRequest,
-        accessToken: String,
+        userInfo: UserInfo,
     ): List<ShowPropertyItem> {
-        val response = withClient(accessToken).searchProperties(com.configset.sdk.proto.SearchPropertiesRequest
-            .newBuilder()
-            .apply {
-                if (searchPropertiesRequest.applicationName != null) {
-                    applicationName = searchPropertiesRequest.applicationName
-                }
-                if (searchPropertiesRequest.hostNameQuery != null) {
-                    hostName = searchPropertiesRequest.hostNameQuery
-                }
-                if (searchPropertiesRequest.propertyNameQuery != null) {
-                    propertyName = searchPropertiesRequest.propertyNameQuery
+        val response = withClient(userInfo).searchProperties(
+            com.configset.sdk.proto.SearchPropertiesRequest
+                .newBuilder()
+                .apply {
+                    if (searchPropertiesRequest.applicationName != null) {
+                        applicationName = searchPropertiesRequest.applicationName
+                    }
+                    if (searchPropertiesRequest.hostNameQuery != null) {
+                        hostName = searchPropertiesRequest.hostNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyNameQuery != null) {
+                        propertyName = searchPropertiesRequest.propertyNameQuery
                 }
                 if (searchPropertiesRequest.propertyValueQuery != null) {
                     propertyValue = searchPropertiesRequest.propertyValueQuery
@@ -84,8 +87,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun listProperties(appName: String, accessToken: String): List<String> {
-        return searchProperties(SearchPropertiesRequest(appName, null, null, null), accessToken)
+    fun listProperties(appName: String, userInfo: UserInfo): List<String> {
+        return searchProperties(SearchPropertiesRequest(appName, null, null, null), userInfo)
             .mapNotNull {
                 if (it.applicationName == appName) {
                     it.propertyName
@@ -95,8 +98,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             }
     }
 
-    fun createHost(requestId: String, hostName: String, accessToken: String): Either<ServerApiGatewayErrorType, Unit> {
-        val response = withClient(accessToken)
+    fun createHost(requestId: String, hostName: String, userInfo: UserInfo): Either<ServerApiGatewayErrorType, Unit> {
+        val response = withClient(userInfo)
             .createHost(
                 CreateHostRequest.newBuilder()
                     .setRequestId(requestId)
@@ -110,8 +113,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun readProperty(appName: String, hostName: String, propertyName: String, accessToken: String): PropertyItem? {
-        val response = withClient(accessToken)
+    fun readProperty(appName: String, hostName: String, propertyName: String, userInfo: UserInfo): PropertyItem? {
+        val response = withClient(userInfo)
             .readProperty(
                 ReadPropertyRequest.newBuilder()
                     .setApplicationName(appName)
@@ -133,9 +136,9 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         propertyName: String,
         propertyValue: String,
         version: Long?,
-        accessToken: String,
+        userInfo: UserInfo,
     ): Either<ServerApiGatewayErrorType, Unit> {
-        val response = withClient(accessToken)
+        val response = withClient(userInfo)
             .updateProperty(
                 UpdatePropertyRequest.newBuilder()
                     .setRequestId(requestId)
@@ -170,9 +173,9 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         hostName: String,
         propertyName: String,
         version: Long,
-        accessToken: String,
+        userInfo: UserInfo,
     ): Either<ServerApiGatewayErrorType, Unit> {
-        val response = withClient(accessToken).deleteProperty(
+        val response = withClient(userInfo).deleteProperty(
             DeletePropertyRequest.newBuilder()
                 .setRequestId(requestId)
                 .setApplicationName(appName)
@@ -189,8 +192,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    private fun withClient(accessToken: String): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
-        return configSetClient.getAuthBlockingClient(accessToken)
+    private fun withClient(userInfo: UserInfo): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
+        return configSetClient.getAuthBlockingClient(userInfo.accessToken)
     }
 }
 

@@ -1,10 +1,9 @@
 package com.configset.server
 
+import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.sdk.auth.RemoteAuthenticationProvider
+import com.configset.sdk.auth.UserInfo
 import com.configset.server.auth.Admin
-import com.configset.server.auth.Authenticator
-import com.configset.server.auth.LoggedIn
-import com.configset.server.auth.OAuth2Authenticator
-import com.configset.server.auth.RemoteJwtVerificationProvider
 import com.configset.server.auth.StubAuthenticator
 import com.configset.server.auth.UserRoleService
 import com.configset.server.db.ConfigurationDao
@@ -19,6 +18,8 @@ import com.configset.server.db.postgres.PostgresDbHandleFactory
 import com.configset.server.db.postgres.RequestIdSqlDao
 import com.configset.server.network.grpc.GrpcConfigurationServer
 import com.configset.server.network.grpc.GrpcConfigurationService
+import com.fasterxml.jackson.databind.ObjectMapper
+import okhttp3.OkHttpClient
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.postgres.PostgresPlugin
 import org.jdbi.v3.sqlobject.SqlObjectPlugin
@@ -26,7 +27,7 @@ import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
-import java.net.http.HttpClient
+import java.time.Instant
 
 fun createAppModules(config: AppConfiguration): List<Module> {
     val dbModule = createDbModule(config)
@@ -110,14 +111,18 @@ private fun createDbModule(config: AppConfiguration): Module {
 private fun createAuthModule(config: AppConfiguration): Module {
     return when (val c = config.getAuthenticatorConfig()) {
         is AuthConfiguration -> module {
-            single<Authenticator> {
-                val jwtVerificationProvider = RemoteJwtVerificationProvider(HttpClient.newHttpClient(), c.baseUrl)
-                OAuth2Authenticator(jwtVerificationProvider.createVerification().build(), c.clientId)
+            single<AuthenticationProvider> {
+                RemoteAuthenticationProvider(OkHttpClient(), c.baseUrl, ObjectMapper(), c.clientId)
             }
         }
         is StubAuthenticatorConfig -> module {
-            single<Authenticator> {
-                StubAuthenticator(mapOf(c.adminAccessToken to LoggedIn("admin", setOf(Admin.key))))
+            single<AuthenticationProvider> {
+                StubAuthenticator(mapOf(c.adminAccessToken to (object : UserInfo {
+                    override val accessToken: String = c.adminAccessToken
+                    override val userName: String = "admin"
+                    override val roles: Set<String> = setOf(Admin.key)
+                    override fun accessTokenExpired(instant: Instant): Boolean = false
+                })))
             }
         }
     }

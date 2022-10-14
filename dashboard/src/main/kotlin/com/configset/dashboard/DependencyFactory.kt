@@ -1,18 +1,20 @@
 package com.configset.dashboard
 
-import com.configset.dashboard.application.ApplicationController
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
-import com.configset.dashboard.pages.PagesController
+import com.configset.dashboard.pages.ApplicationsController
+import com.configset.dashboard.pages.PropertiesController
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
-import com.configset.dashboard.property.PropertyController
 import com.configset.dashboard.property.PropertyImportService
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
+import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.sdk.auth.RemoteAuthenticationProvider
 import com.configset.sdk.client.ConfigSetClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.http.Handler
+import okhttp3.OkHttpClient
 
 open class DependencyFactory(private val config: Config) {
 
@@ -20,18 +22,16 @@ open class DependencyFactory(private val config: Config) {
         authController: AuthController,
         javalinExceptionMapper: JavalinExceptionMapper,
         interceptors: List<Handler>,
-        pagesController: PagesController,
-        applicationController: ApplicationController,
-        propertyController: PropertyController,
+        propertiesController: PropertiesController,
+        applicationsController: ApplicationsController,
     ): JavalinServer {
         return JavalinServer(
             authController,
             config,
             javalinExceptionMapper,
             interceptors,
-            pagesController,
-            applicationController,
-            propertyController
+            propertiesController,
+            applicationsController,
         )
     }
 
@@ -65,8 +65,22 @@ open class DependencyFactory(private val config: Config) {
         return ServerApiGateway(configSetClient)
     }
 
-    fun authInterceptor(): AuthInterceptor {
-        return AuthInterceptor(listOf("/api/config", "/auth/redirect"), config.authenticationConfig)
+    open fun authenticationProvider(objectMapper: ObjectMapper): AuthenticationProvider {
+        val okHttpClient = OkHttpClient()
+        return RemoteAuthenticationProvider(
+            okHttpClient,
+            config.authenticationConfig.realmUri,
+            objectMapper,
+            config.authenticationConfig.authClientId
+        )
+    }
+
+    fun authInterceptor(authenticationProvider: AuthenticationProvider): AuthInterceptor {
+        return AuthInterceptor(
+            listOf("/api/config", "/auth/redirect"),
+            config.authenticationConfig,
+            authenticationProvider
+        )
     }
 
     fun authController(objectMapper: ObjectMapper): AuthController {
@@ -81,25 +95,25 @@ open class DependencyFactory(private val config: Config) {
         return TemplateRenderer(config.templatesFilePath)
     }
 
-    fun pagesController(
+    fun propertiesController(
         templateRenderer: TemplateRenderer,
         listPropertiesService: ListPropertiesService,
         crudPropertyService: CrudPropertyService,
         requestIdProducer: RequestIdProducer
-    ): PagesController {
-        return PagesController(templateRenderer, listPropertiesService, crudPropertyService, requestIdProducer)
+    ): PropertiesController {
+        return PropertiesController(
+            templateRenderer,
+            listPropertiesService,
+            crudPropertyService,
+            requestIdProducer
+        )
     }
 
-    fun applicationController(serverApiGateway: ServerApiGateway): ApplicationController {
-        return ApplicationController(serverApiGateway)
-    }
-
-    fun propertyController(
-        crudPropertyService: CrudPropertyService,
-        listPropertiesService: ListPropertiesService,
-        propertyImportService: PropertyImportService,
-    ): PropertyController {
-        return PropertyController(crudPropertyService, listPropertiesService, propertyImportService)
+    fun applicationsController(
+        serverApiGateway: ServerApiGateway,
+        templateRenderer: TemplateRenderer
+    ): ApplicationsController {
+        return ApplicationsController(serverApiGateway, templateRenderer)
     }
 
     fun requestExtender(objectMapper: ObjectMapper): RequestExtender {

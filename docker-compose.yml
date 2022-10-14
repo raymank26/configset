@@ -26,6 +26,7 @@ services:
       - "client.keycloack_url=http://localhost:8077"
       - "templates.file.path=/templates"
       - "js.file.path=/js"
+      - "auth.realm_uri=http://keycloack:8080/auth/realms/demo"
       - "auth.auth_uri=http://localhost:8077/auth/realms/demo/protocol/openid-connect/auth"
       - "auth.request_token_uri=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/token"
       - "auth.redirect_uri=http://localhost:8188/auth/redirect"
