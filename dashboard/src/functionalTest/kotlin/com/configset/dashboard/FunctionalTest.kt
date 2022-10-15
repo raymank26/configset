@@ -1,7 +1,7 @@
 package com.configset.dashboard
 
 import com.configset.sdk.auth.AuthenticationProvider
-import com.configset.sdk.auth.UserInfo
+import com.configset.sdk.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.server.fixtures.SERVER_PORT
@@ -21,7 +21,9 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
-import java.time.Instant
+
+const val EMPTY_ROLES_ACCESS_TOKEN = "access.token.empty.roles"
+const val FULL_ROLES_ACCESS_TOKEN = "access.token.full.roles"
 
 abstract class FunctionalTest {
 
@@ -72,15 +74,9 @@ abstract class FunctionalTest {
                 }
 
                 override fun authenticationProvider(objectMapper: ObjectMapper): AuthenticationProvider {
-                    return object : AuthenticationProvider {
-                        override fun authenticate(accessToken: String): UserInfo {
-                            return object : UserInfo {
-                                override val accessToken: String = accessToken
-                                override val userName: String = "test.user"
-                                override val roles: Set<String> = setOf()
-                                override fun accessTokenExpired(instant: Instant): Boolean = false
-                            }
-                        }
+                    return stubAuthenticationProvider {
+                        addUser(EMPTY_ROLES_ACCESS_TOKEN, "test.user", setOf())
+                        addUser(FULL_ROLES_ACCESS_TOKEN, "test.user", setOf("applicationCreator"))
                     }
                 }
             })

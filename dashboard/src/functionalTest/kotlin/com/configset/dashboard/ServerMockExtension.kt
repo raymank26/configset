@@ -25,17 +25,20 @@ typealias HostName = String
 
 class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase) {
 
-    fun whenListApplications(): ServerMockContext<AppName> {
-        return object : ServerMockContext<AppName>() {
-            override fun answer(response: AppName) {
+    fun whenListApplications(): ServerMockContext<List<AppName>> {
+        return object : ServerMockContext<List<AppName>>() {
+            override fun answer(response: List<AppName>) {
                 every { mockConfigService.listApplications(any(), any()) } answers {
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
-                    observer.onNext(
-                        ApplicationsResponse.newBuilder()
-                            .addApplications(response)
-                            .build()
+                    observer.onNext(run {
+                        val builder = ApplicationsResponse.newBuilder()
+                        response.forEach {
+                            builder.addApplications(it)
+                        }
+                        builder.build()
+                    }
                     )
                     observer.onCompleted()
                 }

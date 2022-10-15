@@ -4,7 +4,7 @@ import com.codeborne.selenide.Configuration
 import com.codeborne.selenide.Selenide
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverRunner
-import com.configset.dashboard.AccessTokenTestUtils
+import com.configset.dashboard.EMPTY_ROLES_ACCESS_TOKEN
 import com.configset.dashboard.FunctionalTest
 import org.junit.jupiter.api.BeforeEach
 import org.openqa.selenium.Cookie
@@ -22,12 +22,12 @@ abstract class SeleniumTest : FunctionalTest() {
         Configuration.proxyPort = 39823
     }
 
-    fun authenticated() {
+    fun authenticated(accessToken: String = EMPTY_ROLES_ACCESS_TOKEN) {
         open(Configuration.baseUrl)
         WebDriverRunner.getAndCheckWebDriver().manage().addCookie(
             Cookie(
                 "auth.access_token",
-                AccessTokenTestUtils.createAccessToken()
+                accessToken
             )
         )
     }

@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
 {% block main %}
-Hello
+<table class="applications-table">
+    <thead>
+    <tr>
+        <td>ApplicationName</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for app in applications %}
+    <tr>
+        <td>{{app}}</td>
+    </tr>
+    {% endfor %}
+
+    </tbody>
+</table>
+{% if user.roles.contains('applicationCreator') %}
+<a href="/applications/create" class="applications-create-button">Create application</a>
+{% endif %}
 {% endblock %}

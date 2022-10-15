@@ -38,7 +38,7 @@ class DashboardClient {
         }
         return Request.Builder()
             .url(urlBuilder.build())
-            .header("Cookie", "auth.access_token=${AccessTokenTestUtils.createAccessToken()}")
+            .header("Cookie", "auth.access_token=$FULL_ROLES_ACCESS_TOKEN")
     }
 
     fun <T> executeRequest(request: Request, responseClass: JavaType): Either<DashboardHttpFailure, T?> {
@@ -187,7 +187,7 @@ class DashboardClient {
         formBody.add("requestId", requestId)
         val response = okHttp.newCall(
             Request.Builder().url("http://localhost:9299/api$endpoint")
-                .header("Cookie", "auth.access_token=${AccessTokenTestUtils.createAccessToken()}")
+                .header("Cookie", "auth.access_token=${FULL_ROLES_ACCESS_TOKEN}")
             .post(formBody.build())
             .build()).execute()
         if (response.code / 100 != 2) {

@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import com.configset.dashboard.util.userInfo
 import com.google.common.io.Resources
 import com.hubspot.jinjava.Jinjava
 import io.javalin.http.Context
@@ -15,9 +16,8 @@ class TemplateRenderer(private val templatesFilePath: String?) {
         jinjava.setResourceLocator { fullName, _, _ -> loadTemplate(fullName) }
     }
 
-
     fun render(ctx: Context, templateName: String, params: Map<String, Any?> = emptyMap()): String {
-        return jinjava.render(loadTemplate(templateName), params)
+        return jinjava.render(loadTemplate(templateName), params.plus("user" to ctx.userInfo()))
     }
 
     private fun loadTemplate(name: String): String {

@@ -2,9 +2,8 @@ package com.configset.server
 
 import com.configset.sdk.auth.AuthenticationProvider
 import com.configset.sdk.auth.RemoteAuthenticationProvider
-import com.configset.sdk.auth.UserInfo
+import com.configset.sdk.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
 import com.configset.server.auth.Admin
-import com.configset.server.auth.StubAuthenticator
 import com.configset.server.auth.UserRoleService
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
@@ -27,7 +26,6 @@ import org.koin.core.module.Module
 import org.koin.core.scope.Scope
 import org.koin.core.scope.ScopeCallback
 import org.koin.dsl.module
-import java.time.Instant
 
 fun createAppModules(config: AppConfiguration): List<Module> {
     val dbModule = createDbModule(config)
@@ -117,12 +115,9 @@ private fun createAuthModule(config: AppConfiguration): Module {
         }
         is StubAuthenticatorConfig -> module {
             single<AuthenticationProvider> {
-                StubAuthenticator(mapOf(c.adminAccessToken to (object : UserInfo {
-                    override val accessToken: String = c.adminAccessToken
-                    override val userName: String = "admin"
-                    override val roles: Set<String> = setOf(Admin.key)
-                    override fun accessTokenExpired(instant: Instant): Boolean = false
-                })))
+                stubAuthenticationProvider {
+                    addUser(c.adminAccessToken, "admin", setOf(Admin.key))
+                }
             }
         }
     }

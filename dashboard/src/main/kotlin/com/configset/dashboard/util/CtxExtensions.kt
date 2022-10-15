@@ -7,9 +7,9 @@ import io.javalin.http.Context
 
 fun Context.requestId() = this.formParam("requestId") ?: throw BadRequest("requestId")
 
-fun Context.userInfoOrNull() = this.attribute("user_info") as? UserInfo
+fun Context.userInfoOrNull(): UserInfo? = this.attribute("user_info") as? UserInfo
 
-fun Context.userInfo() = userInfoOrNull() ?: error("No userInfo found")
+fun Context.userInfo(): UserInfo = userInfoOrNull() ?: error("No userInfo found")
 
 fun Context.formParamSafe(name: String) = this.formParam(name) ?: throw BadRequest("param.not.found", name)
 
