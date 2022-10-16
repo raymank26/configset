@@ -24,6 +24,13 @@ class ConfigurationService(
         }
     }
 
+    fun deleteApplication(requestId: String, applicationName: String): DeleteApplicationResult {
+        checkRequestId(requestId)
+        return executeMutable(requestId, DeleteApplicationResult.OK) {
+            configurationDao.deleteApplication(it, applicationName)
+        }
+    }
+
     fun createHost(requestId: String, hostName: String): HostCreateResult {
         checkRequestId(requestId)
         return executeMutable(requestId, HostCreateResult.OK) {
@@ -148,6 +155,11 @@ sealed class DeletePropertyResult {
     object OK : DeletePropertyResult()
     object DeleteConflict : DeletePropertyResult()
     object PropertyNotFound : DeletePropertyResult()
+}
+
+sealed class DeleteApplicationResult {
+    object OK : DeleteApplicationResult()
+    object ApplicationNotFound : DeleteApplicationResult()
 }
 
 sealed class CreateApplicationResul {

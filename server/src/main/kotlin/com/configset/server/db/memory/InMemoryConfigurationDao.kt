@@ -2,6 +2,7 @@ package com.configset.server.db.memory
 
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResul
+import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.HostED
@@ -37,6 +38,11 @@ class InMemoryConfigurationDao : ConfigurationDao {
                 CreateApplicationResul.OK
             }
         }
+    }
+
+    override fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult {
+        val removed = applications.removeIf { it.name == applicationName }
+        return if (removed) DeleteApplicationResult.OK else DeleteApplicationResult.ApplicationNotFound
     }
 
     @Synchronized

@@ -19,14 +19,14 @@ fun Context.htmxRedirect(location: String) {
     this.header("HX-Redirect", location)
 }
 
-fun Context.htmlTriggerEvent(event: HtmxEvent) {
+fun Context.htmxTriggerEvent(event: HtmxEvent) {
     val obj = this.objectMapper.createObjectNode()
     obj.set(event.name, objectMapper.valueToTree(event.payload) as ObjectNode) as ObjectNode
     this.header("HX-Trigger", objectMapper.writeValueAsString(obj))
 }
 
 fun Context.htmxShowAlert(text: String) {
-    htmlTriggerEvent(HtmxEvent("showAlert", mapOf("text" to text)))
+    htmxTriggerEvent(HtmxEvent("showAlert", mapOf("text" to text)))
 }
 
 fun Context.permissionDenied(): Nothing {

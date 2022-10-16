@@ -7,6 +7,8 @@ import com.configset.sdk.auth.Role
 import com.configset.sdk.extension.createLogger
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
+import com.configset.sdk.proto.ApplicationDeleteRequest
+import com.configset.sdk.proto.ApplicationDeletedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
@@ -28,6 +30,7 @@ import com.configset.sdk.proto.UpdatePropertyResponse
 import com.configset.sdk.proto.WatchRequest
 import com.configset.server.ConfigurationService
 import com.configset.server.CreateApplicationResul
+import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.PropertiesChanges
@@ -68,6 +71,28 @@ class GrpcConfigurationService(
                         .build()
                 )
             }
+        }
+        responseObserver.onCompleted()
+    }
+
+    override fun deleteApplication(
+        request: ApplicationDeleteRequest,
+        responseObserver: StreamObserver<ApplicationDeletedResponse>
+    ) {
+
+        requireRole(Admin)
+        when (configurationService.deleteApplication(request.requestId, request.applicationName)) {
+            DeleteApplicationResult.ApplicationNotFound -> responseObserver.onNext(
+                ApplicationDeletedResponse.newBuilder()
+                    .setType(ApplicationDeletedResponse.Type.APPLICATION_NOT_FOUND)
+                    .build()
+            )
+
+            DeleteApplicationResult.OK -> responseObserver.onNext(
+                ApplicationDeletedResponse.newBuilder()
+                    .setType(ApplicationDeletedResponse.Type.OK)
+                    .build()
+            )
         }
         responseObserver.onCompleted()
     }

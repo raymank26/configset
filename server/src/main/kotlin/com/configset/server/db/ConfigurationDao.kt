@@ -2,6 +2,7 @@ package com.configset.server.db
 
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResul
+import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.HostED
@@ -13,6 +14,7 @@ interface ConfigurationDao {
     fun initialize()
     fun listApplications(): List<ApplicationED>
     fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul
+    fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult
     fun createHost(handle: DbHandle, hostName: String): HostCreateResult
     fun listHosts(): List<HostED>
     fun updateProperty(

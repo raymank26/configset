@@ -2,6 +2,7 @@ package com.configset.server.db.postgres
 
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResul
+import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
 import com.configset.server.HostED
@@ -49,6 +50,15 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 access.insertApplication(appName, System.currentTimeMillis())
                 CreateApplicationResul.OK
             }
+        }
+    }
+
+    override fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult {
+        return dbi.withHandle<DeleteApplicationResult, Exception> {
+            val res = it.createUpdate("delete from ConfigurationApplication where name = :name cascade")
+                .bind("name", applicationName)
+                .execute()
+            if (res > 0) DeleteApplicationResult.OK else DeleteApplicationResult.ApplicationNotFound
         }
     }
 

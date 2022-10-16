@@ -8,7 +8,6 @@ import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.permissionDenied
-import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.userInfo
 import com.configset.sdk.auth.Admin
 import io.javalin.apibuilder.ApiBuilder.delete
@@ -60,8 +59,12 @@ class ApplicationsController(
             if (!ctx.userInfo().roles.contains(Admin)) {
                 ctx.permissionDenied()
             }
-            val appName = ctx.queryParamSafe("applicationName")
-            TODO()
+            val appName = ctx.formParamSafe("applicationName")
+            val requestId = requestIdProducer.nextRequestId()
+            when (val result = serverApiGateway.deleteApplication(appName, requestId, ctx.userInfo())) {
+                is Either.Left -> ctx.htmxShowAlert(result.value.name)
+                is Either.Right -> ctx.htmxRedirect("/applications")
+            }
         }
     }
 }

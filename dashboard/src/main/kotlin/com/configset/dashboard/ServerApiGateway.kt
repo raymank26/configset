@@ -7,6 +7,8 @@ import com.configset.sdk.auth.UserInfo
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
+import com.configset.sdk.proto.ApplicationDeleteRequest
+import com.configset.sdk.proto.ApplicationDeletedResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
 import com.configset.sdk.proto.CreateHostResponse
@@ -37,6 +39,24 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         return when (res.type) {
             ApplicationCreatedResponse.Type.OK -> Unit.right()
             ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.left()
+            else -> throw RuntimeException("Unrecognized type for msg = $res")
+        }
+    }
+
+    fun deleteApplication(applicationName: String, requestId: String, userInfo: UserInfo):
+            Either<ServerApiGatewayErrorType, Unit> {
+        val res = withClient(userInfo).deleteApplication(
+            ApplicationDeleteRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(applicationName)
+                .build()
+        )
+
+        return when (res.type) {
+            ApplicationDeletedResponse.Type.OK -> Unit.right()
+            ApplicationDeletedResponse.Type.APPLICATION_NOT_FOUND -> ServerApiGatewayErrorType.APPLICATION_NOT_FOUND
+                .left()
+
             else -> throw RuntimeException("Unrecognized type for msg = $res")
         }
     }

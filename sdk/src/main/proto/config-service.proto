@@ -4,16 +4,29 @@ option java_multiple_files = true;
 package com.configset.sdk.proto;
 
 message ApplicationCreateRequest {
-    string applicationName = 1;
-    string requestId = 2;
+  string applicationName = 1;
+  string requestId = 2;
+}
+
+message ApplicationDeleteRequest {
+  string applicationName = 1;
+  string requestId = 2;
+}
+
+message ApplicationDeletedResponse {
+  Type type = 1;
+  enum Type {
+    OK = 0;
+    APPLICATION_NOT_FOUND = 1;
+  }
 }
 
 message ApplicationCreatedResponse {
-    Type type = 1;
-    enum Type {
-        OK = 0;
-        ALREADY_EXISTS = 1;
-    }
+  Type type = 1;
+  enum Type {
+    OK = 0;
+    ALREADY_EXISTS = 1;
+  }
 }
 
 message SubscriberInfoRequest {
@@ -152,8 +165,9 @@ message ListHostsResponse {
 }
 
 service ConfigurationService {
-    rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
-    rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
+  rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
+  rpc deleteApplication (ApplicationDeleteRequest) returns (ApplicationDeletedResponse);
+  rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
     rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
     rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
     rpc createHost (CreateHostRequest) returns (CreateHostResponse);
