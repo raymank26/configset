@@ -2,6 +2,7 @@ package com.configset.sdk.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.SignatureVerificationException
 import com.auth0.jwt.exceptions.TokenExpiredException
 import com.auth0.jwt.interfaces.Verification
 import com.configset.sdk.retry
@@ -47,6 +48,8 @@ class RemoteAuthenticationProvider(
             )
             JwtAuthentication(decodedToken, clientId, username, accessToken)
         } catch (e: TokenExpiredException) {
+            null
+        } catch (e: SignatureVerificationException) {
             null
         }
     }

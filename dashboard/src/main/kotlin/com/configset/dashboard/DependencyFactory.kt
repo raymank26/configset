@@ -111,9 +111,10 @@ open class DependencyFactory(private val config: Config) {
 
     fun applicationsController(
         serverApiGateway: ServerApiGateway,
-        templateRenderer: TemplateRenderer
+        templateRenderer: TemplateRenderer,
+        requestIdProducer: RequestIdProducer
     ): ApplicationsController {
-        return ApplicationsController(serverApiGateway, templateRenderer)
+        return ApplicationsController(serverApiGateway, templateRenderer, requestIdProducer)
     }
 
     fun requestExtender(objectMapper: ObjectMapper): RequestExtender {

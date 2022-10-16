@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block main %}
+<form hx-post="/applications/update" hx-swap="none">
+    <div>
+        <label>
+            <span>Application name</span>
+            <input name="applicationName"
+                   value="{{ application.name }}"
+            />
+        </label>
+    </div>
+    {% if error %}
+    <div class="property-update-error">
+        <p>{{ error }}
+        <p>
+    </div>
+    {% endif %}
+    <input type="hidden" name="id" value="{{ application.id }}"/>
+    <input type="hidden" name="requestId" value="{{requestId}}"/>
+    <button class="property-update-button" type="submit">Update</button>
+</form>
+{% endblock %}

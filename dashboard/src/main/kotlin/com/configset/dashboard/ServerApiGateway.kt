@@ -26,7 +26,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         requestId: String,
         appName: String,
         userInfo: UserInfo,
-    ) {
+    ): Either<ServerApiGatewayErrorType, Unit> {
         val res = withClient(userInfo).createApplication(
             ApplicationCreateRequest.newBuilder()
                 .setRequestId(requestId)
@@ -35,8 +35,8 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         )
 
         return when (res.type) {
-            ApplicationCreatedResponse.Type.OK -> Unit
-            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.throwException()
+            ApplicationCreatedResponse.Type.OK -> Unit.right()
+            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.left()
             else -> throw RuntimeException("Unrecognized type for msg = $res")
         }
     }

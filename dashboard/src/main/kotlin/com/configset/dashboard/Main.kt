@@ -35,7 +35,8 @@ object Main {
         )
         val applicationsController = dependencyFactory.applicationsController(
             serverApiGateway,
-            templateRenderer
+            templateRenderer,
+            requestIdProducer
         )
 //        val propertyImportService = dependencyFactory.propertyImportService(
 //            serverApiGateway,

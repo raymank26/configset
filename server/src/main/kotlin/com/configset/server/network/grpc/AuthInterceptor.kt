@@ -1,6 +1,7 @@
 package com.configset.server.network.grpc
 
 import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.sdk.auth.Role
 import com.configset.sdk.auth.UserInfo
 import io.grpc.Context
 import io.grpc.Contexts
@@ -39,6 +40,7 @@ fun userInfo(): UserInfo = USER_INFO_KEY.get()
 object Anonymous : UserInfo {
     override val accessToken: String = "some.token"
     override val userName: String = "anonymous"
-    override val roles: Set<String> = setOf()
+    override val roles: Set<Role> = setOf()
+
     override fun accessTokenExpired(instant: Instant): Boolean = false
 }

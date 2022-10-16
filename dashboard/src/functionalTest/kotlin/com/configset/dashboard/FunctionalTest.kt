@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import com.configset.sdk.auth.Admin
 import com.configset.sdk.auth.AuthenticationProvider
 import com.configset.sdk.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
 import com.configset.sdk.client.ConfigSetClient
@@ -76,7 +77,7 @@ abstract class FunctionalTest {
                 override fun authenticationProvider(objectMapper: ObjectMapper): AuthenticationProvider {
                     return stubAuthenticationProvider {
                         addUser(EMPTY_ROLES_ACCESS_TOKEN, "test.user", setOf())
-                        addUser(FULL_ROLES_ACCESS_TOKEN, "full.test.user", setOf("applicationCreator"))
+                        addUser(FULL_ROLES_ACCESS_TOKEN, "full.test.user", setOf(Admin))
                     }
                 }
             })

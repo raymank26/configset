@@ -35,6 +35,7 @@
             <div style="display: inline-block">
                 <button class="delete-property"
                         hx-confirm="Are you sure you want to delete this property?"
+                        hx-swap="none"
                         hx-vals='{"applicationName": "{{property.applicationName}}", "propertyName": "{{property.propertyName}}", "hostName": "{{hostProperty.hostName}}", "version": "{{hostProperty.version}}"}'
                         hx-delete="/properties/delete">Delete
                 </button>

@@ -21,11 +21,11 @@ class StubAuthenticationProvider private constructor(
 
         class StubAuthenticationProviderBuilder(val tokenToUser: MutableMap<String, UserInfo>) {
 
-            fun addUser(accessToken: String, username: String, roles: Set<String>) {
+            fun addUser(accessToken: String, username: String, roles: Set<Role>) {
                 tokenToUser[accessToken] = object : UserInfo {
                     override val accessToken: String = accessToken
                     override val userName: String = username
-                    override val roles: Set<String> = roles
+                    override val roles: Set<Role> = roles
                     override fun accessTokenExpired(instant: Instant): Boolean = false
                 }
             }

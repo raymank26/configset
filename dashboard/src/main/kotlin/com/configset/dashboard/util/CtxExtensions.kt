@@ -29,4 +29,8 @@ fun Context.htmxShowAlert(text: String) {
     htmlTriggerEvent(HtmxEvent("showAlert", mapOf("text" to text)))
 }
 
+fun Context.permissionDenied(): Nothing {
+    TODO()
+}
+
 data class HtmxEvent(val name: String, val payload: Map<String, String>)

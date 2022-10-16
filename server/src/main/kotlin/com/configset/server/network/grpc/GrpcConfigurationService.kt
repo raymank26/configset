@@ -1,5 +1,9 @@
 package com.configset.server.network.grpc
 
+import com.configset.sdk.auth.Admin
+import com.configset.sdk.auth.ApplicationOwner
+import com.configset.sdk.auth.HostCreator
+import com.configset.sdk.auth.Role
 import com.configset.sdk.extension.createLogger
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
@@ -30,11 +34,6 @@ import com.configset.server.PropertiesChanges
 import com.configset.server.PropertyCreateResult
 import com.configset.server.SearchPropertyRequest
 import com.configset.server.WatchSubscriber
-import com.configset.server.auth.Admin
-import com.configset.server.auth.ApplicationOwner
-import com.configset.server.auth.HostCreator
-import com.configset.server.auth.Role
-import com.configset.server.auth.UserRoleService
 import com.configset.server.db.PropertyItemED
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -44,7 +43,6 @@ import java.util.UUID
 
 class GrpcConfigurationService(
     private val configurationService: ConfigurationService,
-    private val userRoleService: UserRoleService,
 ) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
     private val log = createLogger()
@@ -318,9 +316,11 @@ class GrpcConfigurationService(
 
     private fun requireRole(role: Role) {
         val userInfo = userInfo()
-        if (!userRoleService.hasRole(userInfo, role)) {
-            throw StatusRuntimeException(Status.UNAUTHENTICATED
-                .withDescription("Not enough permissions, user roles = ${userInfo.roles}"))
+        if (!userInfo.hasRole(role)) {
+            throw StatusRuntimeException(
+                Status.UNAUTHENTICATED
+                    .withDescription("Not enough permissions, user roles = ${userInfo.roles}")
+            )
         }
     }
 }
