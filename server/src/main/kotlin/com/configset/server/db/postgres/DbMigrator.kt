@@ -10,32 +10,30 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import org.postgresql.util.PSQLException
 import java.sql.ResultSet
-import java.util.stream.Collectors
+import kotlin.streams.toList
 
 private val logger = createLoggerStatic<DbMigrator>()
 
 class DbMigrator(private val dbi: Jdbi) {
+
     init {
         dbi.registerRowMapper(TableMetaEDMapper())
     }
 
     fun migrate() {
         val lastVersion = getLastVersion()
-        val resource = javaClass.classLoader.getResource("migration/list.txt")
-        require(resource != null)
-        val migrations: List<Migration> = resource
-            .openStream()
-            .use { stream ->
-                stream.bufferedReader()
-                    .lines()
-                    .map { line ->
-                        val version = line.split("__")[0]
-                        Migration(version.toLong(), line)
-                    }
-                    .filter { it.version > lastVersion }
-                    .sorted(compareBy { it.version })
-                    .collect(Collectors.toList())
+        val migrations = Thread.currentThread().contextClassLoader
+            .getResourceAsStream("migration")
+            .bufferedReader()
+            .use { it.lines().toList() }
+            .asSequence()
+            .map { foo ->
+                val version = foo.split("__")[0]
+                Migration(version.toLong(), foo)
             }
+            .filter { it.version > lastVersion }
+            .sortedBy { it.version }
+            .toList()
         logger.info("Found last table version = $lastVersion and new migrations ${migrations.size})")
         dbi.useHandle<Exception> { handle ->
             for (migrationName in migrations) {

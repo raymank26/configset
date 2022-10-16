@@ -1,2 +1,0 @@
-1__init.sql
-2__add_deleted_field_to_applications.sql
