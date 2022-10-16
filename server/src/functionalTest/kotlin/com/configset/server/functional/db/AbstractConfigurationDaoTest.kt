@@ -1,5 +1,6 @@
 package com.configset.server.functional.db
 
+import com.configset.sdk.ApplicationId
 import com.configset.server.ApplicationED
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
@@ -44,12 +45,29 @@ abstract class AbstractConfigurationDaoTest {
     @Test
     fun `should delete application`() {
         test {
-            // when
+            // given
             createApp("test1")
+
+            // when
             deleteApp("test1")
 
             // then
             appNames() shouldBeEqualTo listOf()
+        }
+    }
+
+    @Test
+    fun `should update application by id`() {
+        test {
+            // given
+            createApp("test1")
+
+            // when
+            val appId = apps().find { it.name == "test1" }!!.id
+            updateApp(appId, "test2")
+
+            // then
+            appNames() shouldBeEqualTo listOf("test2")
         }
     }
 
@@ -319,6 +337,12 @@ class TestDsl(
     fun deleteApp(name: String) {
         dbHandleFactory.withHandle {
             dao.deleteApplication(it, name)
+        }
+    }
+
+    fun updateApp(id: ApplicationId, name: String) {
+        dbHandleFactory.withHandle {
+            dao.updateApplication(it, id, name)
         }
     }
 
