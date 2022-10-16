@@ -27,9 +27,9 @@ class DbMigrator(private val dbi: Jdbi) {
             .bufferedReader()
             .use { it.lines().toList() }
             .asSequence()
-            .map { foo ->
-                val version = foo.split("__")[0]
-                Migration(version.toLong(), foo)
+            .map { fileName ->
+                val version = fileName.split("__")[0]
+                Migration(version.toLong(), fileName)
             }
             .filter { it.version > lastVersion }
             .sortedBy { it.version }
