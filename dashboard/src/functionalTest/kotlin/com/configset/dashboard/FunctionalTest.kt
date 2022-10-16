@@ -76,7 +76,7 @@ abstract class FunctionalTest {
                 override fun authenticationProvider(objectMapper: ObjectMapper): AuthenticationProvider {
                     return stubAuthenticationProvider {
                         addUser(EMPTY_ROLES_ACCESS_TOKEN, "test.user", setOf())
-                        addUser(FULL_ROLES_ACCESS_TOKEN, "test.user", setOf("applicationCreator"))
+                        addUser(FULL_ROLES_ACCESS_TOKEN, "full.test.user", setOf("applicationCreator"))
                     }
                 }
             })
