@@ -1,5 +1,6 @@
 package com.configset.server.db.memory
 
+import com.configset.sdk.ApplicationId
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResul
 import com.configset.server.DeleteApplicationResult
@@ -8,6 +9,7 @@ import com.configset.server.HostCreateResult
 import com.configset.server.HostED
 import com.configset.server.PropertyCreateResult
 import com.configset.server.SearchPropertyRequest
+import com.configset.server.UpdateApplicationResult
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
@@ -16,33 +18,63 @@ import java.util.concurrent.ThreadLocalRandom
 
 class InMemoryConfigurationDao : ConfigurationDao {
 
-    private val properties: MutableList<PropertyItemED> = mutableListOf()
-    private val applications: MutableList<ApplicationED> = mutableListOf()
+    private var properties: MutableList<PropertyItemED> = mutableListOf()
+    private val applications: MutableMap<ApplicationId, ApplicationED> = mutableMapOf()
+    private val applicationsByName: MutableMap<String, ApplicationED> = mutableMapOf()
     private val hosts: MutableList<HostED> = mutableListOf()
     private var hostId = 0L
     private var appId = 0L
 
     @Synchronized
     override fun listApplications(): List<ApplicationED> {
-        return applications
+        return applications.values.toList()
     }
 
     @Synchronized
     override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul {
         return processMutable {
-            if (applications.find { it.name == appName } != null) {
-                CreateApplicationResul.ApplicationAlreadyExists
-            } else {
-                val ct = System.currentTimeMillis()
-                applications.add(ApplicationED(appId++, appName, 0L, ct, ct))
-                CreateApplicationResul.OK
+            if (applicationsByName.containsKey(appName)) {
+                return@processMutable CreateApplicationResul.ApplicationAlreadyExists
             }
+            val ct = System.currentTimeMillis()
+            val id = ApplicationId(appId++)
+            val ed = ApplicationED(id, appName, 0L, ct, ct)
+            applications[id] = ed
+            applicationsByName[appName] = ed
+            return@processMutable CreateApplicationResul.OK
         }
     }
 
+    @Synchronized
     override fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult {
-        val removed = applications.removeIf { it.name == applicationName }
-        return if (removed) DeleteApplicationResult.OK else DeleteApplicationResult.ApplicationNotFound
+        val prev = applicationsByName.remove(applicationName)
+        return if (prev == null) {
+            DeleteApplicationResult.ApplicationNotFound
+        } else {
+            applications.remove(prev.id)
+            properties = properties.filter { it.name != applicationName }.toMutableList()
+            DeleteApplicationResult.OK
+        }
+    }
+
+    @Synchronized
+    override fun updateApplication(
+        handle: DbHandle,
+        id: ApplicationId,
+        applicationName: String
+    ): UpdateApplicationResult {
+        val app = applications[id]
+        return if (app == null) {
+            UpdateApplicationResult.ApplicationNotFound
+        } else {
+            val prevName = app.name
+            val newApp = app.copy(name = applicationName)
+            applications[id] = newApp
+
+            applicationsByName.remove(prevName)
+            applicationsByName[applicationName] = newApp
+            UpdateApplicationResult.OK
+        }
     }
 
     @Synchronized
@@ -136,21 +168,22 @@ class InMemoryConfigurationDao : ConfigurationDao {
             val now = System.currentTimeMillis();
             properties.add(
                 PropertyItemED(
-                    foundProperty?.id ?: ThreadLocalRandom.current().nextLong(),
-                    propertyName,
-                    value,
-                    hostName,
-                    appName,
-                    newVersion,
-                    false,
-                    foundProperty?.createdMs ?: now,
-                    foundProperty?.modifiedMs ?: now
+                    id = foundProperty?.id ?: ThreadLocalRandom.current().nextLong(),
+                    name = propertyName,
+                    value = value,
+                    hostName = hostName,
+                    applicationName = appName,
+                    version = newVersion,
+                    deleted = false,
+                    createdMs = foundProperty?.createdMs ?: now,
+                    modifiedMs = foundProperty?.modifiedMs ?: now
                 )
             )
 
-            val app = applications.find { it.name == appName }!!
-            applications.remove(app)
-            applications.add(app.copy(lastVersion = newVersion))
+            val app = applicationsByName[appName]!!
+            val newApp = app.copy(lastVersion = newVersion)
+            applicationsByName[appName] = newApp
+            applications[newApp.id] = newApp
             return@cb PropertyCreateResult.OK
         }
     }
@@ -186,9 +219,10 @@ class InMemoryConfigurationDao : ConfigurationDao {
                 )
             )
 
-            val app = applications.find { it.name == appName }!!
-            applications.remove(app)
-            applications.add(app.copy(lastVersion = newVersion))
+            val app = applicationsByName[appName]!!
+            val newApp = app.copy(lastVersion = newVersion)
+            applicationsByName[appName] = newApp
+            applications[newApp.id] = newApp
             return@cb DeletePropertyResult.OK
         }
     }
@@ -201,7 +235,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     private fun getLastVersionInApp(appName: String): Long? {
-        return applications.find { it.name == appName }?.lastVersion
+        return applicationsByName[appName]?.lastVersion
     }
 
     @Synchronized
@@ -209,9 +243,11 @@ class InMemoryConfigurationDao : ConfigurationDao {
         return properties
     }
 
+    @Synchronized
     fun cleanup() {
         properties.clear()
         applications.clear()
+        applicationsByName.clear()
         hosts.clear()
         hostId = 0L
         appId = 0L

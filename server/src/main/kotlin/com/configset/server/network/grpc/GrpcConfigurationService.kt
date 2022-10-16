@@ -1,14 +1,18 @@
 package com.configset.server.network.grpc
 
+import com.configset.sdk.ApplicationId
 import com.configset.sdk.auth.Admin
 import com.configset.sdk.auth.ApplicationOwner
 import com.configset.sdk.auth.HostCreator
 import com.configset.sdk.auth.Role
 import com.configset.sdk.extension.createLogger
+import com.configset.sdk.proto.Application
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest
 import com.configset.sdk.proto.ApplicationDeletedResponse
+import com.configset.sdk.proto.ApplicationUpdateRequest
+import com.configset.sdk.proto.ApplicationUpdatedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
@@ -36,6 +40,7 @@ import com.configset.server.HostCreateResult
 import com.configset.server.PropertiesChanges
 import com.configset.server.PropertyCreateResult
 import com.configset.server.SearchPropertyRequest
+import com.configset.server.UpdateApplicationResult
 import com.configset.server.WatchSubscriber
 import com.configset.server.db.PropertyItemED
 import io.grpc.Status
@@ -98,8 +103,40 @@ class GrpcConfigurationService(
     }
 
     override fun listApplications(request: EmptyRequest, responseObserver: StreamObserver<ApplicationsResponse>) {
-        val listApplications = configurationService.listApplications().map { it.name }
-        responseObserver.onNext(ApplicationsResponse.newBuilder().addAllApplications(listApplications).build())
+        val responseBuilder = ApplicationsResponse.newBuilder()
+        configurationService.listApplications().forEach {
+            responseBuilder.addApplications(
+                Application.newBuilder()
+                    .setId(it.id.id.toString())
+                    .setApplicationName(it.name)
+                    .build()
+            )
+        }
+        responseObserver.onNext(responseBuilder.build())
+        responseObserver.onCompleted()
+    }
+
+    override fun updateApplication(
+        request: ApplicationUpdateRequest,
+        responseObserver: StreamObserver<ApplicationUpdatedResponse>
+    ) {
+        when (configurationService.updateApplication(
+            request.requestId,
+            ApplicationId(request.id),
+            request.applicationName
+        )) {
+            UpdateApplicationResult.ApplicationNotFound -> responseObserver.onNext(
+                ApplicationUpdatedResponse.newBuilder()
+                    .setType(ApplicationUpdatedResponse.Type.APPLICATION_NOT_FOUND)
+                    .build()
+            )
+
+            UpdateApplicationResult.OK -> responseObserver.onNext(
+                ApplicationUpdatedResponse.newBuilder()
+                    .setType(ApplicationUpdatedResponse.Type.OK)
+                    .build()
+            )
+        }
         responseObserver.onCompleted()
     }
 

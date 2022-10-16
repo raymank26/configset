@@ -1,5 +1,6 @@
 package com.configset.dashboard
 
+import com.configset.sdk.Application
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationsResponse
@@ -25,9 +26,9 @@ typealias HostName = String
 
 class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase) {
 
-    fun whenListApplications(): ServerMockContext<List<AppName>> {
-        return object : ServerMockContext<List<AppName>>() {
-            override fun answer(response: List<AppName>) {
+    fun whenListApplications(): ServerMockContext<List<Application>> {
+        return object : ServerMockContext<List<Application>>() {
+            override fun answer(response: List<Application>) {
                 every { mockConfigService.listApplications(any(), any()) } answers {
 
                     @Suppress("UNCHECKED_CAST")
@@ -35,11 +36,15 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                     observer.onNext(run {
                         val builder = ApplicationsResponse.newBuilder()
                         response.forEach {
-                            builder.addApplications(it)
+                            builder.addApplications(
+                                com.configset.sdk.proto.Application.newBuilder()
+                                    .setId(it.applicationId.id.toString())
+                                    .setApplicationName(it.name)
+                                    .build()
+                            )
                         }
                         builder.build()
-                    }
-                    )
+                    })
                     observer.onCompleted()
                 }
             }

@@ -5,6 +5,8 @@ import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
 import com.configset.dashboard.FULL_ROLES_ACCESS_TOKEN
 import com.configset.dashboard.selenium.pages.ApplicationsPage
+import com.configset.sdk.Application
+import com.configset.sdk.ApplicationId
 import org.junit.jupiter.api.Test
 
 class ApplicationsPageTest : SeleniumTest() {
@@ -14,7 +16,12 @@ class ApplicationsPageTest : SeleniumTest() {
         // given
         authenticated()
         mockConfigServiceExt.whenListApplications()
-            .answer(listOf("testApp1", "testApp2"))
+            .answer(
+                listOf(
+                    Application(ApplicationId(2389L), "testApp1"),
+                    Application(ApplicationId(28923L), "testApp2")
+                )
+            )
 
         // when
         open("/applications")

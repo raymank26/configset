@@ -1,5 +1,6 @@
 package com.configset.server.db.postgres
 
+import com.configset.sdk.ApplicationId
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResul
 import com.configset.server.DeleteApplicationResult
@@ -8,6 +9,7 @@ import com.configset.server.HostCreateResult
 import com.configset.server.HostED
 import com.configset.server.PropertyCreateResult
 import com.configset.server.SearchPropertyRequest
+import com.configset.server.UpdateApplicationResult
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.PropertyItemED
 import com.configset.server.db.common.DbHandle
@@ -29,7 +31,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         dbi.registerRowMapper(HostEDRowMapper())
         dbi.registerRowMapper(PropertyItemEDMapper())
         dbi.registerRowMapper(PropertyItemEDMapper())
-        dbi.getConfig(SqlStatements::class.java).setUnusedBindingAllowed(true)
+        dbi.getConfig(SqlStatements::class.java).isUnusedBindingAllowed = true
     }
 
     override fun initialize() {
@@ -59,6 +61,20 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 .bind("name", applicationName)
                 .execute()
             if (res > 0) DeleteApplicationResult.OK else DeleteApplicationResult.ApplicationNotFound
+        }
+    }
+
+    override fun updateApplication(
+        handle: DbHandle,
+        id: ApplicationId,
+        applicationName: String
+    ): UpdateApplicationResult {
+        return dbi.withHandle<UpdateApplicationResult, Exception> {
+            val res = it.createUpdate("update ConfigurationApplication set name = :name where id = :id")
+                .bind("id", id.id)
+                .bind("name", applicationName)
+                .execute()
+            if (res > 0) UpdateApplicationResult.OK else UpdateApplicationResult.ApplicationNotFound
         }
     }
 
@@ -115,8 +131,8 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
-                access.insertProperty(propertyName, value, app.lastVersion + 1, app.id!!, host.id!!, ct)
-                access.incrementAppVersion(app.id)
+                access.insertProperty(propertyName, value, app.lastVersion + 1, app.id.id, host.id!!, ct)
+                access.incrementAppVersion(app.id.id)
                 return@cb PropertyCreateResult.OK
             } else if (property != null) {
                 if (!property.deleted && property.version != version) {
@@ -128,11 +144,11 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         app.lastVersion + 1,
                         false,
                         ct,
-                        app.id!!,
+                        app.id.id,
                         propertyName,
                         host.id!!
                     )
-                    access.incrementAppVersion(app.id)
+                    access.incrementAppVersion(app.id.id)
                     return@cb PropertyCreateResult.OK
                 }
             } else {
@@ -159,7 +175,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 return@cb DeletePropertyResult.DeleteConflict
             }
             access.markPropertyAsDeleted(property.id!!, app.lastVersion + 1)
-            access.incrementAppVersion(app.id!!)
+            access.incrementAppVersion(app.id.id)
             DeletePropertyResult.OK
         }
     }
@@ -288,7 +304,7 @@ private interface JdbiAccess {
 private class ApplicationEDRowMapper : RowMapper<ApplicationED> {
     override fun map(rs: ResultSet, ctx: StatementContext): ApplicationED {
         return ApplicationED(
-            id = rs.getLong("id"),
+            id = ApplicationId(rs.getLong("id")),
             name = rs.getString("name"),
             lastVersion = rs.getLong("version"),
             createdMs = rs.getLong("createdMs"),

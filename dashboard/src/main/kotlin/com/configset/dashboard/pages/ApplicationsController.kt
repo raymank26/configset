@@ -9,6 +9,7 @@ import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.permissionDenied
 import com.configset.dashboard.util.userInfo
+import com.configset.sdk.ApplicationId
 import com.configset.sdk.auth.Admin
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
@@ -52,7 +53,15 @@ class ApplicationsController(
                     is Either.Right -> ctx.htmxRedirect("/applications")
                 }
             } else {
-                TODO()
+                when (val result = serverApiGateway.updateApplication(
+                    ApplicationId(applicationId),
+                    applicationName,
+                    requestId,
+                    ctx.userInfo()
+                )) {
+                    is Either.Left -> ctx.htmxShowAlert(result.value.name)
+                    is Either.Right -> ctx.htmxRedirect("/applications")
+                }
             }
         }
         delete("applications/delete") { ctx ->

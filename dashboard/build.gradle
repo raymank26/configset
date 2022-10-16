@@ -17,6 +17,12 @@ testSets {
     functionalTest
 }
 
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjvm-default=all']
+    }
+}
+
 dependencies {
     implementation project(':sdk')
 

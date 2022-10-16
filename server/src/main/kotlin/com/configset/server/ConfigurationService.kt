@@ -1,5 +1,6 @@
 package com.configset.server
 
+import com.configset.sdk.ApplicationId
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
 import com.configset.server.db.PropertyItemED
@@ -28,6 +29,13 @@ class ConfigurationService(
         checkRequestId(requestId)
         return executeMutable(requestId, DeleteApplicationResult.OK) {
             configurationDao.deleteApplication(it, applicationName)
+        }
+    }
+
+    fun updateApplication(requestId: String, id: ApplicationId, applicationName: String): UpdateApplicationResult {
+        checkRequestId(requestId)
+        return executeMutable(requestId, UpdateApplicationResult.OK) {
+            configurationDao.updateApplication(it, id, applicationName)
         }
     }
 
@@ -162,13 +170,18 @@ sealed class DeleteApplicationResult {
     object ApplicationNotFound : DeleteApplicationResult()
 }
 
+sealed class UpdateApplicationResult {
+    object OK : UpdateApplicationResult()
+    object ApplicationNotFound : UpdateApplicationResult()
+}
+
 sealed class CreateApplicationResul {
     object OK : CreateApplicationResul()
     object ApplicationAlreadyExists : CreateApplicationResul()
 }
 
 data class ApplicationED(
-    val id: Long?,
+    val id: ApplicationId,
     val name: String,
     val lastVersion: Long,
     val createdMs: Long,

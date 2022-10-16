@@ -16,16 +16,33 @@ message ApplicationDeleteRequest {
 message ApplicationDeletedResponse {
   Type type = 1;
   enum Type {
-    OK = 0;
-    APPLICATION_NOT_FOUND = 1;
+    UNKNOWN = 0;
+    OK = 1;
+    APPLICATION_NOT_FOUND = 2;
+  }
+}
+
+message ApplicationUpdateRequest {
+  string id = 1;
+  string applicationName = 2;
+  string requestId = 3;
+}
+
+message ApplicationUpdatedResponse {
+  Type type = 1;
+  enum Type {
+    UNKNOWN = 0;
+    OK = 1;
+    APPLICATION_NOT_FOUND = 2;
   }
 }
 
 message ApplicationCreatedResponse {
   Type type = 1;
   enum Type {
-    OK = 0;
-    ALREADY_EXISTS = 1;
+    UNKNOWN = 0;
+    OK = 1;
+    ALREADY_EXISTS = 2;
   }
 }
 
@@ -46,20 +63,26 @@ message PropertyItem {
 message EmptyRequest {
 }
 
+message Application {
+  string id = 1;
+  string applicationName = 2;
+}
+
 message ApplicationsResponse {
-    repeated string applications = 1;
+  repeated Application applications = 1;
 }
 
 message CreateHostRequest {
-    string hostName = 1;
-    string requestId = 2;
+  string hostName = 1;
+  string requestId = 2;
 }
 
 message CreateHostResponse {
     Type type = 1;
     enum Type {
-        OK = 0;
-        HOST_ALREADY_EXISTS = 1;
+      UNKNOWN = 0;
+      OK = 1;
+      HOST_ALREADY_EXISTS = 2;
     }
 }
 
@@ -76,10 +99,11 @@ message UpdatePropertyResponse {
     Type type = 1;
 
     enum Type {
-        OK = 0;
-        HOST_NOT_FOUND = 1;
-        APPLICATION_NOT_FOUND = 2;
-        UPDATE_CONFLICT = 3;
+      UNKNOWN = 0;
+      OK = 1;
+      HOST_NOT_FOUND = 2;
+      APPLICATION_NOT_FOUND = 3;
+      UPDATE_CONFLICT = 4;
     }
 }
 
@@ -95,9 +119,10 @@ message DeletePropertyResponse {
     Type type = 1;
 
     enum Type {
-        OK = 0;
-        PROPERTY_NOT_FOUND = 1;
-        DELETE_CONFLICT = 2;
+      UNKNOWN = 0;
+      OK = 1;
+      PROPERTY_NOT_FOUND = 2;
+      DELETE_CONFLICT = 3;
     }
 }
 
@@ -124,8 +149,9 @@ message WatchRequest {
     SubscribeApplicationRequest subscribeApplicationRequest = 3;
 
     enum Type {
-        UPDATE_RECEIVED = 0;
-        SUBSCRIBE_APPLICATION = 1;
+      UNKNOWN = 0;
+      UPDATE_RECEIVED = 1;
+      SUBSCRIBE_APPLICATION = 2;
     }
 }
 
@@ -167,13 +193,14 @@ message ListHostsResponse {
 service ConfigurationService {
   rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
   rpc deleteApplication (ApplicationDeleteRequest) returns (ApplicationDeletedResponse);
+  rpc updateApplication (ApplicationUpdateRequest) returns (ApplicationUpdatedResponse);
   rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
-    rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
-    rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
-    rpc createHost (CreateHostRequest) returns (CreateHostResponse);
-    rpc listHosts (EmptyRequest) returns (ListHostsResponse);
-    rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
-    rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
-    rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
-    rpc watchChanges (stream WatchRequest) returns (stream PropertiesChangesResponse);
+  rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
+  rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
+  rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+  rpc listHosts (EmptyRequest) returns (ListHostsResponse);
+  rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
+  rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
+  rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
+  rpc watchChanges (stream WatchRequest) returns (stream PropertiesChangesResponse);
 }

@@ -3,12 +3,16 @@ package com.configset.dashboard
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.configset.sdk.Application
+import com.configset.sdk.ApplicationId
 import com.configset.sdk.auth.UserInfo
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest
 import com.configset.sdk.proto.ApplicationDeletedResponse
+import com.configset.sdk.proto.ApplicationUpdateRequest
+import com.configset.sdk.proto.ApplicationUpdatedResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
 import com.configset.sdk.proto.CreateHostResponse
@@ -45,6 +49,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
 
     fun deleteApplication(applicationName: String, requestId: String, userInfo: UserInfo):
             Either<ServerApiGatewayErrorType, Unit> {
+
         val res = withClient(userInfo).deleteApplication(
             ApplicationDeleteRequest.newBuilder()
                 .setRequestId(requestId)
@@ -61,9 +66,30 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun listApplications(userInfo: UserInfo): List<String> {
+    fun updateApplication(id: ApplicationId, name: String, requestId: String, userInfo: UserInfo):
+            Either<ServerApiGatewayErrorType, Unit> {
+
+        val res = withClient(userInfo).updateApplication(
+            ApplicationUpdateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setId(id.id.toString())
+                .setApplicationName(name)
+                .build()
+        )
+        return when (res.type) {
+            ApplicationUpdatedResponse.Type.OK -> Unit.right()
+            ApplicationUpdatedResponse.Type.APPLICATION_NOT_FOUND ->
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.left()
+
+            else -> throw RuntimeException("Unrecognized type for msg = $res")
+        }
+    }
+
+    fun listApplications(userInfo: UserInfo): List<Application> {
         val response = withClient(userInfo).listApplications(EmptyRequest.getDefaultInstance())
-        return response.applicationsList.map { it }
+        return response.applicationsList.map {
+            Application(ApplicationId(it.id), it.applicationName)
+        }
     }
 
     fun listHosts(userInfo: UserInfo): List<String> {

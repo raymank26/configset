@@ -16,6 +16,12 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjvm-default=all']
+    }
+}
+
 sourceSets {
     main {
         java {

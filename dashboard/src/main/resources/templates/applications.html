@@ -11,12 +11,12 @@
     <tbody>
     {% for app in applications %}
     <tr>
-        <td>{{app}}</td>
+        <td>{{app.name}}</td>
         <td>
             <button
                     hx-delete="applications/delete"
                     hx-confirm="Are you sure you want to delete this app?"
-                    hx-vals='{"applicationName": "{{app}}"}'
+                    hx-vals='{"applicationName": "{{app.name}}"}'
                     hx-swap="none">delete
             </button>
         </td>
