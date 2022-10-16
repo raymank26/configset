@@ -96,14 +96,20 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
-        return properties.firstOrNull { it.applicationName == applicationName && it.name == propertyName && it.hostName == hostName }
+        return properties.firstOrNull {
+            it.applicationName == applicationName
+                    && it.name == propertyName
+                    && it.hostName == hostName
+        }
     }
 
     @Synchronized
     override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
         return properties.filter { !it.deleted }
             .mapNotNull { property ->
-                if (searchPropertyRequest.applicationName != null && property.applicationName != searchPropertyRequest.applicationName) {
+                if (searchPropertyRequest.applicationName != null
+                    && property.applicationName != searchPropertyRequest.applicationName
+                ) {
                     return@mapNotNull null
                 }
                 if (searchPropertyRequest.hostNameQuery != null && !containsLowerCase(
@@ -165,7 +171,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
                 }
             }
             val newVersion = lastVersion + 1
-            val now = System.currentTimeMillis();
+            val now = System.currentTimeMillis()
             properties.add(
                 PropertyItemED(
                     id = foundProperty?.id ?: ThreadLocalRandom.current().nextLong(),
@@ -240,7 +246,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
 
     @Synchronized
     override fun getConfigurationSnapshotList(): List<PropertyItemED> {
-        return properties
+        return properties.filter { applicationsByName.containsKey(it.applicationName) }
     }
 
     @Synchronized

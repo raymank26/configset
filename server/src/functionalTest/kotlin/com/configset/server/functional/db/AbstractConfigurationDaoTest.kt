@@ -11,6 +11,7 @@ import com.configset.server.db.common.DbHandle
 import com.configset.server.fixtures.TEST_APP_NAME
 import com.configset.server.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe
+import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldMatchAtLeastOneOf
 import org.junit.jupiter.api.BeforeEach
@@ -41,17 +42,53 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
-    fun testCreateHost() {
+    fun testDeleteApplication() {
         test {
+            // given
+            atomic { createApp("test1") }
+            atomic { deleteApp("test1") }
+
+            // then
+            appNames() shouldBeEqualTo listOf()
+        }
+    }
+
+    @Test
+    fun `should not return properties on deleted applications`() {
+        test {
+            // given
+            atomic {
+                createApp()
+                createHost()
+                updateProperty(name = "foo", value = "bar")
+            }
+
+            // then
+            val properties = properties()
+            atomic { deleteApp(TEST_APP_NAME) }
+
+            // when
+            val propertiesAfterDeletion = properties()
+            properties.size shouldBeEqualTo 1
+            propertiesAfterDeletion.shouldBeEmpty()
+        }
+    }
+
+    @Test
+    fun `should create host`() {
+        test {
+            // given
             atomic {
                 createHost()
             }
+
+            // when
             appHosts() shouldBeEqualTo listOf(TEST_HOST)
         }
     }
 
     @Test
-    fun testCreateProperty() {
+    fun `should create property`() {
         test {
             atomic {
                 createApp()
@@ -66,7 +103,7 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
-    fun testUpdateDoesntBreak() {
+    fun `property update should change previously created property`() {
         test {
             atomic {
                 createApp()
@@ -86,7 +123,7 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
-    fun testDeleteProperty() {
+    fun `property should be deleted`() {
         test {
             atomic {
                 createApp()
@@ -266,12 +303,16 @@ class TestDsl(
 
     fun atomic(handle: DbHandle.() -> Unit) {
         dbHandleFactory.withHandle {
-            it.handle()
+            handle.invoke(it)
         }
     }
 
     fun DbHandle.createApp(name: String? = null) {
         dao.createApplication(this, name ?: TEST_APP_NAME)
+    }
+
+    fun DbHandle.deleteApp(name: String) {
+        dao.deleteApplication(this, name)
     }
 
     fun DbHandle.createHost(name: String? = null) {
@@ -308,5 +349,9 @@ class TestDsl(
 
     fun appHosts(): List<String> {
         return dao.listHosts().map { it.name }
+    }
+
+    fun properties(): List<PropertyItemED> {
+        return dao.getConfigurationSnapshotList()
     }
 }

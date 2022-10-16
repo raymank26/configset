@@ -57,7 +57,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
     override fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult {
         return dbi.withHandle<DeleteApplicationResult, Exception> {
-            val res = it.createUpdate("delete from ConfigurationApplication where name = :name cascade")
+            val res = it.createUpdate("update ConfigurationApplication set deleted = true where name = :name")
                 .bind("name", applicationName)
                 .execute()
             if (res > 0) DeleteApplicationResult.OK else DeleteApplicationResult.ApplicationNotFound
@@ -70,7 +70,9 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         applicationName: String
     ): UpdateApplicationResult {
         return dbi.withHandle<UpdateApplicationResult, Exception> {
-            val res = it.createUpdate("update ConfigurationApplication set name = :name where id = :id")
+            val res = it.createUpdate(
+                "update ConfigurationApplication set name = :name where id = :id and deleted = false"
+            )
                 .bind("id", id.id)
                 .bind("name", applicationName)
                 .execute()
@@ -139,14 +141,14 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                     return@cb PropertyCreateResult.UpdateConflict
                 } else {
                     access.updateProperty(
-                        property.id!!,
-                        value,
-                        app.lastVersion + 1,
-                        false,
-                        ct,
-                        app.id.id,
-                        propertyName,
-                        host.id!!
+                        id = property.id!!,
+                        value = value,
+                        version = app.lastVersion + 1,
+                        deleted = false,
+                        modifiedMs = ct,
+                        appId = app.id.id,
+                        name = propertyName,
+                        hostId = host.id!!
                     )
                     access.incrementAppVersion(app.id.id)
                     return@cb PropertyCreateResult.OK
@@ -186,6 +188,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                 """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
+                | where ca.deleted = false
             """.trimMargin()
             )
                 .mapTo(PropertyItemED::class.java)
@@ -236,7 +239,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
             it.createQuery(
                 """select distinct cp.name from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
-                | where ca.name = :appName and deleted = false
+                | where ca.name = :appName and cp.deleted = false and ca.deleted = false
             """.trimMargin()
             )
                 .bind("appName", applicationName)
@@ -256,13 +259,13 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
 
 private interface JdbiAccess {
 
-    @SqlQuery("select * from ConfigurationApplication")
+    @SqlQuery("select * from ConfigurationApplication where deleted = false")
     fun listApplications(): List<ApplicationED>
 
-    @SqlQuery("select * from ConfigurationApplication where name = :name")
+    @SqlQuery("select * from ConfigurationApplication where name = :name and deleted = false")
     fun getApplicationByName(@Bind("name") name: String): ApplicationED?
 
-    @SqlUpdate("insert into ConfigurationApplication (name, version, createdMs, modifiedMs) values (:name, 0, :createdMs, :createdMs)")
+    @SqlUpdate("insert into ConfigurationApplication (name, version, deleted, createdMs, modifiedMs) values (:name, 0, false, :createdMs, :createdMs)")
     fun insertApplication(@Bind("name") name: String, @Bind("createdMs") createdMs: Long)
 
     @SqlUpdate("update ConfigurationApplication set version = version + 1 WHERE id = :id")
