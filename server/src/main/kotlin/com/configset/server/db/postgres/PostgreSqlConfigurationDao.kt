@@ -2,7 +2,7 @@ package com.configset.server.db.postgres
 
 import com.configset.sdk.ApplicationId
 import com.configset.server.ApplicationED
-import com.configset.server.CreateApplicationResul
+import com.configset.server.CreateApplicationResult
 import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
@@ -43,14 +43,14 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul {
+    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult {
         return processMutable(handle) { access ->
             val createdApp = access.getApplicationByName(appName)
             if (createdApp != null) {
-                CreateApplicationResul.ApplicationAlreadyExists
+                CreateApplicationResult.ApplicationAlreadyExists
             } else {
                 access.insertApplication(appName, System.currentTimeMillis())
-                CreateApplicationResul.OK
+                CreateApplicationResult.OK
             }
         }
     }

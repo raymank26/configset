@@ -18,9 +18,9 @@ class ConfigurationService(
         return configurationDao.listApplications()
     }
 
-    fun createApplication(requestId: String, appName: String): CreateApplicationResul {
+    fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         checkRequestId(requestId)
-        return executeMutable(requestId, CreateApplicationResul.OK) {
+        return executeMutable(requestId, CreateApplicationResult.OK) {
             configurationDao.createApplication(it, appName)
         }
     }
@@ -141,12 +141,6 @@ interface WatchSubscriber {
     fun pushChanges(applicationName: String, changes: PropertiesChanges)
 }
 
-data class PropertyItem(
-    val applicationName: String,
-    val hostName: String,
-    val propertyItemED: PropertyItemED,
-)
-
 sealed class HostCreateResult {
     object OK : HostCreateResult()
     object HostAlreadyExists : HostCreateResult()
@@ -175,9 +169,9 @@ sealed class UpdateApplicationResult {
     object ApplicationNotFound : UpdateApplicationResult()
 }
 
-sealed class CreateApplicationResul {
-    object OK : CreateApplicationResul()
-    object ApplicationAlreadyExists : CreateApplicationResul()
+sealed class CreateApplicationResult {
+    object OK : CreateApplicationResult()
+    object ApplicationAlreadyExists : CreateApplicationResult()
 }
 
 data class ApplicationED(

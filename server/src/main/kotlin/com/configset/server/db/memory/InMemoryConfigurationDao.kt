@@ -2,7 +2,7 @@ package com.configset.server.db.memory
 
 import com.configset.sdk.ApplicationId
 import com.configset.server.ApplicationED
-import com.configset.server.CreateApplicationResul
+import com.configset.server.CreateApplicationResult
 import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
@@ -31,17 +31,17 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResul {
+    override fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult {
         return processMutable {
             if (applicationsByName.containsKey(appName)) {
-                return@processMutable CreateApplicationResul.ApplicationAlreadyExists
+                return@processMutable CreateApplicationResult.ApplicationAlreadyExists
             }
             val ct = System.currentTimeMillis()
             val id = ApplicationId(appId++)
             val ed = ApplicationED(id, appName, 0L, ct, ct)
             applications[id] = ed
             applicationsByName[appName] = ed
-            return@processMutable CreateApplicationResul.OK
+            return@processMutable CreateApplicationResult.OK
         }
     }
 
@@ -95,6 +95,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
         }
     }
 
+    @Synchronized
     override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
         return properties.firstOrNull {
             it.applicationName == applicationName

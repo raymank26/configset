@@ -33,7 +33,7 @@ import com.configset.sdk.proto.UpdatePropertyRequest
 import com.configset.sdk.proto.UpdatePropertyResponse
 import com.configset.sdk.proto.WatchRequest
 import com.configset.server.ConfigurationService
-import com.configset.server.CreateApplicationResul
+import com.configset.server.CreateApplicationResult
 import com.configset.server.DeleteApplicationResult
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult
@@ -61,7 +61,7 @@ class GrpcConfigurationService(
     ) {
         requireRole(Admin)
         when (configurationService.createApplication(request.requestId, request.applicationName)) {
-            CreateApplicationResul.OK -> {
+            CreateApplicationResult.OK -> {
                 responseObserver.onNext(
                     ApplicationCreatedResponse.newBuilder()
                         .setType(ApplicationCreatedResponse.Type.OK)
@@ -69,7 +69,7 @@ class GrpcConfigurationService(
                 )
             }
 
-            CreateApplicationResul.ApplicationAlreadyExists -> {
+            CreateApplicationResult.ApplicationAlreadyExists -> {
                 responseObserver.onNext(
                     ApplicationCreatedResponse.newBuilder()
                         .setType(ApplicationCreatedResponse.Type.ALREADY_EXISTS)
