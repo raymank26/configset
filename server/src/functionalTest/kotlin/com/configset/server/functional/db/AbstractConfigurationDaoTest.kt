@@ -42,7 +42,7 @@ abstract class AbstractConfigurationDaoTest {
     }
 
     @Test
-    fun testDeleteApplication() {
+    fun `should delete application`() {
         test {
             // when
             createApp("test1")

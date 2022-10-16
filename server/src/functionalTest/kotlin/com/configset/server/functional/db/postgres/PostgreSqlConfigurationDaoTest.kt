@@ -10,17 +10,17 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 class PostgreSqlConfigurationDaoTest : AbstractConfigurationDaoTest() {
 
+    companion object {
+        @JvmStatic
+        @RegisterExtension
+        val postgresSqlRule = PostgresqlExtension()
+    }
+
     override fun getDao(): ConfigurationDao {
         return PostgreSqlConfigurationDao(postgresSqlRule.getDBI())
     }
 
     override fun getDbHandleFactory(): DbHandleFactory {
         return PostgresDbHandleFactory(postgresSqlRule.getDBI())
-    }
-
-    companion object {
-        @JvmStatic
-        @RegisterExtension
-        val postgresSqlRule = PostgresqlExtension()
     }
 }
