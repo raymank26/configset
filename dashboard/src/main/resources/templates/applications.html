@@ -13,7 +13,10 @@
     <tr>
         <td>{{app.name}}</td>
         <td>
+            <a class="application-update-button-{{app.id.id}}"
+               href="/applications/update?applicationName={{app.name|e}}">Update</a>
             <button
+                    class="application-delete-button-{{app.id.id}}"
                     hx-delete="applications/delete"
                     hx-confirm="Are you sure you want to delete this app?"
                     hx-vals='{"applicationName": "{{app.name}}"}'

@@ -8,6 +8,7 @@ import com.configset.sdk.extension.createLoggerStatic
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.javalin.Javalin
+import io.javalin.http.NotFoundResponse
 import org.eclipse.jetty.http.HttpStatus
 
 private val LOG = createLoggerStatic<JavalinExceptionMapper>()
@@ -43,11 +44,19 @@ class JavalinExceptionMapper {
 
         app.exception(ImportPropertiesException::class.java) { e, ctx ->
             ctx.status(400)
-            ctx.json(ServerExceptionResponse(when (e.type) {
-                ImportErrorType.ILLEGAL_FORMAT -> "illegal.format"
-            }, null))
+            ctx.json(
+                ServerExceptionResponse(
+                    when (e.type) {
+                        ImportErrorType.ILLEGAL_FORMAT -> "illegal.format"
+                    }, null
+                )
+            )
         }
     }
 }
+
+fun notFound(): Nothing = throw NotFoundResponse()
+
+fun permissionDenied(): Nothing = throw PermissionDenied()
 
 private data class ServerExceptionResponse(val code: String, val details: String?)

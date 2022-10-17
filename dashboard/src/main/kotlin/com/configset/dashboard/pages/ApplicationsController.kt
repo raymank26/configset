@@ -8,7 +8,9 @@ import com.configset.dashboard.util.RequestIdProducer
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
+import com.configset.dashboard.util.notFound
 import com.configset.dashboard.util.permissionDenied
+import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.userInfo
 import com.configset.sdk.ApplicationId
 import io.javalin.apibuilder.ApiBuilder.delete
@@ -28,7 +30,7 @@ class ApplicationsController(
         }
         get("applications/create") { ctx ->
             if (!ctx.userInfo().roles.contains(Admin)) {
-                ctx.permissionDenied()
+                permissionDenied()
             }
             ctx.html(
                 templateRenderer.render(
@@ -38,9 +40,26 @@ class ApplicationsController(
                 )
             )
         }
+        get("applications/update") { ctx ->
+            if (!ctx.userInfo().roles.contains(Admin)) {
+                permissionDenied()
+            }
+            val appName = ctx.queryParamSafe("applicationName")
+            val application = serverApiGateway.listApplications(ctx.userInfo())
+                .find { it.name == appName }
+                ?: notFound()
+            ctx.html(
+                templateRenderer.render(
+                    ctx, "update_application.html", mapOf(
+                        "application" to application,
+                        "requestId" to requestIdProducer.nextRequestId()
+                    )
+                )
+            )
+        }
         post("applications/update") { ctx ->
             if (!ctx.userInfo().roles.contains(Admin)) {
-                ctx.permissionDenied()
+                permissionDenied()
             }
             val applicationId = ctx.formParam("id")
                 ?.ifBlank { null }
@@ -66,7 +85,7 @@ class ApplicationsController(
         }
         delete("applications/delete") { ctx ->
             if (!ctx.userInfo().roles.contains(Admin)) {
-                ctx.permissionDenied()
+                permissionDenied()
             }
             val appName = ctx.formParamSafe("applicationName")
             val requestId = requestIdProducer.nextRequestId()

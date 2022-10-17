@@ -28,14 +28,20 @@ class PropertiesWatchDispatcher(
 
     @Synchronized
     fun subscribeToApplication(
-        subscriberId: String, defaultApplication: String, hostName: String, applicationName: String,
+        subscriberId: String,
+        defaultApplication: String,
+        hostName: String,
+        applicationName: String,
         lastKnownVersion: Long,
         subscriber: WatchSubscriber,
     ): PropertiesChanges? {
 
         val changes = configurationResolver.getChanges(
-            configurationSnapshot, applicationName, hostName,
-            defaultApplication, lastKnownVersion
+            configurationSnapshot,
+            applicationName,
+            hostName,
+            defaultApplication,
+            lastKnownVersion
         )
 
         subscriptions.compute(subscriberId) { _, value ->
@@ -52,7 +58,9 @@ class PropertiesWatchDispatcher(
                 require(defaultApplication == value.defaultApplicationName)
                 val updatedApps = value.applications.filter { it.appName != applicationName }.plus(newAppState).toSet()
                 ObserverState(
-                    hostName = hostName, defaultApplicationName = defaultApplication, applications = updatedApps,
+                    hostName = hostName,
+                    defaultApplicationName = defaultApplication,
+                    applications = updatedApps,
                     watchSubscriber = subscriber
                 )
             }

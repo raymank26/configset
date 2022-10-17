@@ -3,6 +3,8 @@ package com.configset.dashboard
 import com.configset.sdk.Application
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
+import com.configset.sdk.proto.ApplicationDeleteRequest
+import com.configset.sdk.proto.ApplicationDeletedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
@@ -38,7 +40,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                         response.forEach {
                             builder.addApplications(
                                 com.configset.sdk.proto.Application.newBuilder()
-                                    .setId(it.applicationId.id.toString())
+                                    .setId(it.id.id.toString())
                                     .setApplicationName(it.name)
                                     .build()
                             )
@@ -69,6 +71,22 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                         ApplicationCreatedResponse.newBuilder()
                             .setType(response).build()
                     )
+                    observer.onCompleted()
+                }
+            }
+        }
+    }
+
+    fun whenDeleteApplication(request: MockKMatcherScope.() -> ApplicationDeleteRequest):
+            ServerMockContext<ApplicationDeletedResponse> {
+
+        return object : ServerMockContext<ApplicationDeletedResponse>() {
+            override fun answer(response: ApplicationDeletedResponse) {
+                every { mockConfigService.deleteApplication(request(), any()) } answers {
+                    @Suppress("UNCHECKED_CAST")
+                    val observer = (it.invocation.args[1] as StreamObserver<ApplicationDeletedResponse>)
+
+                    observer.onNext(response)
                     observer.onCompleted()
                 }
             }

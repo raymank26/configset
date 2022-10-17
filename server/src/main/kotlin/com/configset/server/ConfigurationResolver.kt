@@ -10,8 +10,11 @@ private val LOG = createLoggerStatic<ConfigurationResolver>()
 class ConfigurationResolver {
 
     fun getChanges(
-        snapshot: Map<String, ConfigurationApplication>, targetApplication: String, hostName: String,
-        defaultApplication: String, lastVersion: Long,
+        snapshot: Map<String, ConfigurationApplication>,
+        targetApplication: String,
+        hostName: String,
+        defaultApplication: String,
+        lastVersion: Long,
     ): PropertiesChanges? {
 
         val properties: ConfigurationApplication = snapshot[targetApplication] ?: return null
