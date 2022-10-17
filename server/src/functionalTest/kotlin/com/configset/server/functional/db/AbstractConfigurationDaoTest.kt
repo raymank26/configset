@@ -38,7 +38,7 @@ abstract class AbstractConfigurationDaoTest {
             createApp()
 
             // then
-            appNames() shouldBeEqualTo listOf(TEST_APP_NAME)
+            listAppNames() shouldBeEqualTo listOf(TEST_APP_NAME)
         }
     }
 
@@ -52,7 +52,22 @@ abstract class AbstractConfigurationDaoTest {
             deleteApp("test1")
 
             // then
-            appNames() shouldBeEqualTo listOf()
+            listAppNames() shouldBeEqualTo listOf()
+        }
+    }
+
+    @Test
+    fun `should recreate application`() {
+        test {
+            // given
+            createApp("test1")
+
+            // when
+            deleteApp("test1")
+            createApp("test1")
+
+            // then
+            listAppNames() shouldBeEqualTo listOf("test1")
         }
     }
 
@@ -63,11 +78,11 @@ abstract class AbstractConfigurationDaoTest {
             createApp("test1")
 
             // when
-            val appId = apps().find { it.name == "test1" }!!.id
+            val appId = listApps().find { it.name == "test1" }!!.id
             updateApp(appId, "test2")
 
             // then
-            appNames() shouldBeEqualTo listOf("test2")
+            listAppNames() shouldBeEqualTo listOf("test2")
         }
     }
 
@@ -80,11 +95,11 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty(name = "foo", value = "bar")
 
             // when
-            val properties = properties()
+            val properties = getConfigurationSnapshot()
             deleteApp(TEST_APP_NAME)
 
             // then
-            val propertiesAfterDeletion = properties()
+            val propertiesAfterDeletion = getConfigurationSnapshot()
             properties.size shouldBeEqualTo 1
             propertiesAfterDeletion.shouldBeEmpty()
         }
@@ -97,7 +112,7 @@ abstract class AbstractConfigurationDaoTest {
             createHost()
 
             // when
-            appHosts() shouldBeEqualTo listOf(TEST_HOST)
+            listHosts() shouldBeEqualTo listOf(TEST_HOST)
         }
     }
 
@@ -113,7 +128,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "valueNext", 1)
 
             // then
-            apps().first().lastVersion shouldBeEqualTo 2
+            listApps().first().lastVersion shouldBeEqualTo 2
         }
     }
 
@@ -376,19 +391,19 @@ class TestDsl(
         }
     }
 
-    fun apps(): List<ApplicationED> {
+    fun listApps(): List<ApplicationED> {
         return dao.listApplications()
     }
 
-    fun appNames(): List<String> {
+    fun listAppNames(): List<String> {
         return dao.listApplications().map { it.name }
     }
 
-    fun appHosts(): List<String> {
+    fun listHosts(): List<String> {
         return dao.listHosts().map { it.name }
     }
 
-    fun properties(): List<PropertyItemED> {
+    fun getConfigurationSnapshot(): List<PropertyItemED> {
         return dao.getConfigurationSnapshotList()
     }
 }

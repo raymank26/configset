@@ -28,7 +28,8 @@ class DbMigrator(private val dbi: Jdbi) {
             .use { it.lines().toList() }
             .asSequence()
             .map { fileName ->
-                val version = fileName.split("__")[0]
+                val version = fileName.split("__").getOrNull(0)
+                    ?: error("Cannot find '__' substring in filename = $fileName")
                 Migration(version.toLong(), fileName)
             }
             .filter { it.version > lastVersion }
@@ -58,7 +59,7 @@ class DbMigrator(private val dbi: Jdbi) {
             val lastSavedVersion = getLastVersion()
             require(lastSavedVersion == lastApplied.version)
         }
-        logger.info("Initialization completed")
+        logger.info("Migration completed")
     }
 
     private fun getLastVersion(): Long {
