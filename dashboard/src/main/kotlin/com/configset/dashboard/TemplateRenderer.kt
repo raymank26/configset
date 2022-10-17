@@ -1,7 +1,7 @@
 package com.configset.dashboard
 
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.util.userInfo
-import com.configset.sdk.auth.UserInfo
 import com.google.common.io.Resources
 import com.hubspot.jinjava.Jinjava
 import io.javalin.http.Context

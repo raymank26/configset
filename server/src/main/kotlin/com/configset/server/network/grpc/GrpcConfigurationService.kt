@@ -1,10 +1,10 @@
 package com.configset.server.network.grpc
 
+import com.configset.common.backend.auth.Admin
+import com.configset.common.backend.auth.ApplicationOwner
+import com.configset.common.backend.auth.HostCreator
+import com.configset.common.backend.auth.Role
 import com.configset.sdk.ApplicationId
-import com.configset.sdk.auth.Admin
-import com.configset.sdk.auth.ApplicationOwner
-import com.configset.sdk.auth.HostCreator
-import com.configset.sdk.auth.Role
 import com.configset.sdk.extension.createLogger
 import com.configset.sdk.proto.Application
 import com.configset.sdk.proto.ApplicationCreateRequest

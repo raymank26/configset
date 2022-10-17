@@ -1,7 +1,7 @@
 package com.configset.dashboard.util
 
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.RequestExtender.Companion.objectMapper
-import com.configset.sdk.auth.UserInfo
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.javalin.http.Context
 

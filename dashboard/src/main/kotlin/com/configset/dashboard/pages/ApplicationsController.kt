@@ -1,6 +1,7 @@
 package com.configset.dashboard.pages
 
 import arrow.core.Either
+import com.configset.common.backend.auth.Admin
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.util.RequestIdProducer
@@ -10,7 +11,6 @@ import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.permissionDenied
 import com.configset.dashboard.util.userInfo
 import com.configset.sdk.ApplicationId
-import com.configset.sdk.auth.Admin
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post

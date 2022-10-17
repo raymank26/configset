@@ -3,6 +3,7 @@
 /server/build/
 /sdk/build/
 /dashboard/build/
+/common-backend/build/
 /sample/build/
 /dashboard/dist/
 /.idea

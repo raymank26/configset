@@ -1,9 +1,9 @@
 package com.configset.server
 
-import com.configset.sdk.auth.Admin
-import com.configset.sdk.auth.AuthenticationProvider
-import com.configset.sdk.auth.RemoteAuthenticationProvider
-import com.configset.sdk.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
+import com.configset.common.backend.auth.Admin
+import com.configset.common.backend.auth.AuthenticationProvider
+import com.configset.common.backend.auth.RemoteAuthenticationProvider
+import com.configset.common.backend.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
 import com.configset.server.db.RequestIdDao

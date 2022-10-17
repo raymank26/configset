@@ -1,8 +1,8 @@
 package com.configset.server.network.grpc
 
-import com.configset.sdk.auth.AuthenticationProvider
-import com.configset.sdk.auth.Role
-import com.configset.sdk.auth.UserInfo
+import com.configset.common.backend.auth.AuthenticationProvider
+import com.configset.common.backend.auth.Role
+import com.configset.common.backend.auth.UserInfo
 import io.grpc.Context
 import io.grpc.Contexts
 import io.grpc.Metadata

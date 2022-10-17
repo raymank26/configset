@@ -1,4 +1,4 @@
-package com.configset.sdk.auth
+package com.configset.common.backend.auth
 
 import java.time.Instant
 

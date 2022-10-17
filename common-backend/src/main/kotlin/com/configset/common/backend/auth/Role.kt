@@ -1,4 +1,4 @@
-package com.configset.sdk.auth
+package com.configset.common.backend.auth
 
 
 sealed interface Role {

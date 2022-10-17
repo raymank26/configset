@@ -5,4 +5,5 @@ include 'client'
 include 'sdk'
 include 'dashboard'
 include 'sample'
+include 'common-backend'
 

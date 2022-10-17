@@ -3,9 +3,9 @@ package com.configset.dashboard
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.configset.common.backend.auth.UserInfo
 import com.configset.sdk.Application
 import com.configset.sdk.ApplicationId
-import com.configset.sdk.auth.UserInfo
 import com.configset.sdk.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse

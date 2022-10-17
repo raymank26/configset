@@ -1,4 +1,4 @@
-package com.configset.sdk.auth
+package com.configset.common.backend.auth
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm

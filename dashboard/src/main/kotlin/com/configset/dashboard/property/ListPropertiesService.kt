@@ -1,10 +1,10 @@
 package com.configset.dashboard.property
 
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.SearchPropertiesRequest
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.ShowPropertyItem
 import com.configset.dashboard.TablePropertyItem
-import com.configset.sdk.auth.UserInfo
 import org.apache.commons.lang3.RandomStringUtils
 
 class ListPropertiesService(

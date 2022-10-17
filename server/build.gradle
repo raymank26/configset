@@ -20,6 +20,7 @@ compileKotlin {
 
 dependencies {
     implementation project(':sdk')
+    implementation project(':common-backend')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation group: 'org.jdbi', name: 'jdbi3-core', version: "$jdbiVersion"

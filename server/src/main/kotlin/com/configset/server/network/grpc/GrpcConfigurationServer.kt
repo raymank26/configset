@@ -1,6 +1,6 @@
 package com.configset.server.network.grpc
 
-import com.configset.sdk.auth.AuthenticationProvider
+import com.configset.common.backend.auth.AuthenticationProvider
 import io.grpc.Server
 import io.grpc.ServerInterceptors
 import io.grpc.netty.NettyServerBuilder

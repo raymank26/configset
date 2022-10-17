@@ -1,10 +1,10 @@
 package com.configset.dashboard.property
 
 import arrow.core.Either
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.ServerApiGatewayErrorType
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.sdk.auth.UserInfo
 
 class CrudPropertyService(
     private val serverApiGateway: ServerApiGateway,

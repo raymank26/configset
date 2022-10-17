@@ -1,9 +1,9 @@
 package com.configset.dashboard.auth
 
+import com.configset.common.backend.auth.AuthenticationProvider
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.AuthenticationConfig
 import com.configset.dashboard.util.userInfoOrNull
-import com.configset.sdk.auth.AuthenticationProvider
-import com.configset.sdk.auth.UserInfo
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import java.net.URLEncoder
