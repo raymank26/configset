@@ -144,7 +144,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "value1")
 
             // then
-            val searchRes: List<PropertyItemED> = dao.searchProperties(
+            val searchRes: List<PropertyItemED> = searchProperties(
                 SearchPropertyRequest(
                     TEST_APP_NAME,
                     null, null, null
@@ -166,9 +166,9 @@ abstract class AbstractConfigurationDaoTest {
             deleteProperty("name") shouldBeEqualTo DeletePropertyResult.OK
 
             // then
-            dao.listProperties(TEST_APP_NAME) shouldBeEqualTo listOf()
+            listProperties(TEST_APP_NAME) shouldBeEqualTo listOf()
 
-            val snapshot = dao.getConfigurationSnapshotList()
+            val snapshot = getConfigurationSnapshot()
             snapshot.size shouldBeEqualTo 1
 
             val first = snapshot.first()
@@ -190,7 +190,7 @@ abstract class AbstractConfigurationDaoTest {
             deleteProperty("name", version = 123) shouldBeEqualTo DeletePropertyResult.DeleteConflict
 
             // then
-            dao.listProperties(TEST_APP_NAME).size shouldBeEqualTo 1
+            listProperties(TEST_APP_NAME).size shouldBeEqualTo 1
         }
     }
 
@@ -207,7 +207,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "value") // TODO: think about null version!
 
             // then
-            val property = dao.searchProperties(SearchPropertyRequest(TEST_APP_NAME, "name", null, null)).first()
+            val property = searchProperties(SearchPropertyRequest(TEST_APP_NAME, "name", null, null)).first()
             property.version shouldBeEqualTo 3
         }
 
@@ -228,7 +228,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "value", appName = "test-app2", host = "srvd2")
 
             // then
-            dao.listProperties(TEST_APP_NAME) shouldBeEqualTo listOf("name")
+            listProperties(TEST_APP_NAME) shouldBeEqualTo listOf("name")
         }
     }
 
@@ -247,9 +247,9 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name1", "value", host = "srvd2")
 
             // then
-            dao.searchProperties(SearchPropertyRequest(null, "Nam", "Val", "SRVD1"))
+            searchProperties(SearchPropertyRequest(null, "Nam", "Val", "SRVD1"))
                 .map { it.name } shouldBeEqualTo listOf("name", "name2")
-            dao.searchProperties(SearchPropertyRequest(null, "nam", "val", "srvd"))
+            searchProperties(SearchPropertyRequest(null, "nam", "val", "srvd"))
                 .map { it.name } shouldBeEqualTo listOf("name", "name2", "name1")
         }
     }
@@ -269,7 +269,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "value3", host = "srvd3")
 
             // then
-            dao.readProperty(TEST_APP_NAME, TEST_HOST, "name")!!.apply {
+            readProperty("name")!!.apply {
                 hostName shouldBeEqualTo "srvd1"
                 applicationName shouldBeEqualTo TEST_APP_NAME
                 name shouldBeEqualTo "name"
@@ -277,7 +277,7 @@ abstract class AbstractConfigurationDaoTest {
                 version shouldBeEqualTo 1
             }
 
-            dao.readProperty(TEST_APP_NAME, "srvd2", "name")!!.apply {
+            readProperty("name", TEST_APP_NAME, "srvd2")!!.apply {
                 hostName shouldBeEqualTo "srvd2"
                 applicationName shouldBeEqualTo TEST_APP_NAME
                 name shouldBeEqualTo "name"
@@ -285,7 +285,7 @@ abstract class AbstractConfigurationDaoTest {
                 version shouldBeEqualTo 2
             }
 
-            dao.readProperty(TEST_APP_NAME, "srvd3", "name")!!.apply {
+            readProperty("name", TEST_APP_NAME, "srvd3")!!.apply {
                 hostName shouldBeEqualTo "srvd3"
                 applicationName shouldBeEqualTo TEST_APP_NAME
                 name shouldBeEqualTo "name"
@@ -307,7 +307,7 @@ abstract class AbstractConfigurationDaoTest {
             updateProperty("name", "value2", host = "srvd2")
 
             // then
-            dao.getConfigurationSnapshotList()
+            getConfigurationSnapshot()
                 .shouldMatchAtLeastOneOf {
                     it.applicationName == TEST_APP_NAME
                             && it.name == "name"
@@ -380,8 +380,17 @@ class TestDsl(
         }
     }
 
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+        return dbHandleFactory.withHandle {
+            dao.searchProperties(it, searchPropertyRequest)
+        }
+    }
+
+
     fun readProperty(name: String, app: String = TEST_APP_NAME, host: String = TEST_HOST): PropertyItemED? {
-        return dao.readProperty(app, host, name)
+        return dbHandleFactory.withHandle {
+            dao.readProperty(it, host, name, app)
+        }
     }
 
     fun deleteProperty(name: String, version: Long? = null): DeletePropertyResult {
@@ -392,18 +401,32 @@ class TestDsl(
     }
 
     fun listApps(): List<ApplicationED> {
-        return dao.listApplications()
+        return dbHandleFactory.withHandle {
+            dao.listApplications(it)
+        }
     }
 
     fun listAppNames(): List<String> {
-        return dao.listApplications().map { it.name }
+        return dbHandleFactory.withHandle {
+            dao.listApplications(it).map { it.name }
+        }
     }
 
     fun listHosts(): List<String> {
-        return dao.listHosts().map { it.name }
+        return dbHandleFactory.withHandle {
+            dao.listHosts(it).map { it.name }
+        }
+    }
+
+    fun listProperties(applicationName: String): List<String> {
+        return dbHandleFactory.withHandle {
+            dao.listProperties(it, applicationName)
+        }
     }
 
     fun getConfigurationSnapshot(): List<PropertyItemED> {
-        return dao.getConfigurationSnapshotList()
+        return dbHandleFactory.withHandle {
+            dao.getConfigurationSnapshotList(it)
+        }
     }
 }

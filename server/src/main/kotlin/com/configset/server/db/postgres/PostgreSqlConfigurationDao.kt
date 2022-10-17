@@ -24,7 +24,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import java.sql.ResultSet
 
 
-class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
+class PostgreSqlConfigurationDao(dbi: Jdbi) : ConfigurationDao {
 
     init {
         dbi.registerRowMapper(ApplicationEDRowMapper())
@@ -37,9 +37,9 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     override fun initialize() {
     }
 
-    override fun listApplications(): List<ApplicationED> {
-        return dbi.withExtension<List<ApplicationED>, JdbiAccess> { access ->
-            access.listApplications()
+    override fun listApplications(handle: DbHandle): List<ApplicationED> {
+        return handle.withApi(JdbiAccess::class.java) {
+            it.listApplications()
         }
     }
 
@@ -56,7 +56,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
     }
 
     override fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult {
-        return dbi.withHandle<DeleteApplicationResult, Exception> {
+        return handle.inTransaction {
             val res = it.createUpdate("update ConfigurationApplication set deleted = true where name = :name")
                 .bind("name", applicationName)
                 .execute()
@@ -69,7 +69,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         id: ApplicationId,
         applicationName: String
     ): UpdateApplicationResult {
-        return dbi.withHandle<UpdateApplicationResult, Exception> {
+        return handle.inTransaction {
             val res = it.createUpdate(
                 "update ConfigurationApplication set name = :name where id = :id and deleted = false"
             )
@@ -92,14 +92,19 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun listHosts(): List<HostED> {
-        return dbi.withExtension<List<HostED>, JdbiAccess, Exception>(JdbiAccess::class.java) { access ->
+    override fun listHosts(handle: DbHandle): List<HostED> {
+        return handle.withApi(JdbiAccess::class.java) { access ->
             access.listHosts()
         }
     }
 
-    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
-        return dbi.withHandle<PropertyItemED, Exception> {
+    override fun readProperty(
+        handle: DbHandle,
+        hostName: String,
+        propertyName: String,
+        applicationName: String
+    ): PropertyItemED? {
+        return handle.inTransaction {
             it.createQuery(
                 """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
@@ -124,21 +129,21 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         version: Long?,
         hostName: String,
     ): PropertyCreateResult {
-        return processMutable(handle) cb@{ access ->
+        return processMutable(handle, fun(access: JdbiAccess): PropertyCreateResult {
             val app = access.getApplicationByName(appName)
-                ?: return@cb PropertyCreateResult.ApplicationNotFound
+                ?: return PropertyCreateResult.ApplicationNotFound
             val host = access.getHostByName(hostName)
-                ?: return@cb PropertyCreateResult.HostNotFound
-            val property = readProperty(appName, hostName, propertyName)
+                ?: return PropertyCreateResult.HostNotFound
+            val property = readProperty(handle, hostName, propertyName, appName)
 
             val ct = System.currentTimeMillis()
             if (property == null && version == null) {
                 access.insertProperty(propertyName, value, app.lastVersion + 1, app.id.id, host.id!!, ct)
                 access.incrementAppVersion(app.id.id)
-                return@cb PropertyCreateResult.OK
+                return PropertyCreateResult.OK
             } else if (property != null) {
                 if (!property.deleted && property.version != version) {
-                    return@cb PropertyCreateResult.UpdateConflict
+                    return PropertyCreateResult.UpdateConflict
                 } else {
                     access.updateProperty(
                         id = property.id!!,
@@ -151,12 +156,12 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
                         hostId = host.id!!
                     )
                     access.incrementAppVersion(app.id.id)
-                    return@cb PropertyCreateResult.OK
+                    return PropertyCreateResult.OK
                 }
             } else {
-                return@cb PropertyCreateResult.UpdateConflict
+                return PropertyCreateResult.UpdateConflict
             }
-        }
+        })
     }
 
     override fun deleteProperty(
@@ -166,24 +171,24 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         propertyName: String,
         version: Long,
     ): DeletePropertyResult {
-        return processMutable(handle) cb@{ access ->
+        return processMutable(handle, fun(access: JdbiAccess): DeletePropertyResult {
             val app = access.getApplicationByName(appName)
-                ?: return@cb DeletePropertyResult.PropertyNotFound
+                ?: return DeletePropertyResult.PropertyNotFound
             val host = access.getHostByName(hostName)
-                ?: return@cb DeletePropertyResult.PropertyNotFound
-            val property = readProperty(app.name, host.name, propertyName)
-                ?: return@cb DeletePropertyResult.PropertyNotFound
+                ?: return DeletePropertyResult.PropertyNotFound
+            val property = readProperty(handle, host.name, propertyName, app.name)
+                ?: return DeletePropertyResult.PropertyNotFound
             if (property.version != version) {
-                return@cb DeletePropertyResult.DeleteConflict
+                return DeletePropertyResult.DeleteConflict
             }
             access.markPropertyAsDeleted(property.id!!, app.lastVersion + 1)
             access.incrementAppVersion(app.id.id)
-            DeletePropertyResult.OK
-        }
+            return DeletePropertyResult.OK
+        })
     }
 
-    override fun getConfigurationSnapshotList(): List<PropertyItemED> {
-        return dbi.withHandle<List<PropertyItemED>, Exception> {
+    override fun getConfigurationSnapshotList(handle: DbHandle): List<PropertyItemED> {
+        return handle.inTransaction {
             it.createQuery(
                 """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
@@ -196,7 +201,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+    override fun searchProperties(
+        handle: DbHandle,
+        searchPropertyRequest: SearchPropertyRequest
+    ): List<PropertyItemED> {
         val conditionList = mutableListOf<String>()
         conditionList.add("true")
         if (searchPropertyRequest.propertyNameQuery != null) {
@@ -211,7 +219,7 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         if (searchPropertyRequest.hostNameQuery != null) {
             conditionList.add("ch.name ilike :hostName")
         }
-        return dbi.withHandle<List<PropertyItemED>, Exception> {
+        return handle.inTransaction {
             it.createQuery(
                 """select $PROPERTY_ED_SELECT_EXP from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
@@ -234,8 +242,8 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    override fun listProperties(applicationName: String): List<String> {
-        return dbi.withHandle<List<String>, Exception> {
+    override fun listProperties(handle: DbHandle, applicationName: String): List<String> {
+        return handle.inTransaction {
             it.createQuery(
                 """select distinct cp.name from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
@@ -248,12 +256,10 @@ class PostgreSqlConfigurationDao(private val dbi: Jdbi) : ConfigurationDao {
         }
     }
 
-    private fun <K> processMutable(
-        handle: DbHandle,
-        callback: (access: JdbiAccess) -> K,
-    ): K {
-        val access = handle.getApi(JdbiAccess::class.java)
-        return callback(access)
+    private fun <K> processMutable(handle: DbHandle, callback: (access: JdbiAccess) -> K): K {
+        return handle.withApi(JdbiAccess::class.java) {
+            callback(it)
+        }
     }
 }
 
@@ -348,4 +354,3 @@ private class PropertyItemEDMapper : RowMapper<PropertyItemED> {
         )
     }
 }
-

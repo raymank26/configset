@@ -15,7 +15,9 @@ class ConfigurationService(
 ) {
 
     fun listApplications(): List<ApplicationED> {
-        return configurationDao.listApplications()
+        return dbHandleFactory.withHandle {
+            configurationDao.listApplications(it)
+        }
     }
 
     fun createApplication(requestId: String, appName: String): CreateApplicationResult {
@@ -47,7 +49,9 @@ class ConfigurationService(
     }
 
     fun listHosts(): List<HostED> {
-        return configurationDao.listHosts()
+        return dbHandleFactory.withHandle {
+            configurationDao.listHosts(it)
+        }
     }
 
     fun updateProperty(
@@ -96,11 +100,15 @@ class ConfigurationService(
     }
 
     fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
-        return configurationDao.searchProperties(searchPropertyRequest)
+        return dbHandleFactory.withHandle {
+            configurationDao.searchProperties(it, searchPropertyRequest)
+        }
     }
 
     fun listProperties(applicationName: String): List<String> {
-        return configurationDao.listProperties(applicationName)
+        return dbHandleFactory.withHandle {
+            configurationDao.listProperties(it, applicationName)
+        }
     }
 
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
@@ -118,7 +126,9 @@ class ConfigurationService(
     }
 
     fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
-        return configurationDao.readProperty(applicationName, hostName, propertyName)
+        return dbHandleFactory.withHandle {
+            configurationDao.readProperty(it, hostName, propertyName, applicationName)
+        }
     }
 
     private fun <T> executeMutable(requestId: String, persistedValue: T, action: (DbHandle) -> T): T {

@@ -14,12 +14,12 @@ import com.configset.server.db.common.DbHandle
 
 interface ConfigurationDao {
     fun initialize()
-    fun listApplications(): List<ApplicationED>
+    fun listApplications(handle: DbHandle): List<ApplicationED>
     fun createApplication(handle: DbHandle, appName: String): CreateApplicationResult
     fun deleteApplication(handle: DbHandle, applicationName: String): DeleteApplicationResult
     fun updateApplication(handle: DbHandle, id: ApplicationId, applicationName: String): UpdateApplicationResult
     fun createHost(handle: DbHandle, hostName: String): HostCreateResult
-    fun listHosts(): List<HostED>
+    fun listHosts(handle: DbHandle): List<HostED>
     fun updateProperty(
         handle: DbHandle,
         appName: String,
@@ -37,10 +37,10 @@ interface ConfigurationDao {
         version: Long,
     ): DeletePropertyResult
 
-    fun getConfigurationSnapshotList(): List<PropertyItemED>
-    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED>
-    fun listProperties(applicationName: String): List<String>
-    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED?
+    fun getConfigurationSnapshotList(handle: DbHandle): List<PropertyItemED>
+    fun searchProperties(handle: DbHandle, searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED>
+    fun listProperties(handle: DbHandle, applicationName: String): List<String>
+    fun readProperty(handle: DbHandle, hostName: String, propertyName: String, applicationName: String): PropertyItemED?
 }
 
 data class ConfigurationApplication(val appName: String, val config: Map<String, ConfigurationProperty>)

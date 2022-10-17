@@ -26,7 +26,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     private var appId = 0L
 
     @Synchronized
-    override fun listApplications(): List<ApplicationED> {
+    override fun listApplications(handle: DbHandle): List<ApplicationED> {
         return applications.values.toList()
     }
 
@@ -78,7 +78,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun listHosts(): List<HostED> {
+    override fun listHosts(handle: DbHandle): List<HostED> {
         return hosts
     }
 
@@ -96,7 +96,12 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
+    override fun readProperty(
+        handle: DbHandle,
+        hostName: String,
+        propertyName: String,
+        applicationName: String
+    ): PropertyItemED? {
         return properties.firstOrNull {
             it.applicationName == applicationName
                     && it.name == propertyName
@@ -105,7 +110,10 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+    override fun searchProperties(
+        handle: DbHandle,
+        searchPropertyRequest: SearchPropertyRequest
+    ): List<PropertyItemED> {
         return properties.filter { !it.deleted }
             .mapNotNull { property ->
                 if (searchPropertyRequest.applicationName != null
@@ -139,7 +147,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun listProperties(applicationName: String): List<String> {
+    override fun listProperties(handle: DbHandle, applicationName: String): List<String> {
         return properties
             .filter { !it.deleted }
             .filter { it.applicationName == applicationName }
@@ -246,7 +254,7 @@ class InMemoryConfigurationDao : ConfigurationDao {
     }
 
     @Synchronized
-    override fun getConfigurationSnapshotList(): List<PropertyItemED> {
+    override fun getConfigurationSnapshotList(handle: DbHandle): List<PropertyItemED> {
         return properties.filter { applicationsByName.containsKey(it.applicationName) }
     }
 

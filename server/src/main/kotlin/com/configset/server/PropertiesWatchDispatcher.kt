@@ -4,12 +4,14 @@ import com.configset.sdk.extension.createLoggerStatic
 import com.configset.server.db.ConfigurationApplication
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.ConfigurationProperty
+import com.configset.server.db.DbHandleFactory
 
 private val LOG = createLoggerStatic<PropertiesWatchDispatcher>()
 
 class PropertiesWatchDispatcher(
     private val configurationDao: ConfigurationDao,
     private val configurationResolver: ConfigurationResolver,
+    private val dbHandleFactory: DbHandleFactory,
     private val scheduler: Scheduler,
     private val updateDelayMs: Long,
 ) {
@@ -70,7 +72,9 @@ class PropertiesWatchDispatcher(
     }
 
     private fun updateSnapshot() {
-        val properties = configurationDao.getConfigurationSnapshotList()
+        val properties = dbHandleFactory.withHandle {
+            configurationDao.getConfigurationSnapshotList(it)
+        }
         LOG.debug("Properties size in memory = ${properties.size}")
         LOG.trace("Properties = $properties")
         configurationSnapshot = properties

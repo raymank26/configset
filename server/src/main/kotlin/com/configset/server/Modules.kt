@@ -40,7 +40,7 @@ fun createAppModules(config: AppConfiguration): List<Module> {
         }
 
         single {
-            val dispatcher = PropertiesWatchDispatcher(get(), get(), get(), config.getUpdateDelayMs())
+            val dispatcher = PropertiesWatchDispatcher(get(), get(), get(), get(), config.getUpdateDelayMs())
             dispatcher.start()
             dispatcher
         }
