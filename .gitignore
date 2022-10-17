@@ -4,6 +4,7 @@
 /sdk/build/
 /dashboard/build/
 /common-backend/build/
+/common-client/build/
 /sample/build/
 /dashboard/dist/
 /.idea
