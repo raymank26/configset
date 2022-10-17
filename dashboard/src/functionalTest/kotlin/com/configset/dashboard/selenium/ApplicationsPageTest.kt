@@ -110,4 +110,20 @@ class ApplicationsPageTest : SeleniumTest() {
         // then
         Selenide.switchTo().alert().text.shouldBeEqualTo("APPLICATION_NOT_FOUND")
     }
+
+    @Test
+    fun `create button should redirect to application create page`() {
+        // given
+        authenticated(FULL_ROLES_ACCESS_TOKEN)
+        val id = ApplicationId(238923L)
+        mockConfigServiceExt.whenListApplications()
+            .answer(listOf(Application(id, "test1")))
+
+        // when
+        open("/applications")
+        ApplicationsPage.createNewApplicationButton.click()
+
+        // then
+        Selenide.webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/applications/create"))
+    }
 }
