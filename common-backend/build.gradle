@@ -12,7 +12,7 @@ compileKotlin {
 
 dependencies {
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
-    implementation project(':sdk')
+    implementation project(':common-client')
     implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
     implementation "com.auth0:java-jwt:$authZeroVersion"
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "$jacksonVersion"

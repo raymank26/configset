@@ -24,7 +24,7 @@ compileKotlin {
 }
 
 dependencies {
-    implementation project(':sdk')
+    implementation project(':common-client')
     implementation project(':common-backend')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
