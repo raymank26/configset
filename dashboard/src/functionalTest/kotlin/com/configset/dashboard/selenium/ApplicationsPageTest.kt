@@ -185,4 +185,23 @@ class ApplicationsPageTest : SeleniumTest() {
             it.applicationName shouldBeEqualTo "New app"
         }
     }
+
+    @Test
+    fun `should show error on application update`() {
+        // given
+        authenticated(FULL_ROLES_ACCESS_TOKEN)
+        mockConfigServiceExt.whenUpdateApplication {
+            any()
+        }.answer(ApplicationUpdatedResponse.Type.APPLICATION_NOT_FOUND)
+        mockConfigServiceExt.whenListApplications()
+            .answer(listOf(Application(ApplicationId(1231L), "Some-app")))
+
+        // when
+        open("/applications/update?applicationName=Some-app")
+        UpdateApplicationPage.applicationNameInput.value = "New app"
+        UpdateApplicationPage.updateButton.click()
+
+        // then
+        Selenide.switchTo().alert().text.shouldBeEqualTo("APPLICATION_NOT_FOUND")
+    }
 }
