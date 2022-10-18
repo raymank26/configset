@@ -1,7 +1,7 @@
 syntax = "proto3";
 option java_multiple_files = true;
 
-package com.configset.sdk.proto;
+package com.configset.client.proto;
 
 message ApplicationCreateRequest {
   string applicationName = 1;

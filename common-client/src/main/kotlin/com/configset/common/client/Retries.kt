@@ -1,4 +1,4 @@
-package com.configset.sdk
+package com.configset.common.client
 
 import org.slf4j.LoggerFactory
 

@@ -1,7 +1,7 @@
 package com.configset.server.functional
 
-import com.configset.sdk.client.ConfigSetClient
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.ConfigSetClient
+import com.configset.common.client.extension.createLogger
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc

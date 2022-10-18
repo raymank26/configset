@@ -4,9 +4,9 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.configset.common.backend.auth.UserInfo
-import com.configset.sdk.Application
-import com.configset.sdk.ApplicationId
-import com.configset.sdk.client.ConfigSetClient
+import com.configset.common.client.Application
+import com.configset.common.client.ApplicationId
+import com.configset.common.client.ConfigSetClient
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest

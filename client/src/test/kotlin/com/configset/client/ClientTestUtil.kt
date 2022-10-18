@@ -1,6 +1,6 @@
 package com.configset.client
 
-import com.configset.sdk.client.ConfigSetClient
+import com.configset.common.client.ConfigSetClient
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
 import com.configset.sdk.proto.PropertyItem

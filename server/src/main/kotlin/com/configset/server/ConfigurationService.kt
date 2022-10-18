@@ -1,6 +1,6 @@
 package com.configset.server
 
-import com.configset.sdk.ApplicationId
+import com.configset.common.client.ApplicationId
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
 import com.configset.server.db.PropertyItemED

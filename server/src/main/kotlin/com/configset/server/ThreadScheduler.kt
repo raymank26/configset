@@ -1,7 +1,7 @@
 package com.configset.server
 
+import com.configset.common.client.extension.createLogger
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.configset.sdk.extension.createLogger
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 

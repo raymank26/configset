@@ -1,6 +1,6 @@
 package com.configset.server.db.memory
 
-import com.configset.sdk.ApplicationId
+import com.configset.common.client.ApplicationId
 import com.configset.server.ApplicationED
 import com.configset.server.CreateApplicationResult
 import com.configset.server.DeleteApplicationResult

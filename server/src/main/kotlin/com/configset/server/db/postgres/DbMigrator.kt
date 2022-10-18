@@ -1,6 +1,6 @@
 package com.configset.server.db.postgres
 
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.server.TableMetaED
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper

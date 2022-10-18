@@ -5,11 +5,11 @@ import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverConditions
+import com.configset.common.client.Application
+import com.configset.common.client.ApplicationId
 import com.configset.dashboard.FULL_ROLES_ACCESS_TOKEN
 import com.configset.dashboard.selenium.pages.ApplicationsPage
 import com.configset.dashboard.selenium.pages.UpdateApplicationPage
-import com.configset.sdk.Application
-import com.configset.sdk.ApplicationId
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest

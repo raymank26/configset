@@ -2,7 +2,7 @@ package com.configset.client.repository.grpc
 
 import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
 import com.configset.sdk.proto.SubscribeApplicationRequest

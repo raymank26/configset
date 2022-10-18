@@ -1,4 +1,4 @@
-package com.configset.sdk
+package com.configset.common.client
 
 @JvmInline
 value class PropertyItemId(val id: Long)

@@ -1,6 +1,6 @@
 package com.configset.server.network.grpc
 
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.extension.createLogger
 import io.grpc.ForwardingServerCallListener
 import io.grpc.Metadata
 import io.grpc.ServerCall

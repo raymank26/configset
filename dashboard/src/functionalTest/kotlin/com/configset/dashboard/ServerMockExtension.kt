@@ -1,6 +1,6 @@
 package com.configset.dashboard
 
-import com.configset.sdk.Application
+import com.configset.common.client.Application
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest

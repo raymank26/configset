@@ -1,6 +1,6 @@
 package com.configset.server
 
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.extension.createLogger
 import com.configset.server.network.grpc.GrpcConfigurationServer
 import org.koin.dsl.koinApplication
 import java.util.concurrent.CompletableFuture

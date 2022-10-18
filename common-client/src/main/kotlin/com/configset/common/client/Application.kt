@@ -1,4 +1,4 @@
-package com.configset.sdk
+package com.configset.common.client
 
 data class Application(
     val id: ApplicationId,

@@ -1,9 +1,9 @@
 package com.configset.dashboard.property
 
 import com.configset.common.backend.auth.UserInfo
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.sdk.extension.createLoggerStatic
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper

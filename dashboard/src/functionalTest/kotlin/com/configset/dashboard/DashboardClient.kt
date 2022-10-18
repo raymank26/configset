@@ -2,7 +2,7 @@ package com.configset.dashboard
 
 import arrow.core.Either
 import arrow.core.left
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

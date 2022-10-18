@@ -1,10 +1,10 @@
 package com.configset.dashboard.util
 
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.dashboard.ServerApiGatewayErrorType
 import com.configset.dashboard.ServerApiGatewayException
 import com.configset.dashboard.property.ImportErrorType
 import com.configset.dashboard.property.ImportPropertiesException
-import com.configset.sdk.extension.createLoggerStatic
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.javalin.Javalin

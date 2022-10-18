@@ -1,7 +1,7 @@
 package com.configset.dashboard.selenium.pages
 
 import com.codeborne.selenide.Selenide
-import com.configset.sdk.ApplicationId
+import com.configset.common.client.ApplicationId
 import org.openqa.selenium.By
 
 object ApplicationsPage {

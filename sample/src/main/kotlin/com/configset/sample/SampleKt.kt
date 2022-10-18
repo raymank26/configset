@@ -6,7 +6,7 @@ import com.configset.client.ConfigurationRegistry
 import com.configset.client.ConfigurationRegistryFactory
 import com.configset.client.ConfigurationTransport
 import com.configset.client.converter.Converters
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import java.util.concurrent.Semaphore
 
 private const val BILLING_APP = "billing"

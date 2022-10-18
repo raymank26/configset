@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation project(':common-client')
+    api project(':common-client')
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 

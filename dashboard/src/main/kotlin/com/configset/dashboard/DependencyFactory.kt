@@ -2,6 +2,7 @@ package com.configset.dashboard
 
 import com.configset.common.backend.auth.AuthenticationProvider
 import com.configset.common.backend.auth.RemoteAuthenticationProvider
+import com.configset.common.client.ConfigSetClient
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.ApplicationsController
@@ -11,7 +12,6 @@ import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.property.PropertyImportService
 import com.configset.dashboard.util.JavalinExceptionMapper
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.sdk.client.ConfigSetClient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.http.Handler
 import okhttp3.OkHttpClient

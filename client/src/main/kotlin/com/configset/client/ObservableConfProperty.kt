@@ -1,7 +1,7 @@
 package com.configset.client
 
 import com.configset.client.converter.Converter
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 
 private val LOG = createLoggerStatic<ObservableConfProperty<*>>()
 

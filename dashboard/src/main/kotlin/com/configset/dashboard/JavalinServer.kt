@@ -1,10 +1,10 @@
 package com.configset.dashboard
 
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.pages.ApplicationsController
 import com.configset.dashboard.pages.PropertiesController
 import com.configset.dashboard.util.JavalinExceptionMapper
-import com.configset.sdk.extension.createLoggerStatic
 import io.javalin.Javalin
 import io.javalin.http.Handler
 import io.javalin.http.staticfiles.Location

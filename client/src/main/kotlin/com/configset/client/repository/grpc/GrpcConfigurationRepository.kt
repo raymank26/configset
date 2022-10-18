@@ -4,7 +4,7 @@ import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException

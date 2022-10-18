@@ -1,6 +1,6 @@
 package com.configset.server.functional.db
 
-import com.configset.sdk.ApplicationId
+import com.configset.common.client.ApplicationId
 import com.configset.server.ApplicationED
 import com.configset.server.DeletePropertyResult
 import com.configset.server.HostCreateResult

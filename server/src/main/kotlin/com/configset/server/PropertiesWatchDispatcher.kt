@@ -1,6 +1,6 @@
 package com.configset.server
 
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.server.db.ConfigurationApplication
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.ConfigurationProperty

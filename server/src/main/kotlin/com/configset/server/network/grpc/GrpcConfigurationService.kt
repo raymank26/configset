@@ -4,8 +4,8 @@ import com.configset.common.backend.auth.Admin
 import com.configset.common.backend.auth.ApplicationOwner
 import com.configset.common.backend.auth.HostCreator
 import com.configset.common.backend.auth.Role
-import com.configset.sdk.ApplicationId
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.ApplicationId
+import com.configset.common.client.extension.createLogger
 import com.configset.sdk.proto.Application
 import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse

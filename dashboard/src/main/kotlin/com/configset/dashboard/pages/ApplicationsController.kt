@@ -2,6 +2,7 @@ package com.configset.dashboard.pages
 
 import arrow.core.Either
 import com.configset.common.backend.auth.Admin
+import com.configset.common.client.ApplicationId
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.util.RequestIdProducer
@@ -12,7 +13,6 @@ import com.configset.dashboard.util.notFound
 import com.configset.dashboard.util.permissionDenied
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.userInfo
-import com.configset.sdk.ApplicationId
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
