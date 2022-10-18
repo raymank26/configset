@@ -7,12 +7,12 @@ import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.dashboard.util.escapeHtml
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.requestId
+import com.configset.dashboard.util.urlEncode
 import com.configset.dashboard.util.userInfo
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
@@ -108,7 +108,7 @@ class PropertiesController(
                 is Either.Right ->
                     ctx.htmxRedirect(buildString {
                         append("/?applicationName=")
-                        append(appName.escapeHtml())
+                        append(appName.urlEncode())
                     })
             }
         }
@@ -150,11 +150,11 @@ class PropertiesController(
 
                 is Either.Right -> ctx.redirect(buildString {
                     append("/?applicationName=")
-                    append(appName.escapeHtml())
+                    append(appName.urlEncode())
                     append("&propertyName=")
-                    append(propertyName.escapeHtml())
+                    append(propertyName.urlEncode())
                     append("&hostName=")
-                    append(hostName.escapeHtml())
+                    append(hostName.urlEncode())
                 })
             }
         }

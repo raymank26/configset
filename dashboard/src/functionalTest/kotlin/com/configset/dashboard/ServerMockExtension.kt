@@ -5,6 +5,8 @@ import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest
 import com.configset.sdk.proto.ApplicationDeletedResponse
+import com.configset.sdk.proto.ApplicationUpdateRequest
+import com.configset.sdk.proto.ApplicationUpdatedResponse
 import com.configset.sdk.proto.ApplicationsResponse
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.CreateHostRequest
@@ -60,7 +62,9 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenCreateApplication(request: MockKMatcherScope.() -> ApplicationCreateRequest): ServerMockContext<ApplicationCreatedResponse.Type> {
+    fun whenCreateApplication(request: MockKMatcherScope.() -> ApplicationCreateRequest):
+            ServerMockContext<ApplicationCreatedResponse.Type> {
+
         return object : ServerMockContext<ApplicationCreatedResponse.Type>() {
             override fun answer(response: ApplicationCreatedResponse.Type) {
                 every { mockConfigService.createApplication(request(), any()) } answers {
@@ -68,7 +72,27 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                     val observer = (it.invocation.args[1] as StreamObserver<ApplicationCreatedResponse>)
                     observer.onNext(
                         ApplicationCreatedResponse.newBuilder()
-                            .setType(response).build()
+                            .setType(response)
+                            .build()
+                    )
+                    observer.onCompleted()
+                }
+            }
+        }
+    }
+
+    fun whenUpdateApplication(request: MockKMatcherScope.() -> ApplicationUpdateRequest):
+            ServerMockContext<ApplicationUpdatedResponse.Type> {
+
+        return object : ServerMockContext<ApplicationUpdatedResponse.Type>() {
+            override fun answer(response: ApplicationUpdatedResponse.Type) {
+                every { mockConfigService.updateApplication(request(), any()) } answers {
+                    @Suppress("UNCHECKED_CAST")
+                    val observer = (it.invocation.args[1] as StreamObserver<ApplicationUpdatedResponse>)
+                    observer.onNext(
+                        ApplicationUpdatedResponse.newBuilder()
+                            .setType(response)
+                            .build()
                     )
                     observer.onCompleted()
                 }

@@ -14,6 +14,8 @@ import com.configset.sdk.proto.ApplicationCreateRequest
 import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest
 import com.configset.sdk.proto.ApplicationDeletedResponse
+import com.configset.sdk.proto.ApplicationUpdateRequest
+import com.configset.sdk.proto.ApplicationUpdatedResponse
 import io.mockk.slot
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
@@ -155,6 +157,31 @@ class ApplicationsPageTest : SeleniumTest() {
         // then
         Selenide.webdriver().shouldHave(WebDriverConditions.url("$BASE_URL/applications"))
         applicationCreateRequest.captured.also {
+            it.applicationName shouldBeEqualTo "New app"
+        }
+    }
+
+    @Test
+    fun `should update application`() {
+        // given
+        authenticated(FULL_ROLES_ACCESS_TOKEN)
+        val applicationUpdateRequest = slot<ApplicationUpdateRequest>()
+        mockConfigServiceExt.whenUpdateApplication {
+            capture(applicationUpdateRequest)
+        }.answer(ApplicationUpdatedResponse.Type.OK)
+
+        mockConfigServiceExt.whenListApplications()
+            .answer(listOf(Application(ApplicationId(1231L), "Some-app")))
+
+        // when
+        open("/applications/update?applicationName=Some-app")
+        UpdateApplicationPage.applicationNameInput.value = "New app"
+        UpdateApplicationPage.updateButton.click()
+
+        // then
+        Selenide.webdriver().shouldHave(WebDriverConditions.url("$BASE_URL/applications"))
+        applicationUpdateRequest.captured.also {
+            it.id shouldBeEqualTo ApplicationId(1231L).id.toString()
             it.applicationName shouldBeEqualTo "New app"
         }
     }

@@ -2,7 +2,7 @@ package com.configset.dashboard.auth
 
 import com.auth0.jwt.JWT
 import com.configset.dashboard.AuthenticationConfig
-import com.configset.dashboard.util.escapeHtml
+import com.configset.dashboard.util.urlEncode
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.javalin.apibuilder.ApiBuilder.get
@@ -61,7 +61,7 @@ class AuthController(
                 isHttpOnly = true
             })
 
-            ctx.cookie(Cookie("auth.username", username.escapeHtml()))
+            ctx.cookie(Cookie("auth.username", username.urlEncode()))
 
             ctx.redirect("/")
         }

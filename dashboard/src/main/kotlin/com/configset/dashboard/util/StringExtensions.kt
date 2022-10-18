@@ -1,8 +1,9 @@
 package com.configset.dashboard.util
 
-import org.apache.commons.lang3.StringEscapeUtils
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 
-fun String.escapeHtml(): String {
-    return StringEscapeUtils.escapeHtml4(this)
+fun String.urlEncode(): String {
+    return URLEncoder.encode(this, StandardCharsets.UTF_8)
 }
