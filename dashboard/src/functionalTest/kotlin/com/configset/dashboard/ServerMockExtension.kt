@@ -23,7 +23,6 @@ import io.grpc.stub.StreamObserver
 import io.mockk.MockKMatcherScope
 import io.mockk.every
 
-typealias AppName = String
 typealias HostName = String
 
 class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrpc.ConfigurationServiceImplBase) {

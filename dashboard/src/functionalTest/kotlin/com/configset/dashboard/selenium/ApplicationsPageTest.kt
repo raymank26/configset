@@ -7,8 +7,11 @@ import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.WebDriverConditions
 import com.configset.dashboard.FULL_ROLES_ACCESS_TOKEN
 import com.configset.dashboard.selenium.pages.ApplicationsPage
+import com.configset.dashboard.selenium.pages.UpdateApplicationPage
 import com.configset.sdk.Application
 import com.configset.sdk.ApplicationId
+import com.configset.sdk.proto.ApplicationCreateRequest
+import com.configset.sdk.proto.ApplicationCreatedResponse
 import com.configset.sdk.proto.ApplicationDeleteRequest
 import com.configset.sdk.proto.ApplicationDeletedResponse
 import io.mockk.slot
@@ -35,7 +38,12 @@ class ApplicationsPageTest : SeleniumTest() {
 
         // then
         ApplicationsPage.applicationsTable.shouldHave(text("testApp1"))
+        ApplicationsPage.getApplicationRow(ApplicationId(2389L)).updateButton.shouldBe(visible)
+        ApplicationsPage.getApplicationRow(ApplicationId(2389L)).deleteButton.shouldBe(visible)
         ApplicationsPage.applicationsTable.shouldHave(text("testApp2"))
+        ApplicationsPage.getApplicationRow(ApplicationId(28923L)).updateButton.shouldBe(visible)
+        ApplicationsPage.getApplicationRow(ApplicationId(28923L)).deleteButton.shouldBe(visible)
+
         ApplicationsPage.createNewApplicationButton.shouldNotBe(visible)
     }
 
@@ -54,7 +62,7 @@ class ApplicationsPageTest : SeleniumTest() {
     }
 
     @Test
-    fun `should delete property`() {
+    fun `should delete application`() {
         // given
         authenticated(FULL_ROLES_ACCESS_TOKEN)
         val id = ApplicationId(238923L)
@@ -125,5 +133,29 @@ class ApplicationsPageTest : SeleniumTest() {
 
         // then
         Selenide.webdriver().shouldHave(WebDriverConditions.urlStartingWith("$BASE_URL/applications/create"))
+    }
+
+    @Test
+    fun `should create new application`() {
+        // given
+        authenticated(FULL_ROLES_ACCESS_TOKEN)
+        val applicationCreateRequest = slot<ApplicationCreateRequest>()
+        mockConfigServiceExt.whenCreateApplication {
+            capture(applicationCreateRequest)
+        }.answer(ApplicationCreatedResponse.Type.OK)
+
+        mockConfigServiceExt.whenListApplications()
+            .answer(listOf())
+
+        // when
+        open("/applications/create")
+        UpdateApplicationPage.applicationNameInput.value = "New app"
+        UpdateApplicationPage.updateButton.click()
+
+        // then
+        Selenide.webdriver().shouldHave(WebDriverConditions.url("$BASE_URL/applications"))
+        applicationCreateRequest.captured.also {
+            it.applicationName shouldBeEqualTo "New app"
+        }
     }
 }
