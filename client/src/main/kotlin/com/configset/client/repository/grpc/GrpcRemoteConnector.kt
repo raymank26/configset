@@ -46,17 +46,35 @@ class GrpcRemoteConnector(
                 .setHostName(applicationHostname)
                 .setLastKnownVersion(watchState.value.lastVersion)
                 .build()
-            watchMethodApi.onNext(WatchRequest.newBuilder()
-                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                .setSubscribeApplicationRequest(subscribeRequest)
-                .build())
+            watchMethodApi.onNext(
+                WatchRequest.newBuilder()
+                    .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                    .setSubscribeApplicationRequest(subscribeRequest)
+                    .build()
+            )
             LOG.info("Resubscribed to app = $appName and lastVersion = ${watchState.value.lastVersion}")
         }
         LOG.info("Watch subscription is (re)initialized")
     }
 
-    fun subscribeForChanges(appName: String, currentObservable: ChangingObservable<List<PropertyItem>>) {
+    fun subscribeForChanges(
+        appName: String,
+        defaultApplicationName: String,
+        currentObservable: ChangingObservable<List<PropertyItem>>
+    ) {
         appWatchMappers[appName] = WatchState(appName, -1, currentObservable)
+        val subscribeRequest = SubscribeApplicationRequest
+            .newBuilder()
+            .setApplicationName(appName)
+            .setDefaultApplicationName(defaultApplicationName)
+            .setHostName(applicationHostname)
+            .build()
+        watchMethodApi.onNext(
+            WatchRequest.newBuilder()
+                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
+                .setSubscribeApplicationRequest(subscribeRequest)
+                .build()
+        )
     }
 
     @Synchronized
@@ -69,43 +87,51 @@ class GrpcRemoteConnector(
         (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
     }
 
-    fun sendRequest(watchRequest: WatchRequest) {
-        watchMethodApi.onNext(watchRequest)
-    }
-
     override fun onNext(value: PropertiesChangesResponse) {
         val updates: MutableList<PropertyItem> = ArrayList()
         val lastVersion = value.lastVersion
         for (propertyItemProto in value.itemsList) {
             val propValue = if (propertyItemProto.deleted) null else propertyItemProto.propertyValue
-            updates.add(PropertyItem(propertyItemProto.applicationName, propertyItemProto.propertyName,
-                propertyItemProto.version, propValue))
+            updates.add(
+                PropertyItem(
+                    propertyItemProto.applicationName, propertyItemProto.propertyName,
+                    propertyItemProto.version, propValue
+                )
+            )
         }
 
         val appName = value.applicationName
         val watchState: WatchState = appWatchMappers[appName]!!
         if (lastVersion <= watchState.lastVersion) {
             if (updates.isNotEmpty()) {
-                LOG.debug("Obsolete value has come, known version = ${watchState.lastVersion}," +
-                        "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}")
+                LOG.debug(
+                    "Obsolete value has come, known version = ${watchState.lastVersion}," +
+                            "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}"
+                )
             }
             return
         }
         val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
         if (filteredUpdates.size != updates.size) {
-            LOG.debug("Some updates where filtered (they are obsolete)" +
-                    ", before size = ${updates.size}, after size = ${filteredUpdates.size}")
+            LOG.debug(
+                "Some updates where filtered (they are obsolete)" +
+                        ", before size = ${updates.size}, after size = ${filteredUpdates.size}"
+            )
         }
         LOG.info("Configuration updated {}", filteredUpdates)
         watchState.observable.push(filteredUpdates)
         watchState.lastVersion = lastVersion
-        watchMethodApi.onNext(WatchRequest.newBuilder()
-            .setType(WatchRequest.Type.UPDATE_RECEIVED)
-            .setUpdateReceived(UpdateReceived.newBuilder()
-                .setApplicationName(appName)
-                .setVersion(lastVersion)
-                .build())
-            .build())
+        watchMethodApi.onNext(
+            WatchRequest.newBuilder()
+                .setType(WatchRequest.Type.UPDATE_RECEIVED)
+                .setUpdateReceived(
+                    UpdateReceived.newBuilder()
+                        .setApplicationName(appName)
+                        .setVersion(lastVersion)
+                        .build()
+                )
+                .build()
+        )
     }
 
     override fun onError(t: Throwable?) {

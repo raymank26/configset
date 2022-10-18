@@ -5,8 +5,6 @@ import com.configset.client.PropertyItem
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.sdk.extension.createLoggerStatic
-import com.configset.sdk.proto.SubscribeApplicationRequest
-import com.configset.sdk.proto.WatchRequest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -23,7 +21,6 @@ class GrpcConfigurationRepository(
 
     private lateinit var grpcRemoteConnector: GrpcRemoteConnector
 
-    @Synchronized
     override fun start() {
         grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, grpcClientFactory, reconnectionTimeoutMs)
         grpcRemoteConnector.init()
@@ -31,19 +28,7 @@ class GrpcConfigurationRepository(
 
     override fun subscribeToProperties(appName: String): ConfigApplication {
         val currentObservable = ChangingObservable<List<PropertyItem>>()
-        synchronized(this) {
-            grpcRemoteConnector.subscribeForChanges(appName, currentObservable)
-            val subscribeRequest = SubscribeApplicationRequest
-                .newBuilder()
-                .setApplicationName(appName)
-                .setDefaultApplicationName(defaultApplicationName)
-                .setHostName(applicationHostname)
-                .build()
-            grpcRemoteConnector.sendRequest(WatchRequest.newBuilder()
-                .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
-                .setSubscribeApplicationRequest(subscribeRequest)
-                .build())
-        }
+        grpcRemoteConnector.subscribeForChanges(appName, defaultApplicationName, currentObservable)
 
         val future = CompletableFuture<List<PropertyItem>>()
         currentObservable.onSubscribe { value -> future.complete(value) }
@@ -60,7 +45,6 @@ class GrpcConfigurationRepository(
         return ConfigApplication(appName, initialProperties, currentObservable)
     }
 
-    @Synchronized
     override fun stop() {
         grpcRemoteConnector.stop()
     }
