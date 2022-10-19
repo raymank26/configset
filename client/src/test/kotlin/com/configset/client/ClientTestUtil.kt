@@ -1,6 +1,7 @@
 package com.configset.client
 
 import com.configset.common.client.ConfigSetClient
+import com.configset.common.client.DeadlineInterceptor
 import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.sdk.proto.PropertiesChangesResponse
 import com.configset.sdk.proto.PropertyItem
@@ -27,29 +28,6 @@ class ClientTestUtil {
         override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
             var isShuttedDown = false
 
-            fun startSubscription(responseObserver: StreamObserver<PropertiesChangesResponse>) {
-                thread {
-                    val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
-                        (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
-                    } else {
-                        updateVersion.get()
-                    }
-                    responseObserver.onNext(PropertiesChangesResponse.newBuilder()
-                        .setApplicationName(APP_NAME)
-                        .setLastVersion(lastVersion)
-                        .build())
-                    while (!isShuttedDown) {
-                        when (val cmd = cmdQueue.take()) {
-                            Payload.DropConnection -> {
-                                isShuttedDown = true
-                                responseObserver.onCompleted()
-                            }
-                            is Payload.Msg -> responseObserver.onNext(cmd.data)
-                        }
-                    }
-                }
-            }
-
             return object : StreamObserver<WatchRequest> {
                 override fun onNext(value: WatchRequest) {
                     when (value.type) {
@@ -69,6 +47,32 @@ class ClientTestUtil {
                 override fun onCompleted() {
                     isShuttedDown = true
                 }
+
+                private fun startSubscription(responseObserver: StreamObserver<PropertiesChangesResponse>) {
+                    thread {
+                        val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
+                            (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
+                        } else {
+                            updateVersion.get()
+                        }
+                        responseObserver.onNext(
+                            PropertiesChangesResponse.newBuilder()
+                                .setApplicationName(APP_NAME)
+                                .setLastVersion(lastVersion)
+                                .build()
+                        )
+                        while (!isShuttedDown) {
+                            when (val cmd = cmdQueue.take()) {
+                                Payload.DropConnection -> {
+                                    isShuttedDown = true
+                                    responseObserver.onCompleted()
+                                }
+
+                                is Payload.Msg -> responseObserver.onNext(cmd.data)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -76,7 +80,10 @@ class ClientTestUtil {
     fun start() {
         server = InProcessServerBuilder.forName("mytest")
             .directExecutor().addService(service).build().start()
-        channel = InProcessChannelBuilder.forName("mytest").directExecutor().build()
+        channel = InProcessChannelBuilder.forName("mytest")
+            .intercept(DeadlineInterceptor(10_000))
+            .directExecutor()
+            .build()
         asyncClient = ConfigSetClient(channel).asyncClient
     }
 

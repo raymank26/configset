@@ -1,6 +1,7 @@
 package com.configset.client
 
 import com.configset.client.repository.ConfigurationRepository
+import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
 import com.configset.sdk.proto.ConfigurationServiceGrpc
@@ -27,10 +28,13 @@ object ConfigurationRegistryFactory {
         return GrpcConfigurationRepository(
             applicationHostname = transport.hostName,
             defaultApplicationName = transport.defaultApplicationName,
-            grpcClientFactory = {
-                prepareGrpcStub(transport)
+            grpcClientFactory = object : GrpcClientFactory {
+                override fun createAsyncClient(): ConfigurationServiceGrpc.ConfigurationServiceStub {
+                    return prepareGrpcStub(transport)
+                }
             },
-            reconnectionTimeoutMs = 5000)
+            reconnectionTimeoutMs = 5000
+        )
     }
 
     private fun prepareGrpcStub(transport: ConfigurationTransport.RemoteGrpc): ConfigurationServiceGrpc.ConfigurationServiceStub {

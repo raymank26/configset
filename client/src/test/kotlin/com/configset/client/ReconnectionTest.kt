@@ -12,15 +12,14 @@ class ReconnectionTest : BaseClientTest() {
         val propertyName = "configuration.property"
         var confUpdates = 0
         val confProperty: ConfProperty<String?> = defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
+        val expectedValueAfterUpdate = "123"
 
         confProperty.subscribe {
             confUpdates++
         }
-
         confProperty.getValue() shouldBeEqualTo null
 
-        val expectedValueAfterUpdate = "123"
-
+        // when
         clientUtil.pushPropertyUpdate(APP_NAME, propertyName, expectedValueAfterUpdate)
 
         Awaitility.await().untilAsserted {
@@ -29,7 +28,7 @@ class ReconnectionTest : BaseClientTest() {
 
         clientUtil.dropConnection()
 
-        confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate // here we check that property wan't changed
+        confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate // here we check that property wasn't changed
 
         clientUtil.pushPropertyDeleted(APP_NAME, propertyName)
 

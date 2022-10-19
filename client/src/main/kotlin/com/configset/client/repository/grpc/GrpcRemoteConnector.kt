@@ -8,11 +8,18 @@ import com.configset.sdk.proto.PropertiesChangesResponse
 import com.configset.sdk.proto.SubscribeApplicationRequest
 import com.configset.sdk.proto.UpdateReceived
 import com.configset.sdk.proto.WatchRequest
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
 import kotlin.concurrent.thread
+import kotlin.concurrent.withLock
+import kotlin.concurrent.write
 
 private val LOG = createLoggerStatic<GrpcRemoteConnector>()
 
@@ -20,24 +27,21 @@ class GrpcRemoteConnector(
     private val applicationHostname: String,
     private val grpcClientFactory: GrpcClientFactory,
     private val reconnectionTimeoutMs: Long,
-) : StreamObserver<PropertiesChangesResponse> {
+) {
 
     private val appWatchMappers: MutableMap<String, WatchState> = ConcurrentHashMap()
-
-    private lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
-    private lateinit var watchMethodApi: StreamObserver<WatchRequest>
-
-    @Volatile
-    private var isStopped = false
+    private lateinit var persistentWatcher: PersistentWatcher
 
     fun init() {
-        asyncClient = grpcClientFactory.createAsyncClient()
+        persistentWatcher = PersistentWatcher(grpcClientFactory.createAsyncClient(),
+            reconnectionTimeoutMs = reconnectionTimeoutMs,
+            changesCallback = { processUpdate(it) },
+            resubscribeCallback = { resubscribe() })
         resubscribe()
     }
 
-    @Synchronized
     private fun resubscribe() {
-        watchMethodApi = asyncClient.watchChanges(this)
+        persistentWatcher.connect()
         for (watchState in appWatchMappers) {
             val appName = watchState.value.appName
             val subscribeRequest = SubscribeApplicationRequest
@@ -46,7 +50,7 @@ class GrpcRemoteConnector(
                 .setHostName(applicationHostname)
                 .setLastKnownVersion(watchState.value.lastVersion)
                 .build()
-            watchMethodApi.onNext(
+            persistentWatcher.sendWatchRequest(
                 WatchRequest.newBuilder()
                     .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
                     .setSubscribeApplicationRequest(subscribeRequest)
@@ -69,7 +73,7 @@ class GrpcRemoteConnector(
             .setDefaultApplicationName(defaultApplicationName)
             .setHostName(applicationHostname)
             .build()
-        watchMethodApi.onNext(
+        persistentWatcher.sendWatchRequest(
             WatchRequest.newBuilder()
                 .setType(WatchRequest.Type.SUBSCRIBE_APPLICATION)
                 .setSubscribeApplicationRequest(subscribeRequest)
@@ -77,17 +81,11 @@ class GrpcRemoteConnector(
         )
     }
 
-    @Synchronized
     fun stop() {
-        if (isStopped) {
-            return
-        }
-        isStopped = true
-        watchMethodApi.onCompleted()
-        (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
+        persistentWatcher.stop()
     }
 
-    override fun onNext(value: PropertiesChangesResponse) {
+    private fun processUpdate(value: PropertiesChangesResponse) {
         val updates: MutableList<PropertyItem> = ArrayList()
         val lastVersion = value.lastVersion
         for (propertyItemProto in value.itemsList) {
@@ -121,7 +119,7 @@ class GrpcRemoteConnector(
         LOG.info("Configuration updated {}", filteredUpdates)
         watchState.observable.push(filteredUpdates)
         watchState.lastVersion = lastVersion
-        watchMethodApi.onNext(
+        persistentWatcher.sendWatchRequest(
             WatchRequest.newBuilder()
                 .setType(WatchRequest.Type.UPDATE_RECEIVED)
                 .setUpdateReceived(
@@ -133,44 +131,25 @@ class GrpcRemoteConnector(
                 .build()
         )
     }
-
-    override fun onError(t: Throwable?) {
-        if (isStopped) {
-            return
-        }
-        LOG.warn("Exception on streaming data", t)
-        reconnect()
-    }
-
-    override fun onCompleted() {
-        if (isStopped) {
-            return
-        }
-        reconnect()
-    }
-
-    private fun reconnect() {
-        thread {
-            LOG.info("Resubscribe started, waiting for 5 seconds")
-            Thread.sleep(reconnectionTimeoutMs)
-            resubscribe()
-        }
-    }
 }
 
 class PersistentWatcher(
     private val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub,
+    private val reconnectionTimeoutMs: Long,
     private val changesCallback: (PropertiesChangesResponse) -> Unit,
+    private val resubscribeCallback: () -> Unit,
 ) {
 
     @Volatile
     private var stopped = false
     private lateinit var observer: StreamObserver<WatchRequest>
+    private val requestExecutors = Executors.newCachedThreadPool(ThreadFactoryBuilder().setDaemon(true).build())
+    private val sendRequestLock = ReentrantReadWriteLock()
+    private val reconnectionLock = ReentrantLock()
 
-    @Synchronized
     fun connect() {
         if (stopped) {
-            error("Already stopped")
+            return
         }
         observer = asyncClient.watchChanges(object : StreamObserver<PropertiesChangesResponse> {
             override fun onNext(value: PropertiesChangesResponse) {
@@ -180,35 +159,53 @@ class PersistentWatcher(
             override fun onError(t: Throwable) {
                 if (!stopped) {
                     LOG.warn("Exception in communication", t)
-                    thread {
-                        connect()
-                    }
+                    emitReconnection()
                 }
             }
 
             override fun onCompleted() {
                 LOG.debug("Completed called")
                 if (!stopped) {
-                    thread {
-                        connect()
-                    }
+                    emitReconnection()
                 }
             }
         })
     }
 
-    @Synchronized
+    private fun emitReconnection() {
+        thread {
+            Thread.sleep(reconnectionTimeoutMs)
+            reconnectionLock.withLock(resubscribeCallback)
+        }
+    }
+
     fun sendWatchRequest(watchRequest: WatchRequest) {
         if (stopped) {
             return
         }
-        observer.onNext(watchRequest)
+        requestExecutors.submit {
+            while (true) {
+                try {
+                    sendRequestLock.read {
+                        if (stopped) {
+                            return@submit
+                        }
+                        observer.onNext(watchRequest)
+                    }
+                    return@submit
+                } catch (e: Exception) {
+                    LOG.warn("Cannot send watch request", e)
+                    Thread.sleep(2000)
+                }
+            }
+        }
     }
 
-    @Synchronized
     fun stop() {
-        observer.onCompleted()
+        sendRequestLock.write {
+            stopped = true
+            observer.onCompleted()
+        }
         (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
-        stopped = true
     }
 }
