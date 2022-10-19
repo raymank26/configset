@@ -157,3 +157,58 @@ class GrpcRemoteConnector(
         }
     }
 }
+
+class PersistentWatcher(
+    private val asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub,
+    private val changesCallback: (PropertiesChangesResponse) -> Unit,
+) {
+
+    @Volatile
+    private var stopped = false
+    private lateinit var observer: StreamObserver<WatchRequest>
+
+    @Synchronized
+    fun connect() {
+        if (stopped) {
+            error("Already stopped")
+        }
+        observer = asyncClient.watchChanges(object : StreamObserver<PropertiesChangesResponse> {
+            override fun onNext(value: PropertiesChangesResponse) {
+                changesCallback.invoke(value)
+            }
+
+            override fun onError(t: Throwable) {
+                if (!stopped) {
+                    LOG.warn("Exception in communication", t)
+                    thread {
+                        connect()
+                    }
+                }
+            }
+
+            override fun onCompleted() {
+                LOG.debug("Completed called")
+                if (!stopped) {
+                    thread {
+                        connect()
+                    }
+                }
+            }
+        })
+    }
+
+    @Synchronized
+    fun sendWatchRequest(watchRequest: WatchRequest) {
+        if (stopped) {
+            return
+        }
+        observer.onNext(watchRequest)
+    }
+
+    @Synchronized
+    fun stop() {
+        observer.onCompleted()
+        (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
+        stopped = true
+    }
+}
