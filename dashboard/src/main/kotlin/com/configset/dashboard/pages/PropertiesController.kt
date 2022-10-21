@@ -4,12 +4,16 @@ import arrow.core.Either
 import com.configset.dashboard.SearchPropertiesRequest
 import com.configset.dashboard.TablePropertyItem
 import com.configset.dashboard.TemplateRenderer
+import com.configset.dashboard.forms.Form
+import com.configset.dashboard.forms.FormField
+import com.configset.dashboard.forms.FormFieldValidator.Companion.NOT_BLANK
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.util.RequestIdProducer
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
+import com.configset.dashboard.util.notFound
 import com.configset.dashboard.util.queryParamSafe
 import com.configset.dashboard.util.requestId
 import com.configset.dashboard.util.urlEncode
@@ -17,6 +21,7 @@ import com.configset.dashboard.util.userInfo
 import io.javalin.apibuilder.ApiBuilder.delete
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.post
+import io.javalin.http.Handler
 
 class PropertiesController(
     private val templateRenderer: TemplateRenderer,
@@ -24,6 +29,46 @@ class PropertiesController(
     private val crudPropertyService: CrudPropertyService,
     private val requestIdProducer: RequestIdProducer
 ) {
+
+    private val propertyForm = Form(
+        listOf(
+            FormField(
+                label = "Application name",
+                required = true,
+                name = "applicationName",
+                validation = NOT_BLANK
+            ),
+            FormField(
+                label = "Host name",
+                required = true,
+                name = "hostName",
+                validation = NOT_BLANK
+            ),
+            FormField(
+                label = "Property name",
+                required = true,
+                name = "propertyName",
+                validation = NOT_BLANK
+            ),
+            FormField(
+                label = "Property value",
+                required = true,
+                name = "propertyValue"
+            ),
+            FormField(
+                label = "RequestId",
+                required = true,
+                name = "requestId"
+            ),
+            FormField(
+                label = "Version",
+                required = true,
+                name = "propertyVersion"
+            ),
+        )
+    )
+
+    private val propertyFormUpdateReadOnlyFields = setOf("applicationName", "hostName", "propertyName")
 
     fun bind() {
         get("") { ctx ->
@@ -69,7 +114,9 @@ class PropertiesController(
             ctx.html(
                 templateRenderer.render(
                     ctx, "update_property.html", mapOf(
-                        "requestId" to requestIdProducer.nextRequestId()
+                        "form" to propertyForm.withDefaultValues(
+                            mapOf("requestId" to requestIdProducer.nextRequestId())
+                        ),
                     )
                 )
             )
@@ -80,15 +127,20 @@ class PropertiesController(
                 hostName = ctx.queryParamSafe("hostName"),
                 propertyName = ctx.queryParamSafe("propertyName"),
                 userInfo = ctx.userInfo()
-            )
-            ctx.html(
-                templateRenderer.render(
-                    ctx, "update_property.html", mapOf(
-                        "property" to property,
-                        "requestId" to requestIdProducer.nextRequestId()
-                    )
+            ) ?: notFound()
+
+            val form = propertyForm.withDefaultValues(
+                mapOf(
+                    "applicationName" to property.applicationName,
+                    "hostName" to property.hostName,
+                    "propertyName" to property.propertyName,
+                    "propertyValue" to property.propertyValue,
+                    "propertyVersion" to property.version.toString(),
+                    "requestId" to requestIdProducer.nextRequestId()
                 )
-            )
+            ).withReadonlyFields(propertyFormUpdateReadOnlyFields)
+
+            ctx.html(templateRenderer.render(ctx, "update_property.html", mapOf("form" to form)))
         }
 
         delete("properties/delete") { ctx ->
@@ -113,13 +165,19 @@ class PropertiesController(
             }
         }
 
-        post("properties/update") { ctx ->
+        val updateHandler = Handler { ctx ->
             val requestId = ctx.requestId()
-            val appName = ctx.formParamSafe("applicationName")
-            val hostName = ctx.formParamSafe("hostName")
-            val propertyName = ctx.formParamSafe("propertyName")
-            val propertyValue = ctx.formParamSafe("propertyValue")
-            val version = ctx.formParamSafe("version").toLongOrNull()
+            val validatedForm = propertyForm.performValidation(ctx.formParamMap())
+
+            if (validatedForm.hasError) {
+                ctx.html(templateRenderer.render(ctx, "update_property.html", mapOf("form" to validatedForm)))
+                return@Handler
+            }
+            val appName = validatedForm.getField("applicationName").value!!
+            val hostName = validatedForm.getField("hostName").value!!
+            val propertyName = validatedForm.getField("propertyName").value!!
+            val propertyValue = validatedForm.getField("propertyValue").value!!
+            val version: Long? = validatedForm.getField("propertyVersion").value?.toLongOrNull()
 
             val result = crudPropertyService.updateProperty(
                 requestId = requestId,
@@ -132,17 +190,12 @@ class PropertiesController(
             )
             when (result) {
                 is Either.Left -> {
-                    val property = listPropertiesService.getProperty(
-                        appName = appName,
-                        hostName = hostName,
-                        propertyName = propertyName,
-                        userInfo = ctx.userInfo()
-                    )
                     ctx.html(
                         templateRenderer.render(
                             ctx, "update_property.html", mapOf(
-                                "property" to property,
-                                "error" to result.value
+                                "form" to validatedForm
+                                    .withCommonError(result.value.name)
+                                    .withReadonlyFields(propertyFormUpdateReadOnlyFields),
                             )
                         )
                     )
@@ -158,5 +211,8 @@ class PropertiesController(
                 })
             }
         }
+
+        post("properties/update", updateHandler)
+        post("properties/create", updateHandler)
     }
 }

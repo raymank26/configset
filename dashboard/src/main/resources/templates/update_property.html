@@ -1,50 +1,24 @@
+{% import "macros/forms.html" as forms %}
 {% extends "base.html" %}
 
 {% block main %}
-<form action="/properties/update" method="post">
+<div class="column is-4 pt-0">
+    <h3>Create/Update property</h3>
     <div>
-        <label>
-            <span>Application name</span>
-            <input name="applicationName"
-                   value="{{ property.applicationName if property else ''}}"
-                   {% if property %} readonly {% endif %}
-            />
-        </label>
+        <form method="post">
+            {{ forms.input(form.getField('applicationName')) }}
+            {{ forms.input(form.getField('hostName')) }}
+            {{ forms.input(form.getField('propertyName')) }}
+            {{ forms.textarea(form.getField('propertyValue')) }}
+            {% if form.commonError %}
+            <div class="property-update-error content">
+                <p class="has-text-danger">{{ form.commonError }}</p>
+            </div>
+            {% endif %}
+            {{ forms.hiddenInput(form.getField('requestId')) }}
+            {{ forms.hiddenInput(form.getField('propertyVersion')) }}
+            <button class="button is-link property-update-button" type="submit">Update</button>
+        </form>
     </div>
-    <div>
-        <label>
-            <span>Host value</span>
-            <input name="hostName"
-                   value="{{ property.hostName if property else '' }}"
-                   {% if property %} readonly {% endif %}
-            />
-        </label>
-    </div>
-    <div>
-        <label>
-            <span>Property name</span>
-            <input name="propertyName"
-                   value="{{ property.propertyName if property else '' }}"
-                   {% if property %} readonly {% endif %}
-            />
-        </label>
-    </div>
-    <div>
-        <label>
-            <span>Property value</span>
-            <input name="propertyValue"
-                   value="{{ property.propertyValue if property else '' }}"
-            />
-        </label>
-    </div>
-    {% if error %}
-    <div class="property-update-error">
-        <p>{{ error }}
-        <p>
-    </div>
-    {% endif %}
-    <input type="hidden" name="requestId" value="{{requestId}}"/>
-    <input type="hidden" name="version" value="{{property.version}}"/>
-    <button class="property-update-button" type="submit">Update</button>
-</form>
+</div>
 {% endblock %}
