@@ -1,7 +1,9 @@
 package com.configset.dashboard.pages
 
 import arrow.core.Either
+import arrow.core.computations.either
 import com.configset.dashboard.SearchPropertiesRequest
+import com.configset.dashboard.ServerApiGatewayErrorType
 import com.configset.dashboard.TablePropertyItem
 import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.forms.Form
@@ -166,48 +168,62 @@ class PropertiesController(
         }
 
         val updateHandler = Handler { ctx ->
-            val requestId = ctx.requestId()
-            val validatedForm = propertyForm.performValidation(ctx.formParamMap())
+            val result = either.eager<UpdateError, Form> {
+                val validatedForm = propertyForm.performValidation(ctx.formParamMap())
+                    .map { it.form }
+                    .mapLeft { UpdateError.FormValidationError(it.form) }
+                    .bind()
 
-            if (validatedForm.hasError) {
-                ctx.html(templateRenderer.render(ctx, "update_property.html", mapOf("form" to validatedForm)))
-                return@Handler
+                val appName = validatedForm.getField("applicationName").value!!
+                val hostName = validatedForm.getField("hostName").value!!
+                val propertyName = validatedForm.getField("propertyName").value!!
+                val propertyValue = validatedForm.getField("propertyValue").value!!
+                val version: Long? = validatedForm.getField("propertyVersion").value?.toLongOrNull()
+
+                crudPropertyService.updateProperty(
+                    requestId = ctx.requestId(),
+                    appName = appName,
+                    hostName = hostName,
+                    propertyName = propertyName,
+                    propertyValue = propertyValue,
+                    version = version,
+                    userInfo = ctx.userInfo()
+                )
+                    .mapLeft { UpdateError.ServerApiError(validatedForm, it) }
+                    .map { validatedForm }
+                    .bind()
             }
-            val appName = validatedForm.getField("applicationName").value!!
-            val hostName = validatedForm.getField("hostName").value!!
-            val propertyName = validatedForm.getField("propertyName").value!!
-            val propertyValue = validatedForm.getField("propertyValue").value!!
-            val version: Long? = validatedForm.getField("propertyVersion").value?.toLongOrNull()
-
-            val result = crudPropertyService.updateProperty(
-                requestId = requestId,
-                appName = appName,
-                hostName = hostName,
-                propertyName = propertyName,
-                propertyValue = propertyValue,
-                version = version,
-                userInfo = ctx.userInfo()
-            )
             when (result) {
-                is Either.Left -> {
-                    ctx.html(
-                        templateRenderer.render(
-                            ctx, "update_property.html", mapOf(
-                                "form" to validatedForm
-                                    .withCommonError(result.value.name)
-                                    .withReadonlyFields(propertyFormUpdateReadOnlyFields),
+                is Either.Left -> when (val errorType = result.value) {
+                    is UpdateError.FormValidationError ->
+                        ctx.html(
+                            templateRenderer.render(
+                                ctx, "update_property.html", mapOf(
+                                    "form" to errorType.form
+                                        .withReadonlyFields(propertyFormUpdateReadOnlyFields),
+                                )
                             )
                         )
-                    )
+
+                    is UpdateError.ServerApiError ->
+                        ctx.html(
+                            templateRenderer.render(
+                                ctx, "update_property.html", mapOf(
+                                    "form" to errorType.form
+                                        .withCommonError(errorType.error.name)
+                                        .withReadonlyFields(propertyFormUpdateReadOnlyFields),
+                                )
+                            )
+                        )
                 }
 
                 is Either.Right -> ctx.redirect(buildString {
                     append("/?applicationName=")
-                    append(appName.urlEncode())
+                    append(result.value.getField("applicationName").name.urlEncode())
                     append("&propertyName=")
-                    append(propertyName.urlEncode())
+                    append(result.value.getField("propertyName").name.urlEncode())
                     append("&hostName=")
-                    append(hostName.urlEncode())
+                    append(result.value.getField("hostName").name.urlEncode())
                 })
             }
         }
@@ -215,4 +231,9 @@ class PropertiesController(
         post("properties/update", updateHandler)
         post("properties/create", updateHandler)
     }
+}
+
+sealed class UpdateError {
+    data class FormValidationError(val form: Form) : UpdateError()
+    data class ServerApiError(val form: Form, val error: ServerApiGatewayErrorType) : UpdateError()
 }

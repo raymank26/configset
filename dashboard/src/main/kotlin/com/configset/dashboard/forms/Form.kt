@@ -1,5 +1,9 @@
 package com.configset.dashboard.forms
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+
 class Form(
     private val fields: List<FormField>,
     @Suppress("MemberVisibilityCanBePrivate")
@@ -35,14 +39,14 @@ class Form(
         return Form(fields.map { if (readonlyFields.contains(it.name)) it.copy(readonly = true) else it }, commonError)
     }
 
-    fun performValidation(formValues: Map<String, List<String>>): Form {
+    fun performValidation(formValues: Map<String, List<String>>): Either<InvalidForm, ValidForm> {
         @Suppress("UNCHECKED_CAST")
         return doValidation(formValues
             .mapValues { it.value.getOrNull(0) }
             .filterValues { it != null } as Map<String, String>)
     }
 
-    private fun doValidation(formValues: Map<String, String>): Form {
+    private fun doValidation(formValues: Map<String, String>): Either<InvalidForm, ValidForm> {
         val validatedFields = fields.map {
             val value = formValues[it.name]
             if (value == null && it.required) {
@@ -54,7 +58,12 @@ class Form(
                 is FormError.CustomError -> it.copy(error = validationRes.text, value = value)
             }
         }
-        return Form(validatedFields, commonError)
+        val res = Form(validatedFields, commonError)
+        return if (validatedFields.find { it.error != null } != null || commonError != null) {
+            InvalidForm(res).left()
+        } else {
+            ValidForm(res).right()
+        }
     }
 }
 
@@ -104,5 +113,8 @@ fun FormFieldValidator.and(other: FormFieldValidator): FormFieldValidator {
         }
     }
 }
+
+data class InvalidForm(val form: Form)
+data class ValidForm(val form: Form)
 
 
