@@ -192,7 +192,14 @@ class PropertiesController(
                     .mapLeft { UpdateError.ServerApiError(validatedForm, it) }
                     .map { validatedForm }
                     .bind()
+            }.mapLeft {
+                if (it is UpdateError.ServerApiError && it.error == ServerApiGatewayErrorType.APPLICATION_NOT_FOUND)
+                    UpdateError.FormValidationError(it.form.withFieldError("applicationName", "Application not found"))
+                else it
             }
+            val readonlyFields = if (ctx.path() == "/properties/create")
+                emptySet() else propertyFormUpdateReadOnlyFields
+
             when (result) {
                 is Either.Left -> when (val errorType = result.value) {
                     is UpdateError.FormValidationError ->
@@ -200,7 +207,7 @@ class PropertiesController(
                             templateRenderer.render(
                                 ctx, "update_property.html", mapOf(
                                     "form" to errorType.form
-                                        .withReadonlyFields(propertyFormUpdateReadOnlyFields),
+                                        .withReadonlyFields(readonlyFields),
                                 )
                             )
                         )
@@ -211,7 +218,7 @@ class PropertiesController(
                                 ctx, "update_property.html", mapOf(
                                     "form" to errorType.form
                                         .withCommonError(errorType.error.name)
-                                        .withReadonlyFields(propertyFormUpdateReadOnlyFields),
+                                        .withReadonlyFields(readonlyFields),
                                 )
                             )
                         )

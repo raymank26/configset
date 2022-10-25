@@ -35,6 +35,10 @@ class Form(
         return Form(fields, commonError)
     }
 
+    fun withFieldError(fieldName: String, error: String): Form {
+        return Form(fields.map { if (it.name == fieldName) it.copy(error = error) else it }, commonError)
+    }
+
     fun withReadonlyFields(readonlyFields: Set<String>): Form {
         return Form(fields.map { if (readonlyFields.contains(it.name)) it.copy(readonly = true) else it }, commonError)
     }

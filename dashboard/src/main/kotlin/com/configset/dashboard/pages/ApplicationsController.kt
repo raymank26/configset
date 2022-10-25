@@ -94,5 +94,18 @@ class ApplicationsController(
                 is Either.Right -> ctx.htmxRedirect("/applications")
             }
         }
+        get("applications/suggest") { ctx ->
+            val applicationName = ctx.queryParamSafe("applicationName")
+            val foundApplications = serverApiGateway.listApplications(ctx.userInfo())
+                .filter { it.name.contains(applicationName) }
+                .map { it.name }
+            ctx.html(
+                templateRenderer.render(
+                    ctx, "autocomplete_items.html", mapOf(
+                        "items" to foundApplications
+                    )
+                )
+            )
+        }
     }
 }

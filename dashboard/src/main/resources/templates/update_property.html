@@ -6,7 +6,7 @@
     <h3>Create/Update property</h3>
     <div>
         <form method="post">
-            {{ forms.input(form.getField('applicationName')) }}
+            {{ forms.autocomplete_input(form.getField('applicationName'), '/applications/suggest') }}
             {{ forms.input(form.getField('hostName')) }}
             {{ forms.input(form.getField('propertyName')) }}
             {{ forms.textarea(form.getField('propertyValue')) }}
