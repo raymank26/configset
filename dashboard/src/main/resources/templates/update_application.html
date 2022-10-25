@@ -1,23 +1,23 @@
+{% import "macros/forms.html" as forms %}
 {% extends "base.html" %}
 
 {% block main %}
-<form hx-post="/applications/update" hx-swap="none">
+<div class="column is-4 pt-0">
+    <h3>Create/Update application</h3>
     <div>
-        <label>
-            <span>Application name</span>
-            <input name="applicationName"
-                   value="{{ application.name }}"
-            />
-        </label>
+        <form method="post">
+            {{ forms.input(form.getField('applicationName')) }}
+            {% if form.commonError %}
+            <div class="application-update-error content">
+                <p class="has-text-danger">{{ form.commonError }}</p>
+            </div>
+            {% endif %}
+            {% if form.hasField('applicationId') %}
+            {{ forms.hiddenInput(form.getField('applicationId')) }}
+            {% endif %}
+            {{ forms.hiddenInput(form.getField('requestId')) }}
+            <button class="button is-link application-update-button" type="submit">Submit</button>
+        </form>
     </div>
-    {% if error %}
-    <div class="property-update-error">
-        <p>{{ error }}
-        <p>
-    </div>
-    {% endif %}
-    <input type="hidden" name="id" value="{{ application.id.id }}"/>
-    <input type="hidden" name="requestId" value="{{requestId}}"/>
-    <button class="application-update-button" type="submit">Update</button>
-</form>
+</div>
 {% endblock %}

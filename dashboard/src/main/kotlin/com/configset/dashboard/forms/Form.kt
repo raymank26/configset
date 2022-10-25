@@ -29,6 +29,8 @@ class Form(
         }
     }
 
+    fun hasField(name: String): Boolean = fieldsMap.containsKey(name)
+
     fun getField(name: String): FormField = fieldsMap[name]!!
 
     fun withCommonError(commonError: String): Form {
@@ -53,7 +55,9 @@ class Form(
     private fun doValidation(formValues: Map<String, String>): Either<InvalidForm, ValidForm> {
         val validatedFields = fields.map {
             val value = formValues[it.name]
-            if (value == null && it.required) {
+            if (!it.required && value.isNullOrBlank()) {
+                it
+            } else if (it.required && value == null) {
                 it.copy(error = "Required")
             } else if (value == null) {
                 it
@@ -95,6 +99,11 @@ interface FormFieldValidator {
         val NOT_BLANK = object : FormFieldValidator {
             override fun validate(value: String): FormError {
                 return if (value.isBlank()) FormError.CustomError("Value is blank") else FormError.Ok
+            }
+        }
+        val IS_LONG = object : FormFieldValidator {
+            override fun validate(value: String): FormError {
+                return if (value.toLongOrNull() == null) FormError.CustomError("Value is not Long") else FormError.Ok
             }
         }
     }

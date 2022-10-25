@@ -202,6 +202,6 @@ class ApplicationsPageTest : SeleniumTest() {
         UpdateApplicationPage.updateButton.click()
 
         // then
-        Selenide.switchTo().alert().text.shouldBeEqualTo("APPLICATION_NOT_FOUND")
+        UpdateApplicationPage.errorContainer.shouldHave(text("APPLICATION_NOT_FOUND"))
     }
 }
