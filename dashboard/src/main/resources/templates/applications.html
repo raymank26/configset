@@ -1,34 +1,28 @@
 {% extends "base.html" %}
 
 {% block main %}
-<table class="applications-table">
-    <thead>
-    <tr>
-        <td>ApplicationName</td>
-        <td>Delete</td>
-    </tr>
-    </thead>
-    <tbody>
-    {% for app in applications %}
-    <tr>
-        <td>{{app.name}}</td>
-        <td>
-            <a class="application-update-button-{{app.id.id}}"
-               href="/applications/update?applicationName={{app.name|e}}">Update</a>
-            <button
-                    class="application-delete-button-{{app.id.id}}"
-                    hx-delete="applications/delete"
-                    hx-confirm="Are you sure you want to delete this app?"
-                    hx-vals='{"applicationName": "{{app.name}}"}'
-                    hx-swap="none">delete
-            </button>
-        </td>
-    </tr>
-    {% endfor %}
+<div class="columns applications-table">
+    <div class="column is-2"><h4>Application name</h4></div>
+    <div class="column is-2"><h4 class="content">Actions</h4></div>
+</div>
+{% for app in applications %}
+<div class="columns">
+    <div class="column is-2">{{ app.name }}</div>
+    <div class="column is-2">
+        <a class="button is-primary application-update-button-{{app.id.id}}"
+           href="/applications/update?applicationName={{app.name|e}}">Update</a>
+        <button
+                class="button is-secondary application-delete-button-{{app.id.id}}"
+                hx-delete="applications/delete"
+                hx-confirm="Are you sure you want to delete this app?"
+                hx-vals='{"applicationName": "{{app.name}}"}'
+                hx-swap="none">delete
+        </button>
+    </div>
+</div>
+{% endfor %}
 
-    </tbody>
-</table>
 {% if user.hasRole('admin') %}
-<a href="/applications/create" class="applications-create-button">Create application</a>
+<a href="/applications/create" class="button is-link applications-create-button">Create application</a>
 {% endif %}
 {% endblock %}
