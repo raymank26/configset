@@ -20,12 +20,14 @@ export function initWidgets() {
                         that.selectedSuggestionIndex = -1;
                     })
                     this.$refs.autocompleteInput.addEventListener('keydown', (e) => {
-                        // console.log(that.$el);
+                        console.log(e.keyCode);
                         if (e.keyCode === 9) { // tab
                             return;
                         }
                         if (e.keyCode === 13) { // enter
-                            that.value = that.autocompleteItems[that.selectedSuggestionIndex].innerHTML;
+                            if (that.selectedSuggestionIndex > 0) {
+                                that.value = that.autocompleteItems[that.selectedSuggestionIndex].innerHTML;
+                            }
                             that.autocompleteItems = []
                             that.selectedSuggestionIndex = -1;
                             e.preventDefault();

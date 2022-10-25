@@ -2,7 +2,11 @@
 {% extends "base.html" %}
 
 {% block main %}
-<form class="block">
+<form class="block"
+      hx-get="/properties"
+      hx-target="#properties-search-result"
+      hx-push-url="true"
+>
     <div class="columns is-vcentered">
         <div class="column is-2">
             {{ forms.autocomplete_input(form.getField('applicationName'), '/applications/suggest') }}

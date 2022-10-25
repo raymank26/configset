@@ -134,9 +134,13 @@ class PropertiesController(
                 SearchPropertiesResult(emptyList(), false, it.form)
             }.orNull()!!
 
+            val templateName = if (ctx.header("HX-Request") == "true")
+                "properties_search_result_block.html"
+            else "properties.html"
+
             ctx.html(
                 templateRenderer.render(
-                    ctx, "properties.html", mapOf(
+                    ctx, templateName, mapOf(
                         "form" to result.form,
                         "showProperties" to result.showProperties,
                         "properties" to result.properties

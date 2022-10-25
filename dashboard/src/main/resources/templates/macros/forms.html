@@ -32,6 +32,7 @@
            x-model="value"
            data-initialValue="{{ field.value}}"
            x-init="value = $el.dataset.initialvalue"
+           hx-push-url="false"
            hx-get="{{ autocomplete_url }}"
            hx-trigger="autocompleteAjaxTrigger delay:300ms"
            x-bind:hx-target="'#' + autocompleteContainerId"
