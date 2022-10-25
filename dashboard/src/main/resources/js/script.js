@@ -12,17 +12,18 @@ document.addEventListener('alpine:init', () => {
                 this.autocompleteContainerId = this.$id('autocomplete');
 
                 let that = this;
-                addEventListener('autocompleteItemsUpdated', () => {
+                this.$el.addEventListener('autocompleteItemsUpdated', () => {
                     let autocompleteContainer = document.getElementById(that.autocompleteContainerId);
 
                     that.selectedSuggestionIndex = -1;
                     that.autocompleteItems = autocompleteContainer.getElementsByTagName('div');
                 })
-                addEventListener('focusout', () => {
+                this.$el.addEventListener('focusout', () => {
                     that.autocompleteItems = [];
                     that.selectedSuggestionIndex = -1;
                 })
                 this.$refs.autocompleteInput.addEventListener('keydown', (e) => {
+                    // console.log(that.$el);
                     if (e.keyCode === 9) { // tab
                         return;
                     }

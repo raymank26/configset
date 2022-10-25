@@ -38,6 +38,10 @@ object Main {
             templateRenderer,
             requestIdProducer
         )
+        val hostsController = dependencyFactory.hostsController(
+            serverApiGateway,
+            templateRenderer,
+        )
 //        val propertyImportService = dependencyFactory.propertyImportService(
 //            serverApiGateway,
 //            requestIdProducer
@@ -48,7 +52,8 @@ object Main {
             javalinExceptionMapper,
             listOf(authInterceptor, requestExtender),
             propertiesController,
-            applicationsController
+            applicationsController,
+            hostsController,
         )
         return object : App {
             override fun start() {

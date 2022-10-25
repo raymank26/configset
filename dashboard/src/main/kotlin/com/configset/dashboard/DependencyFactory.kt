@@ -6,6 +6,7 @@ import com.configset.common.client.ConfigSetClient
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.ApplicationsController
+import com.configset.dashboard.pages.HostsController
 import com.configset.dashboard.pages.PropertiesController
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
@@ -24,6 +25,7 @@ open class DependencyFactory(private val config: Config) {
         interceptors: List<Handler>,
         propertiesController: PropertiesController,
         applicationsController: ApplicationsController,
+        hostsController: HostsController,
     ): JavalinServer {
         return JavalinServer(
             authController,
@@ -32,6 +34,7 @@ open class DependencyFactory(private val config: Config) {
             interceptors,
             propertiesController,
             applicationsController,
+            hostsController
         )
     }
 
@@ -115,6 +118,13 @@ open class DependencyFactory(private val config: Config) {
         requestIdProducer: RequestIdProducer
     ): ApplicationsController {
         return ApplicationsController(serverApiGateway, templateRenderer, requestIdProducer)
+    }
+
+    fun hostsController(
+        serverApiGateway: ServerApiGateway,
+        templateRenderer: TemplateRenderer,
+    ): HostsController {
+        return HostsController(serverApiGateway, templateRenderer)
     }
 
     fun requestExtender(objectMapper: ObjectMapper): RequestExtender {

@@ -7,7 +7,7 @@
     <div>
         <form method="post">
             {{ forms.autocomplete_input(form.getField('applicationName'), '/applications/suggest') }}
-            {{ forms.input(form.getField('hostName')) }}
+            {{ forms.autocomplete_input(form.getField('hostName'), '/hosts/suggest') }}
             {{ forms.input(form.getField('propertyName')) }}
             {{ forms.textarea(form.getField('propertyValue')) }}
             {% if form.commonError %}

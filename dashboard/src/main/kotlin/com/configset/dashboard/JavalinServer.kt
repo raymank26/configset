@@ -3,6 +3,7 @@ package com.configset.dashboard
 import com.configset.common.client.extension.createLoggerStatic
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.pages.ApplicationsController
+import com.configset.dashboard.pages.HostsController
 import com.configset.dashboard.pages.PropertiesController
 import com.configset.dashboard.util.JavalinExceptionMapper
 import io.javalin.Javalin
@@ -18,6 +19,7 @@ class JavalinServer(
     private val interceptors: List<Handler>,
     private val propertiesController: PropertiesController,
     private val applicationsController: ApplicationsController,
+    private val hostsController: HostsController,
 ) {
 
     private val app = Javalin.create { config ->
@@ -39,6 +41,7 @@ class JavalinServer(
             propertiesController.bind()
             applicationsController.bind()
             authController.bind()
+            hostsController.bind()
         }
         app.start(serverConfig.dashboardPort)
         LOG.info("Server started")

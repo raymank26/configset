@@ -29,11 +29,11 @@
            hx-get="{{ autocomplete_url }}"
            hx-trigger="autocompleteAjaxTrigger delay:300ms"
            x-bind:hx-target="'#' + autocompleteContainerId"
-           x-on:htmx:after-swap.window="$dispatch('autocompleteItemsUpdated')"
            x-ref="autocompleteInput"
            {% if field.readonly %} readonly {% endif %}
     />
     <div class="autocomplete-items"
+         x-on:htmx:after-swap="$dispatch('autocompleteItemsUpdated')"
          x-show="autocompleteItems.length > 0"
          x-ref="autocompleteResult"
          x-bind:id="autocompleteContainerId"></div>
