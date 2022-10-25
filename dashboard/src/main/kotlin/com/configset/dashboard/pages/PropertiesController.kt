@@ -2,6 +2,7 @@ package com.configset.dashboard.pages
 
 import arrow.core.Either
 import arrow.core.computations.either
+import arrow.core.handleError
 import com.configset.dashboard.SearchPropertiesRequest
 import com.configset.dashboard.ServerApiGatewayErrorType
 import com.configset.dashboard.TablePropertyItem
@@ -9,6 +10,7 @@ import com.configset.dashboard.TemplateRenderer
 import com.configset.dashboard.forms.Form
 import com.configset.dashboard.forms.FormField
 import com.configset.dashboard.forms.FormFieldValidator.Companion.NOT_BLANK
+import com.configset.dashboard.forms.InvalidForm
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.util.RequestIdProducer
@@ -31,6 +33,35 @@ class PropertiesController(
     private val crudPropertyService: CrudPropertyService,
     private val requestIdProducer: RequestIdProducer
 ) {
+
+    private val propertySearchForm = Form(
+        listOf(
+            FormField(
+                label = "Application name",
+                required = false,
+                inlineLabel = true,
+                name = "applicationName",
+            ),
+            FormField(
+                label = "Host name",
+                required = false,
+                inlineLabel = true,
+                name = "hostName",
+            ),
+            FormField(
+                label = "Property name",
+                required = false,
+                inlineLabel = true,
+                name = "propertyName",
+            ),
+            FormField(
+                label = "Property value",
+                required = false,
+                inlineLabel = true,
+                name = "propertyValue"
+            )
+        )
+    )
 
     private val propertyForm = Form(
         listOf(
@@ -77,37 +108,38 @@ class PropertiesController(
             ctx.redirect("/properties")
         }
         get("properties") { ctx ->
-            val applicationName = ctx.queryParam("applicationName") ?: ""
-            val hostName = ctx.queryParam("hostName") ?: ""
-            val propertyName = ctx.queryParam("propertyName") ?: ""
-            val propertyValue = ctx.queryParam("propertyValue") ?: ""
-            val (properties, showProperties) = if (applicationName == ""
-                && hostName == ""
-                && propertyName == ""
-                && propertyValue == ""
-            ) {
+            val result: SearchPropertiesResult = either.eager<InvalidForm, SearchPropertiesResult> {
+                val (form) = propertySearchForm.performValidation(ctx.queryParamMap()).bind()
 
-                emptyList<TablePropertyItem>() to false
-            } else {
-                listPropertiesService.searchProperties(
-                    SearchPropertiesRequest(
-                        applicationName = applicationName,
-                        hostNameQuery = hostName,
-                        propertyNameQuery = propertyName,
-                        propertyValueQuery = propertyValue
-                    ),
-                    ctx.userInfo()
-                ) to true
-            }
+                val applicationName = form.getField("applicationName").value ?: ""
+                val hostName = form.getField("hostName").value ?: ""
+                val propertyName = form.getField("propertyName").value ?: ""
+                val propertyValue = form.getField("propertyValue").value ?: ""
+
+                if (applicationName == "" && hostName == "" && propertyName == "" && propertyValue == "") {
+                    SearchPropertiesResult(emptyList(), false, form)
+                } else {
+                    val properties = listPropertiesService.searchProperties(
+                        SearchPropertiesRequest(
+                            applicationName = applicationName,
+                            hostNameQuery = hostName,
+                            propertyNameQuery = propertyName,
+                            propertyValueQuery = propertyValue
+                        ),
+                        ctx.userInfo()
+                    )
+                    SearchPropertiesResult(properties, true, form)
+                }
+            }.handleError {
+                SearchPropertiesResult(emptyList(), false, it.form)
+            }.orNull()!!
+
             ctx.html(
                 templateRenderer.render(
                     ctx, "properties.html", mapOf(
-                        "properties" to properties,
-                        "showProperties" to showProperties,
-                        "applicationName" to applicationName,
-                        "hostName" to hostName,
-                        "propertyName" to propertyName,
-                        "propertyValue" to propertyValue,
+                        "form" to result.form,
+                        "showProperties" to result.showProperties,
+                        "properties" to result.properties
                     )
                 )
             )
@@ -244,3 +276,9 @@ sealed class UpdateError {
     data class FormValidationError(val form: Form) : UpdateError()
     data class ServerApiError(val form: Form, val error: ServerApiGatewayErrorType) : UpdateError()
 }
+
+data class SearchPropertiesResult(
+    val properties: List<TablePropertyItem>,
+    val showProperties: Boolean,
+    val form: Form
+)

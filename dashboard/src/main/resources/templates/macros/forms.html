@@ -1,10 +1,13 @@
-{% macro input(field) -%}
+{% macro input(field, inlineLabel=false) -%}
 <div class="field" xmlns="http://www.w3.org/1999/html">
+  {% if !field.inlineLabel %}
   <label class="label">{{field.label}}</label>
+  {% endif %}
   <div class="control">
     <input class="input {% if field.error %}is-danger{% endif %} {% if field.readonly %}is-static{% endif %}"
            name="{{ field.name }}"
            value="{{ field.value }}"
+           {% if field.inlineLabel %} placeholder="{{ field.label }}" {% endif %}
            {% if field.readonly %} readonly {% endif %}
     />
   </div>
@@ -14,10 +17,12 @@
 </div>
 {%- endmacro %}
 
-{% macro autocomplete_input(field, autocomplete_url) -%}
+{% macro autocomplete_input(field, autocomplete_url, inlineLabel=false) -%}
 <div class="field" xmlns="http://www.w3.org/1999/html"
      x-data="autocompleteForm">
+  {% if !field.inlineLabel %}
   <label class="label">{{field.label}}</label>
+  {% endif %}
   <div class="control">
     <input class="input {% if field.error %}is-danger{% endif %} {% if field.readonly %}is-static{% endif %}"
            type="search"
@@ -30,6 +35,7 @@
            hx-trigger="autocompleteAjaxTrigger delay:300ms"
            x-bind:hx-target="'#' + autocompleteContainerId"
            x-ref="autocompleteInput"
+           {% if field.inlineLabel %} placeholder="{{ field.label }}" {% endif %}
            {% if field.readonly %} readonly {% endif %}
     />
     <div class="autocomplete-items"

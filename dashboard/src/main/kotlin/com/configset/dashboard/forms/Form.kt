@@ -82,6 +82,7 @@ data class FormField(
     val name: String,
     val validation: FormFieldValidator = noValidation,
     val readonly: Boolean = false,
+    val inlineLabel: Boolean = false,
     val error: String? = null,
     val value: String? = null,
 )
