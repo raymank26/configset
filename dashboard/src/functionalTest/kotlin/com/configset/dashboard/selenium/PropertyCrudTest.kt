@@ -20,6 +20,8 @@ class PropertyCrudTest : SeleniumTest() {
 
     @BeforeEach
     fun beforeSearchPage() {
+        mockConfigServiceExt.whenListApplications()
+            .answer(listOf())
         authenticated()
     }
 
