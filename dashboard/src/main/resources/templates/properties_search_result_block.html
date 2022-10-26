@@ -11,10 +11,10 @@
     </tr>
     </thead>
     {% for property in properties %}
-    <tbody x-data="{ open{{ property.id }}: false }" class="property-item-row">
+    <tbody x-data="{ open: false }" class="property-item-row">
     <tr>
         <td>
-            <button class="expand" @click="open{{ property.id }} = true">Expand</button>
+            <button class="expand" @click="open = true">Expand</button>
         </td>
         <td>{{ property.applicationName }}</td>
         <td>{{ property.propertyName }}</td>
@@ -23,7 +23,7 @@
         <td></td>
     </tr>
     {% for hostProperty in property.hostProperties %}
-    <tr x-show="open{{ property.id }}">
+    <tr x-show="open">
         <td></td>
         <td></td>
         <td></td>

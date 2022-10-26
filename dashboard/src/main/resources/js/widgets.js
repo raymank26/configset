@@ -4,7 +4,7 @@ export function initWidgets() {
             return {
                 'value': '',
                 'autocompleteItems': [],
-                'selectedSuggestionIndex': 0,
+                'selectedSuggestionIndex': -1,
                 init() {
                     this.autocompleteContainerId = this.$id('autocomplete');
 
@@ -25,7 +25,10 @@ export function initWidgets() {
                             return;
                         }
                         if (e.keyCode === 13) { // enter
-                            if (that.selectedSuggestionIndex > 0) {
+                            if (that.autocompleteItems.length === 0) {
+                                return;
+                            }
+                            if (that.selectedSuggestionIndex >= 0) {
                                 that.value = that.autocompleteItems[that.selectedSuggestionIndex].innerHTML;
                             }
                             that.autocompleteItems = []

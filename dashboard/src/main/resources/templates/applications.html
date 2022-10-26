@@ -9,7 +9,7 @@
     {% for app in applications %}
     <div class="columns">
         <div class="column is-2">{{ app.name }}</div>
-        <div class="column is-2">
+        <div class="column is-narrow">
             <a class="button is-primary application-update-button-{{app.id.id}}"
                href="/applications/update?applicationName={{app.name|e}}">Update</a>
             <button
