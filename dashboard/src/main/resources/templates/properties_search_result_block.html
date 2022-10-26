@@ -14,7 +14,7 @@
     <tbody x-data="{ open: false }" class="property-item-row">
     <tr>
         <td>
-            <button class="expand" @click="open = true">Expand</button>
+            <button class="is-primary expand button" @click="open = true">Expand</button>
         </td>
         <td>{{ property.applicationName }}</td>
         <td>{{ property.propertyName }}</td>
@@ -23,17 +23,17 @@
         <td></td>
     </tr>
     {% for hostProperty in property.hostProperties %}
-    <tr x-show="open">
+    <tr x-show="open" class="has-background-light">
         <td></td>
         <td></td>
         <td></td>
         <td>{{ hostProperty.hostName }}</td>
         <td>{{ hostProperty.propertyValue }}</td>
         <td>
-            <a class="update-property"
+            <a class="update-property button is-primary"
                href="/properties/update?applicationName={{property.applicationName|e}}&propertyName={{property.propertyName|e}}&hostName={{hostProperty.hostName|e}}">Update</a>
             <div style="display: inline-block">
-                <button class="delete-property"
+                <button class="button delete-property"
                         hx-confirm="Are you sure you want to delete this property?"
                         hx-swap="none"
                         hx-vals='{"applicationName": "{{property.applicationName}}", "propertyName": "{{property.propertyName}}", "hostName": "{{hostProperty.hostName}}", "version": "{{hostProperty.version}}"}'
