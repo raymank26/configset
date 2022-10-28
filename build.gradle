@@ -39,4 +39,8 @@ subprojects {
         mavenLocal()
         mavenCentral()
     }
+
+    kotlinter {
+        disabledRules = ['indent']
+    }
 }
