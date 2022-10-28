@@ -36,18 +36,20 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
 
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
-                    observer.onNext(run {
-                        val builder = ApplicationsResponse.newBuilder()
-                        response.forEach {
-                            builder.addApplications(
-                                com.configset.sdk.proto.Application.newBuilder()
-                                    .setId(it.id.id.toString())
-                                    .setApplicationName(it.name)
-                                    .build()
-                            )
+                    observer.onNext(
+                        run {
+                            val builder = ApplicationsResponse.newBuilder()
+                            response.forEach {
+                                builder.addApplications(
+                                    com.configset.sdk.proto.Application.newBuilder()
+                                        .setId(it.id.id.toString())
+                                        .setApplicationName(it.name)
+                                        .build()
+                                )
+                            }
+                            builder.build()
                         }
-                        builder.build()
-                    })
+                    )
                     observer.onCompleted()
                 }
             }

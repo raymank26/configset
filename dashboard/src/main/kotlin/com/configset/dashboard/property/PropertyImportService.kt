@@ -65,7 +65,6 @@ class PropertiesXml {
     @JacksonXmlProperty(localName = "property")
     @JacksonXmlElementWrapper(useWrapping = false)
     var properties: MutableList<PropertyXml> = ArrayList()
-
 }
 
 class PropertyXml {

@@ -140,7 +140,8 @@ class PropertiesController(
 
             ctx.html(
                 templateRenderer.render(
-                    ctx, templateName, mapOf(
+                    ctx, templateName,
+                    mapOf(
                         "form" to result.form,
                         "showProperties" to result.showProperties,
                         "properties" to result.properties
@@ -151,7 +152,8 @@ class PropertiesController(
         get("properties/create") { ctx ->
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_property.html", mapOf(
+                    ctx, "update_property.html",
+                    mapOf(
                         "form" to propertyForm.withDefaultValues(
                             mapOf("requestId" to requestIdProducer.nextRequestId())
                         ),
@@ -196,10 +198,12 @@ class PropertiesController(
             when (result) {
                 is Either.Left -> ctx.htmxShowAlert(result.value.name)
                 is Either.Right ->
-                    ctx.htmxRedirect(buildString {
-                        append("/?applicationName=")
-                        append(appName.urlEncode())
-                    })
+                    ctx.htmxRedirect(
+                        buildString {
+                            append("/?applicationName=")
+                            append(appName.urlEncode())
+                        }
+                    )
             }
         }
 
@@ -241,7 +245,8 @@ class PropertiesController(
                     is UpdateError.FormValidationError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_property.html", mapOf(
+                                ctx, "update_property.html",
+                                mapOf(
                                     "form" to errorType.form
                                         .withReadonlyFields(readonlyFields),
                                 )
@@ -251,7 +256,8 @@ class PropertiesController(
                     is UpdateError.ServerApiError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_property.html", mapOf(
+                                ctx, "update_property.html",
+                                mapOf(
                                     "form" to errorType.form
                                         .withCommonError(errorType.error.name)
                                         .withReadonlyFields(readonlyFields),
@@ -260,14 +266,16 @@ class PropertiesController(
                         )
                 }
 
-                is Either.Right -> ctx.redirect(buildString {
-                    append("/?applicationName=")
-                    append(result.value.getField("applicationName").name.urlEncode())
-                    append("&propertyName=")
-                    append(result.value.getField("propertyName").name.urlEncode())
-                    append("&hostName=")
-                    append(result.value.getField("hostName").name.urlEncode())
-                })
+                is Either.Right -> ctx.redirect(
+                    buildString {
+                        append("/?applicationName=")
+                        append(result.value.getField("applicationName").name.urlEncode())
+                        append("&propertyName=")
+                        append(result.value.getField("propertyName").name.urlEncode())
+                        append("&hostName=")
+                        append(result.value.getField("hostName").name.urlEncode())
+                    }
+                )
             }
         }
 

@@ -1,5 +1,4 @@
 plugins {
-//    id "com.google.protobuf" version "0.8.17"
     id 'com.bmuschko.docker-java-application' version '6.4.0'
 }
 

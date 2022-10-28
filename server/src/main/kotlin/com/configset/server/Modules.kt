@@ -63,7 +63,6 @@ fun createAppModules(config: AppConfiguration): List<Module> {
     }.plus(listOf(dbModule, authModule))
 }
 
-
 private fun createDbModule(config: AppConfiguration): Module {
     return when (config.getDaoType()) {
         DaoType.IN_MEMORY -> module {

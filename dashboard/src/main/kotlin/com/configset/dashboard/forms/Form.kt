@@ -47,9 +47,11 @@ class Form(
 
     fun performValidation(formValues: Map<String, List<String>>): Either<InvalidForm, ValidForm> {
         @Suppress("UNCHECKED_CAST")
-        return doValidation(formValues
-            .mapValues { it.value.getOrNull(0) }
-            .filterValues { it != null } as Map<String, String>)
+        return doValidation(
+            formValues
+                .mapValues { it.value.getOrNull(0) }
+                .filterValues { it != null } as Map<String, String>
+        )
     }
 
     private fun doValidation(formValues: Map<String, String>): Either<InvalidForm, ValidForm> {
@@ -130,5 +132,3 @@ fun FormFieldValidator.and(other: FormFieldValidator): FormFieldValidator {
 
 data class InvalidForm(val form: Form)
 data class ValidForm(val form: Form)
-
-

@@ -60,7 +60,6 @@ enum class DaoType {
     ;
 }
 
-
 sealed interface AuthenticatorConfig
 
 data class StubAuthenticatorConfig(val adminAccessToken: String) : AuthenticatorConfig

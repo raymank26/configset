@@ -59,8 +59,9 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
 
         return when (res.type) {
             ApplicationDeletedResponse.Type.OK -> Unit.right()
-            ApplicationDeletedResponse.Type.APPLICATION_NOT_FOUND -> ServerApiGatewayErrorType.APPLICATION_NOT_FOUND
-                .left()
+            ApplicationDeletedResponse.Type.APPLICATION_NOT_FOUND ->
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND
+                    .left()
 
             else -> throw RuntimeException("Unrecognized type for msg = $res")
         }
@@ -114,12 +115,13 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
                     }
                     if (searchPropertiesRequest.propertyNameQuery != null) {
                         propertyName = searchPropertiesRequest.propertyNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyValueQuery != null) {
+                        propertyValue = searchPropertiesRequest.propertyValueQuery
+                    }
                 }
-                if (searchPropertiesRequest.propertyValueQuery != null) {
-                    propertyValue = searchPropertiesRequest.propertyValueQuery
-                }
-            }
-            .build())
+                .build()
+        )
 
         return response.itemsList.map { item ->
             ShowPropertyItem(
@@ -275,4 +277,3 @@ data class TablePropertyItem @JsonCreator constructor(
     @JsonProperty("hostProperties")
     val hostProperties: List<ShowPropertyItem>,
 )
-

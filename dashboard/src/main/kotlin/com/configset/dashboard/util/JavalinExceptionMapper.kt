@@ -34,12 +34,17 @@ class JavalinExceptionMapper {
 
         app.exception(ServerApiGatewayException::class.java) { e, ctx ->
             ctx.status(400)
-            ctx.json(ServerExceptionResponse(when (e.type) {
-                ServerApiGatewayErrorType.CONFLICT -> "update.conflict"
-                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND -> "application.not.found"
-                ServerApiGatewayErrorType.PROPERTY_NOT_FOUND -> "property.not.found"
-                ServerApiGatewayErrorType.HOST_NOT_FOUND -> "host.not.found"
-            }, null))
+            ctx.json(
+                ServerExceptionResponse(
+                    when (e.type) {
+                        ServerApiGatewayErrorType.CONFLICT -> "update.conflict"
+                        ServerApiGatewayErrorType.APPLICATION_NOT_FOUND -> "application.not.found"
+                        ServerApiGatewayErrorType.PROPERTY_NOT_FOUND -> "property.not.found"
+                        ServerApiGatewayErrorType.HOST_NOT_FOUND -> "host.not.found"
+                    },
+                    null
+                )
+            )
         }
 
         app.exception(ImportPropertiesException::class.java) { e, ctx ->
@@ -48,7 +53,8 @@ class JavalinExceptionMapper {
                 ServerExceptionResponse(
                     when (e.type) {
                         ImportErrorType.ILLEGAL_FORMAT -> "illegal.format"
-                    }, null
+                    },
+                    null
                 )
             )
         }

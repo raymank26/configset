@@ -102,4 +102,3 @@ private class TableMetaEDMapper : RowMapper<TableMetaED> {
         return TableMetaED(rs.getLong("version"))
     }
 }
-

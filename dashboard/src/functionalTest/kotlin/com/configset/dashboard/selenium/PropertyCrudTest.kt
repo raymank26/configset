@@ -68,7 +68,6 @@ class PropertyCrudTest : SeleniumTest() {
         }
     }
 
-
     @Test
     fun `should update property and redirect back`() {
         // given

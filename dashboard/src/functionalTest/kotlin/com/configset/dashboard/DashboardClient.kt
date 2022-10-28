@@ -93,17 +93,23 @@ class DashboardClient {
         propertyValue: String,
         requestId: String,
     ): Either<DashboardHttpFailure, Unit> {
-        return executePostRequest<Unit>("/property/update", mapOf(
-            Pair("applicationName", applicationName),
-            Pair("hostName", hostName),
-            Pair("propertyName", propertyName),
-            Pair("propertyValue", propertyValue)
-        ), OBJECT_MAPPER.typeFactory.constructType(Unit::class.java), requestId)
+        return executePostRequest<Unit>(
+            "/property/update",
+            mapOf(
+                Pair("applicationName", applicationName),
+                Pair("hostName", hostName),
+                Pair("propertyName", propertyName),
+                Pair("propertyValue", propertyValue)
+            ),
+            OBJECT_MAPPER.typeFactory.constructType(Unit::class.java), requestId
+        )
             .map { }
     }
 
     fun searchProperties(
-        applicationName: String? = null, hostName: String? = null, propertyName: String? = null,
+        applicationName: String? = null,
+        hostName: String? = null,
+        propertyName: String? = null,
         propertyValue: String? = null,
     ): Either<DashboardHttpFailure, List<TablePropertyItem>> {
         val queryParams = mutableMapOf<String, String>()
@@ -127,44 +133,55 @@ class DashboardClient {
     }
 
     fun importProperties(appName: String, content: String): Either<DashboardHttpFailure, Unit> {
-        return executePostRequest<Unit>("/property/import",
+        return executePostRequest<Unit>(
+            "/property/import",
             mapOf(
                 Pair("applicationName", appName),
-                Pair("properties", content)),
+                Pair("properties", content)
+            ),
             OBJECT_MAPPER.typeFactory.constructType(Any::class.java)
         ).map { }
     }
 
     fun deleteProperty(appName: String, hostName: String, propertyName: String): Either<DashboardHttpFailure, Unit> {
-        return executePostRequest<Unit>("/property/delete", mapOf(
-            Pair("applicationName", appName),
-            Pair("hostName", hostName),
-            Pair("propertyName", propertyName),
-            Pair("version", "1")
-        ), OBJECT_MAPPER.constructType(Unit::class.java), requestId = "1239")
+        return executePostRequest<Unit>(
+            "/property/delete",
+            mapOf(
+                Pair("applicationName", appName),
+                Pair("hostName", hostName),
+                Pair("propertyName", propertyName),
+                Pair("version", "1")
+            ),
+            OBJECT_MAPPER.constructType(Unit::class.java), requestId = "1239"
+        )
             .map { }
     }
 
     fun listApplications(): Either<DashboardHttpFailure, List<String>> {
-        return executeGetRequest<List<String>>("/application/list",
-            OBJECT_MAPPER.typeFactory.constructCollectionType(ArrayList::class.java, String::class.java))
+        return executeGetRequest<List<String>>(
+            "/application/list",
+            OBJECT_MAPPER.typeFactory.constructCollectionType(ArrayList::class.java, String::class.java)
+        )
             .map { it!! }
     }
 
     fun createApplication(appName: String): Either<DashboardHttpFailure, Unit> {
-        return executePostRequest<Unit>("/application/", mapOf(Pair("appName", appName)),
-            OBJECT_MAPPER.constructType(Unit::class.java))
+        return executePostRequest<Unit>(
+            "/application/", mapOf(Pair("appName", appName)),
+            OBJECT_MAPPER.constructType(Unit::class.java)
+        )
             .map { }
     }
 
     fun getConfig(): Either<DashboardHttpFailure, Map<String, String>> {
         val res = buildGetRequest("/config")
         res.removeHeader("Authorization")
-        return executeRequest<Map<String, String>>(res.build(),
-            OBJECT_MAPPER.typeFactory.constructMapType(HashMap::class.java, String::class.java, String::class.java))
+        return executeRequest<Map<String, String>>(
+            res.build(),
+            OBJECT_MAPPER.typeFactory.constructMapType(HashMap::class.java, String::class.java, String::class.java)
+        )
             .map { it!! }
     }
-
 
     private fun <T> executeGetRequest(
         endpoint: String,
@@ -187,9 +204,10 @@ class DashboardClient {
         formBody.add("requestId", requestId)
         val response = okHttp.newCall(
             Request.Builder().url("http://localhost:9299/api$endpoint")
-                .header("Cookie", "auth.access_token=${FULL_ROLES_ACCESS_TOKEN}")
-            .post(formBody.build())
-            .build()).execute()
+                .header("Cookie", "auth.access_token=$FULL_ROLES_ACCESS_TOKEN")
+                .post(formBody.build())
+                .build()
+        ).execute()
         if (response.code / 100 != 2) {
             val errorDetails = response.body?.byteStream().use {
                 OBJECT_MAPPER.readTree(it)
@@ -202,9 +220,11 @@ class DashboardClient {
         if (response.body?.contentLength() == 0L) {
             return Either.Right(null)
         }
-        return Either.Right(response.body?.byteStream().use {
-            OBJECT_MAPPER.readValue(it, responseClass)
-        })
+        return Either.Right(
+            response.body?.byteStream().use {
+                OBJECT_MAPPER.readValue(it, responseClass)
+            }
+        )
     }
 }
 

@@ -51,23 +51,26 @@ class AuthorisationTest : SeleniumTest() {
 
         wireMock.stubFor(
             post("/token")
-                .withRequestBody(equalTo(
-                    mapOf(
-                        "code" to "sample_code",
-                        "client_id" to "sample_content_id",
-                        "client_secret" to "sample_secret_key",
-                        "redirect_uri" to "http://localhost:9299/auth/redirect",
-                        "grant_type" to "authorization_code"
-                    ).mapValues { URLEncoder.encode(it.value, StandardCharsets.UTF_8) }
-                        .entries
-                        .joinToString("&")
-                ))
+                .withRequestBody(
+                    equalTo(
+                        mapOf(
+                            "code" to "sample_code",
+                            "client_id" to "sample_content_id",
+                            "client_secret" to "sample_secret_key",
+                            "redirect_uri" to "http://localhost:9299/auth/redirect",
+                            "grant_type" to "authorization_code"
+                        ).mapValues { URLEncoder.encode(it.value, StandardCharsets.UTF_8) }
+                            .entries
+                            .joinToString("&")
+                    )
+                )
                 .willReturn(
                     jsonResponse(
                         """{
                         |"access_token": "$FULL_ROLES_ACCESS_TOKEN",
                         |"id_token": "${createIdTokenJwt()}" 
-                        |}""".trimMargin(), 200
+                        |}""".trimMargin(),
+                        200
                     )
                 )
         )

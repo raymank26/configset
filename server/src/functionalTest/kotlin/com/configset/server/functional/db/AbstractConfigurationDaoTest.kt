@@ -174,7 +174,6 @@ abstract class AbstractConfigurationDaoTest {
             val first = snapshot.first()
             first.deleted shouldBe true
             first.version shouldBeEqualTo 2
-
         }
     }
 
@@ -210,7 +209,6 @@ abstract class AbstractConfigurationDaoTest {
             val property = searchProperties(SearchPropertyRequest(TEST_APP_NAME, "name", null, null)).first()
             property.version shouldBeEqualTo 3
         }
-
     }
 
     @Test
@@ -309,25 +307,25 @@ abstract class AbstractConfigurationDaoTest {
             // then
             getConfigurationSnapshot()
                 .shouldMatchAtLeastOneOf {
-                    it.applicationName == TEST_APP_NAME
-                            && it.name == "name"
-                            && it.hostName == TEST_HOST
-                            && it.version == 1L
-                            && it.value == "value"
+                    it.applicationName == TEST_APP_NAME &&
+                            it.name == "name" &&
+                            it.hostName == TEST_HOST &&
+                            it.version == 1L &&
+                            it.value == "value"
                 }
                 .shouldMatchAtLeastOneOf {
-                    it.applicationName == TEST_APP_NAME
-                            && it.name == "name2"
-                            && it.hostName == TEST_HOST
-                            && it.version == 2L
-                            && it.value == "value2"
+                    it.applicationName == TEST_APP_NAME &&
+                            it.name == "name2" &&
+                            it.hostName == TEST_HOST &&
+                            it.version == 2L &&
+                            it.value == "value2"
                 }
                 .shouldMatchAtLeastOneOf {
-                    it.applicationName == TEST_APP_NAME
-                            && it.name == "name"
-                            && it.hostName == "srvd2"
-                            && it.version == 3L
-                            && it.value == "value2"
+                    it.applicationName == TEST_APP_NAME &&
+                            it.name == "name" &&
+                            it.hostName == "srvd2" &&
+                            it.version == 3L &&
+                            it.value == "value2"
                 }
         }
     }
@@ -385,7 +383,6 @@ class TestDsl(
             dao.searchProperties(it, searchPropertyRequest)
         }
     }
-
 
     fun readProperty(name: String, app: String = TEST_APP_NAME, host: String = TEST_HOST): PropertyItemED? {
         return dbHandleFactory.withHandle {

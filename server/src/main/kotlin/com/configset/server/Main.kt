@@ -20,10 +20,12 @@ object Main {
             modules(createAppModules(config))
         }
         val shutdownFuture = CompletableFuture<Any>()
-        Runtime.getRuntime().addShutdownHook(Thread {
-            koinApp.close()
-            shutdownFuture.complete(Unit)
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                koinApp.close()
+                shutdownFuture.complete(Unit)
+            }
+        )
         koinApp.koin.get<GrpcConfigurationServer>().start()
         LOG.info("Server started")
         shutdownFuture.get()

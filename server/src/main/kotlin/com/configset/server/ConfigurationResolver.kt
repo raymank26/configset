@@ -22,8 +22,10 @@ class ConfigurationResolver {
         val collectedProperties = mutableListOf<PropertyItemED>()
 
         if (LOG.isDebugEnabled) {
-            LOG.debug("Snapshot = $snapshot, app = $targetApplication, hostName = $hostName, defaultApplication = $defaultApplication," +
-                    "lastVersion = $lastVersion")
+            LOG.debug(
+                "Snapshot = $snapshot, app = $targetApplication, hostName = $hostName, defaultApplication = $defaultApplication," +
+                        "lastVersion = $lastVersion"
+            )
         }
 
         var newLastVersion = lastVersion

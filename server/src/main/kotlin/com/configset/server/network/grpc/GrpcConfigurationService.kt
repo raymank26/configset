@@ -48,7 +48,6 @@ import io.grpc.StatusRuntimeException
 import io.grpc.stub.StreamObserver
 import java.util.UUID
 
-
 class GrpcConfigurationService(
     private val configurationService: ConfigurationService,
 ) : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
@@ -120,11 +119,13 @@ class GrpcConfigurationService(
         request: ApplicationUpdateRequest,
         responseObserver: StreamObserver<ApplicationUpdatedResponse>
     ) {
-        when (configurationService.updateApplication(
-            request.requestId,
-            ApplicationId(request.id),
-            request.applicationName
-        )) {
+        when (
+            configurationService.updateApplication(
+                request.requestId,
+                ApplicationId(request.id),
+                request.applicationName
+            )
+        ) {
             UpdateApplicationResult.ApplicationNotFound -> responseObserver.onNext(
                 ApplicationUpdatedResponse.newBuilder()
                     .setType(ApplicationUpdatedResponse.Type.APPLICATION_NOT_FOUND)
@@ -173,14 +174,16 @@ class GrpcConfigurationService(
     ) {
         requireRole(ApplicationOwner(request.applicationName))
         val version = if (request.version == 0L) null else request.version
-        when (configurationService.updateProperty(
-            request.requestId,
-            request.applicationName,
-            request.hostName,
-            request.propertyName,
-            request.propertyValue,
-            version
-        )) {
+        when (
+            configurationService.updateProperty(
+                request.requestId,
+                request.applicationName,
+                request.hostName,
+                request.propertyName,
+                request.propertyValue,
+                version
+            )
+        ) {
             PropertyCreateResult.OK -> responseObserver.onNext(
                 UpdatePropertyResponse.newBuilder()
                     .setType(UpdatePropertyResponse.Type.OK)
@@ -213,13 +216,15 @@ class GrpcConfigurationService(
         responseObserver: StreamObserver<DeletePropertyResponse>,
     ) {
         requireRole(ApplicationOwner(request.applicationName))
-        when (configurationService.deleteProperty(
-            request.requestId,
-            request.applicationName,
-            request.hostName,
-            request.propertyName,
-            request.version
-        )) {
+        when (
+            configurationService.deleteProperty(
+                request.requestId,
+                request.applicationName,
+                request.hostName,
+                request.propertyName,
+                request.version
+            )
+        ) {
             DeletePropertyResult.OK -> responseObserver.onNext(
                 DeletePropertyResponse.newBuilder()
                     .setType(DeletePropertyResponse.Type.OK)
@@ -364,8 +369,10 @@ class GrpcConfigurationService(
             }
 
             override fun onError(t: Throwable?) {
-                log.warn("Error in incoming stream, the bidirectional stream will be closed, unsubscribe will be called",
-                    t)
+                log.warn(
+                    "Error in incoming stream, the bidirectional stream will be closed, unsubscribe will be called",
+                    t
+                )
                 configurationService.unsubscribe(subscriberId)
             }
 

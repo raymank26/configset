@@ -76,7 +76,7 @@ class SearchPageTest : SeleniumTest() {
                 .setVersion(2)
                 .build(),
 
-            )
+        )
         mockConfigServiceExt.whenSearchProperties {
             eq(request)
         }.answer(properties)

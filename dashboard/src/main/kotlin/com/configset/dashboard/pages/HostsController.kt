@@ -18,7 +18,8 @@ class HostsController(
                 .filter { it.contains(hostName) }
             ctx.html(
                 templateRenderer.render(
-                    ctx, "autocomplete_items.html", mapOf(
+                    ctx, "autocomplete_items.html",
+                    mapOf(
                         "items" to foundApplications
                     )
                 )

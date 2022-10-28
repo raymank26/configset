@@ -6,9 +6,11 @@ object Main {
     fun main(args: Array<String>) {
         val config = Config(System.getenv())
         val app = createApp(DependencyFactory(config))
-        Runtime.getRuntime().addShutdownHook(Thread {
-            app.stop()
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                app.stop()
+            }
+        )
         app.start()
     }
 
@@ -16,7 +18,7 @@ object Main {
         val objectMapper = dependencyFactory.objectMapper()
         val authController = dependencyFactory.authController(objectMapper)
         val javalinExceptionMapper = dependencyFactory.javalinExceptionMapper()
-        val authenticationProvider = dependencyFactory.authenticationProvider(objectMapper);
+        val authenticationProvider = dependencyFactory.authenticationProvider(objectMapper)
         val authInterceptor = dependencyFactory.authInterceptor(authenticationProvider)
         val templateRenderer = dependencyFactory.templateRenderer()
         val configSetClient = dependencyFactory.configSetClient()

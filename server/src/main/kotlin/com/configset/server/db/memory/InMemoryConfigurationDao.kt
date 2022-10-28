@@ -103,9 +103,9 @@ class InMemoryConfigurationDao : ConfigurationDao {
         applicationName: String
     ): PropertyItemED? {
         return properties.firstOrNull {
-            it.applicationName == applicationName
-                    && it.name == propertyName
-                    && it.hostName == hostName
+            it.applicationName == applicationName &&
+                    it.name == propertyName &&
+                    it.hostName == hostName
         }
     }
 
@@ -116,8 +116,8 @@ class InMemoryConfigurationDao : ConfigurationDao {
     ): List<PropertyItemED> {
         return properties.filter { !it.deleted }
             .mapNotNull { property ->
-                if (searchPropertyRequest.applicationName != null
-                    && property.applicationName != searchPropertyRequest.applicationName
+                if (searchPropertyRequest.applicationName != null &&
+                    property.applicationName != searchPropertyRequest.applicationName
                 ) {
                     return@mapNotNull null
                 }

@@ -20,12 +20,10 @@ class RequestIdSqlDao : RequestIdDao {
     }
 }
 
-
 private interface RequestIdSqlDaoDbi {
     @SqlUpdate("insert into RequestId (requestId, createdMs) values (:requestId, :createdMs)")
     fun insertRequestId(@Bind("requestId") requestId: String, @Bind("createdMs") createdMs: Long)
 
     @SqlQuery("select count(*) from RequestId where requestId = :requestId")
     fun getRequestIdCount(@Bind("requestId") requestId: String): Int
-
 }

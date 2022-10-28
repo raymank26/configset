@@ -16,11 +16,14 @@ class GrpcConfigurationServer(
     private val server: Server = NettyServerBuilder.forPort(port)
         .permitKeepAliveWithoutCalls(true)
         .permitKeepAliveTime(4, TimeUnit.SECONDS)
-        .addService(ServerInterceptors.intercept(grpcConfigurationService,
-            LoggingInterceptor(),
-            AuthInterceptor(authenticator)))
+        .addService(
+            ServerInterceptors.intercept(
+                grpcConfigurationService,
+                LoggingInterceptor(),
+                AuthInterceptor(authenticator)
+            )
+        )
         .build()
-
 
     fun start() {
         server.start()

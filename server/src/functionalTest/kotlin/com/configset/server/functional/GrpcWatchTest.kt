@@ -48,17 +48,17 @@ class GrpcWatchTest {
         receivedItems.size shouldBeEqualTo 2
 
         receivedItems shouldContainAny {
-            it.applicationName == TEST_APP_NAME
-                    && it.propertyName == "name"
-                    && it.propertyValue == "value"
-                    && it.hostName == "srvd1"
-                    && it.version == 1L
+            it.applicationName == TEST_APP_NAME &&
+                    it.propertyName == "name" &&
+                    it.propertyValue == "value" &&
+                    it.hostName == "srvd1" &&
+                    it.version == 1L
         } shouldContainAny {
-            it.applicationName == TEST_APP_NAME
-                    && it.propertyName == "name2"
-                    && it.propertyValue == "value2"
-                    && it.hostName == "host-my-app"
-                    && it.version == 2L
+            it.applicationName == TEST_APP_NAME &&
+                    it.propertyName == "name2" &&
+                    it.propertyValue == "value2" &&
+                    it.hostName == "host-my-app" &&
+                    it.version == 2L
         }
 
         serviceRule.deleteProperty(TEST_APP_NAME, "srvd1", "name", 1)

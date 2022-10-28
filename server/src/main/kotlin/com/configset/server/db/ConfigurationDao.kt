@@ -46,4 +46,3 @@ interface ConfigurationDao {
 data class ConfigurationApplication(val appName: String, val config: Map<String, ConfigurationProperty>)
 
 data class ConfigurationProperty(val propertyName: String, val hosts: Map<String, PropertyItemED>)
-

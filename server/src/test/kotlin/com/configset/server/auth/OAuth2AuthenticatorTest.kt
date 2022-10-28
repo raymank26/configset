@@ -1,6 +1,6 @@
 package com.configset.server.auth
 
-//class OAuth2AuthenticatorTest {
+// class OAuth2AuthenticatorTest {
 //
 //    private val authenticator = run {
 //        val publicKey =
@@ -24,4 +24,4 @@ package com.configset.server.auth
 //        userInfo.userName `should be equal to` "raymank26"
 //        userInfo.roles `should contain` "administrator"
 //    }
-//}
+// }

@@ -27,16 +27,18 @@ class AuthInterceptor(
         if (userInfo == null) {
             val redirectUriEncoded = URLEncoder.encode(authenticationConfig.authRedirectUri, StandardCharsets.UTF_8)
             val scopeEncoded = URLEncoder.encode("openid profile", StandardCharsets.UTF_8)
-            return ctx.redirect(buildString {
-                append(authenticationConfig.authUri)
-                append("?client_id=")
-                append(authenticationConfig.authClientId)
-                append("&scope=")
-                append(scopeEncoded)
-                append("&redirect_uri=")
-                append(redirectUriEncoded)
-                append("&response_type=code")
-            })
+            return ctx.redirect(
+                buildString {
+                    append(authenticationConfig.authUri)
+                    append("?client_id=")
+                    append(authenticationConfig.authClientId)
+                    append("&scope=")
+                    append(scopeEncoded)
+                    append("&redirect_uri=")
+                    append(redirectUriEncoded)
+                    append("&response_type=code")
+                }
+            )
         } else {
             ctx.attribute("user_info", userInfo)
         }
@@ -44,12 +46,12 @@ class AuthInterceptor(
 
     private fun getValidUserInfoOrNull(ctx: Context): UserInfo? {
         val accessToken = ctx.cookie("auth.access_token")
-        val userInfo = ctx.userInfoOrNull();
+        val userInfo = ctx.userInfoOrNull()
         val now = Instant.now()
-        if (accessToken != null
-            && userInfo != null
-            && accessToken == userInfo.accessToken
-            && !userInfo.accessTokenExpired(now)
+        if (accessToken != null &&
+            userInfo != null &&
+            accessToken == userInfo.accessToken &&
+            !userInfo.accessTokenExpired(now)
         ) {
             return userInfo
         }

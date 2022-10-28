@@ -24,9 +24,12 @@ class LoggingInterceptor : ServerInterceptor {
                     if (e is StatusRuntimeException) {
                         call.close(e.status, Metadata())
                     } else {
-                        call.close(Status.INTERNAL
-                            .withCause(e)
-                            .withDescription(e.toString()), Metadata())
+                        call.close(
+                            Status.INTERNAL
+                                .withCause(e)
+                                .withDescription(e.toString()),
+                            Metadata()
+                        )
                     }
                 }
             }

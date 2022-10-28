@@ -1,6 +1,5 @@
 package com.configset.dashboard
 
-
 class Config(properties: Map<String, String>) {
 
     val hostname = properties["config_server.hostname"] ?: "localhost"

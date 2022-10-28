@@ -57,9 +57,11 @@ class AuthController(
                 setOf("preferred_username", "name", "nickname")
             )
 
-            ctx.cookie(Cookie("auth.access_token", accessToken).apply {
-                isHttpOnly = true
-            })
+            ctx.cookie(
+                Cookie("auth.access_token", accessToken).apply {
+                    isHttpOnly = true
+                }
+            )
 
             ctx.cookie(Cookie("auth.username", username.urlEncode()))
 

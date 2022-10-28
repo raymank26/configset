@@ -35,12 +35,14 @@ class ApplicationsController(
                 required = true,
                 name = "applicationName",
                 validation = FormFieldValidator.NOT_BLANK,
-            ), FormField(
+            ),
+            FormField(
                 label = "Application id",
                 required = false,
                 name = "applicationId",
                 validation = FormFieldValidator.IS_LONG,
-            ), FormField(
+            ),
+            FormField(
                 label = "Request Id",
                 required = true,
                 name = "requestId",
@@ -60,7 +62,8 @@ class ApplicationsController(
             }
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_application.html", mapOf(
+                    ctx, "update_application.html",
+                    mapOf(
                         "form" to applicationForm.withDefaultValues(
                             mapOf(
                                 "requestId" to requestIdProducer.nextRequestId()
@@ -80,7 +83,8 @@ class ApplicationsController(
                 ?: notFound()
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_application.html", mapOf(
+                    ctx, "update_application.html",
+                    mapOf(
                         "form" to applicationForm.withDefaultValues(
                             mapOf(
                                 "applicationName" to application.name,
@@ -127,7 +131,8 @@ class ApplicationsController(
                     is UpdateError.FormValidationError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_application.html", mapOf(
+                                ctx, "update_application.html",
+                                mapOf(
                                     "form" to updateError.form
                                 )
                             )
@@ -136,7 +141,8 @@ class ApplicationsController(
                     is UpdateError.ServerApiError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_application.html", mapOf(
+                                ctx, "update_application.html",
+                                mapOf(
                                     "form" to updateError.form
                                         .withCommonError(updateError.error.name)
                                 )
@@ -168,7 +174,8 @@ class ApplicationsController(
                 .map { it.name }
             ctx.html(
                 templateRenderer.render(
-                    ctx, "autocomplete_items.html", mapOf(
+                    ctx, "autocomplete_items.html",
+                    mapOf(
                         "items" to foundApplications
                     )
                 )

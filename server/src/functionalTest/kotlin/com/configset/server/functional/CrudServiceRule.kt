@@ -154,7 +154,10 @@ class CrudServiceRule : BeforeAllCallback, BeforeEachCallback, AfterEachCallback
     }
 
     fun deleteProperty(
-        appName: String, hostName: String, propertyName: String, version: Long,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
         expectedType: DeletePropertyResponse.Type = DeletePropertyResponse.Type.OK,
     ) {
 

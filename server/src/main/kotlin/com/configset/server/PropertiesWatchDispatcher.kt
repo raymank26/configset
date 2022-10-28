@@ -103,14 +103,18 @@ class PropertiesWatchDispatcher(
             val watchSubscriber = observerState.watchSubscriber
 
             for (appState: ApplicationState in observerState.applications) {
-                val changes = configurationResolver.getChanges(configurationSnapshot, appState.appName,
-                        observerState.hostName, observerState.defaultApplicationName, appState.lastVersion)
+                val changes = configurationResolver.getChanges(
+                    configurationSnapshot, appState.appName,
+                    observerState.hostName, observerState.defaultApplicationName, appState.lastVersion
+                )
                 if (changes != null && changes.propertyItems.isNotEmpty()) {
                     if (LOG.isDebugEnabled) {
-                        LOG.debug("Found changes with size = ${changes.propertyItems.size}" +
-                                " and lastVersion = ${changes.lastVersion}" +
-                                ", subscriberId = ${watchSubscriber.getId()}" +
-                                ", prevVersion = ${appState.lastVersion}")
+                        LOG.debug(
+                            "Found changes with size = ${changes.propertyItems.size}" +
+                                    " and lastVersion = ${changes.lastVersion}" +
+                                    ", subscriberId = ${watchSubscriber.getId()}" +
+                                    ", prevVersion = ${appState.lastVersion}"
+                        )
                     }
                     watchSubscriber.pushChanges(appState.appName, changes)
                 }
@@ -155,4 +159,3 @@ private data class ObserverState(
 )
 
 private data class ApplicationState(val appName: String, var lastVersion: Long)
-

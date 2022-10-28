@@ -3,7 +3,6 @@ package com.configset.server.db.postgres
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 
-
 class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
 
     val prefixMapping = mutableMapOf<String, Int>()
@@ -16,7 +15,7 @@ class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
                 continue
             }
             require(prefix != "")
-            prefixMapping["${prefix}.${rs.metaData.getColumnName(i)}"] = i
+            prefixMapping["$prefix.${rs.metaData.getColumnName(i)}"] = i
         }
     }
 
@@ -26,7 +25,7 @@ class ResultSetPrefixFetcherBuilder(rs: ResultSet) {
         fun buildSelectExp(aliases: List<String>): String {
             val parts = mutableListOf<String>()
             for (alias in aliases) {
-                parts.add("'' as table_${alias}, ${alias}.*")
+                parts.add("'' as table_$alias, $alias.*")
             }
             return parts.joinToString(", ")
         }
@@ -57,9 +56,12 @@ class ResultSetPrefixFetcher(
         private val registry = ConcurrentHashMap<Class<*>, ResultSetPrefixFetcherBuilder>()
 
         fun getFetcher(cls: Class<*>, rs: ResultSet): ResultSetPrefixFetcher {
-            return ResultSetPrefixFetcher(registry.computeIfAbsent(cls) {
-                ResultSetPrefixFetcherBuilder(rs)
-            }, rs)
+            return ResultSetPrefixFetcher(
+                registry.computeIfAbsent(cls) {
+                    ResultSetPrefixFetcherBuilder(rs)
+                },
+                rs
+            )
         }
     }
 }
