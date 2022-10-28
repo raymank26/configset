@@ -1,6 +1,5 @@
 package com.configset.common.backend.auth
 
-
 sealed interface Role {
     val key: String
     val parent: Role?

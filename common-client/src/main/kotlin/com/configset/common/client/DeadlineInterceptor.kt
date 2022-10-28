@@ -22,5 +22,4 @@ class DeadlineInterceptor(private val deadlineMs: Long) : ClientInterceptor {
         }
         return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, co)) {}
     }
-
 }

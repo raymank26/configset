@@ -11,9 +11,11 @@ class JwtAuthentication(
 ) : UserInfo {
 
     override val roles: Set<Role> = run {
-        val roles: List<String> = (decodedJwt.claims["resource_access"]
-            ?.asMap()
-            ?.get(clientId) as? LinkedHashMap<*, *>)
+        val roles: List<String> = (
+                decodedJwt.claims["resource_access"]
+                    ?.asMap()
+                    ?.get(clientId) as? LinkedHashMap<*, *>
+                )
             ?.get("roles") as? List<String> ?: emptyList()
         roles.map { parseRole(it) }
     }.toHashSet()
