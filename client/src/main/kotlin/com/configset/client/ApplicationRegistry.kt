@@ -25,7 +25,7 @@ class ApplicationRegistry(
     @Synchronized
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
-            LOG.info("Update come for appName = ${appName}, property = $propertyItem")
+            LOG.info("Update come for appName = $appName, property = $propertyItem")
             val dynValue = snapshot[propertyItem.name]
             if (dynValue != null) {
                 dynValue.observable.push(propertyItem.value)

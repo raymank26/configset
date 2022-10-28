@@ -1,6 +1,5 @@
 package com.configset.client
 
-
 class ConfigPropertyLinkProcessor {
 
     companion object {
@@ -79,5 +78,3 @@ private enum class ParseState {
     IN_LINK_START,
     IN_LINK_END
 }
-
-

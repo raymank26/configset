@@ -5,6 +5,8 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 class ClientTest : BaseClientTest() {
 
@@ -36,25 +38,25 @@ class ClientTest : BaseClientTest() {
         val propertyName = "configuration.property"
         val confProperty: ConfProperty<String?> = defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
-        var deleteCaught = false
-        var called = 0
+        val deleteCaught = AtomicBoolean()
+        val called = AtomicInteger()
 
         confProperty.subscribe { value ->
             if (value == null) {
-                deleteCaught = true
+                deleteCaught.set(true)
             }
-            called++
+            called.incrementAndGet()
             println("called with arg = $value")
         }
 
         clientUtil.pushPropertyUpdate(APP_NAME, propertyName, "123")
 
-        Awaitility.await().untilAsserted { called shouldBe 1 }
+        Awaitility.await().untilAsserted { called.get() shouldBe 1 }
 
         clientUtil.pushPropertyDeleted(APP_NAME, propertyName)
 
-        Awaitility.await().untilAsserted { deleteCaught shouldBe true }
-        Awaitility.await().untilAsserted { called shouldBe 2 }
+        Awaitility.await().untilAsserted { deleteCaught.get() shouldBe true }
+        Awaitility.await().untilAsserted { called.get() shouldBe 2 }
     }
 
     @Test

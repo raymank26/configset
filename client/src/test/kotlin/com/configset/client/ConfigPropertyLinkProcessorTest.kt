@@ -16,12 +16,14 @@ class ConfigPropertyLinkProcessorTest {
     @Test
     fun testParsingWithLinks() {
         val parseResult = processor.parse("prefix\${my-app1\\some-value1}suffix \${my-app2\\some-value2}")
-        parseResult shouldBeEqualTo TokenList(listOf(
-            Text("prefix"),
-            Link("my-app1", "some-value1"),
-            Text("suffix "),
-            Link("my-app2", "some-value2"),
-        ))
+        parseResult shouldBeEqualTo TokenList(
+            listOf(
+                Text("prefix"),
+                Link("my-app1", "some-value1"),
+                Text("suffix "),
+                Link("my-app2", "some-value2"),
+            )
+        )
     }
 
     @Test

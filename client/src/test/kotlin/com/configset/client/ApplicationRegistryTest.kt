@@ -18,7 +18,8 @@ class ApplicationRegistryTest {
             PropertyItem("some-app", "good.property", 1, "good value"),
             PropertyItem("some-app", "recursive.property", 1, "point to \${some-app\\recursive.property}"),
         )
-        applicationRegistry = ApplicationRegistry(ConfigApplication("some-app", initial, ChangingObservable())
+        applicationRegistry = ApplicationRegistry(
+            ConfigApplication("some-app", initial, ChangingObservable())
         ) { _, propertyName -> applicationRegistry.getConfProperty(propertyName, Converters.STRING) }
     }
 

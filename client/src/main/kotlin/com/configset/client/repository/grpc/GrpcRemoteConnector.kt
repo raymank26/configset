@@ -33,10 +33,12 @@ class GrpcRemoteConnector(
     private lateinit var persistentWatcher: PersistentWatcher
 
     fun init() {
-        persistentWatcher = PersistentWatcher(grpcClientFactory.createAsyncClient(),
+        persistentWatcher = PersistentWatcher(
+            grpcClientFactory.createAsyncClient(),
             reconnectionTimeoutMs = reconnectionTimeoutMs,
             changesCallback = { processUpdate(it) },
-            resubscribeCallback = { resubscribe() })
+            resubscribeCallback = { resubscribe() }
+        )
         resubscribe()
     }
 
@@ -104,7 +106,7 @@ class GrpcRemoteConnector(
             if (updates.isNotEmpty()) {
                 LOG.debug(
                     "Obsolete value has come, known version = ${watchState.lastVersion}," +
-                            "received = ${lastVersion}, applicationName = $appName, updateSize = ${updates.size}"
+                            "received = $lastVersion, applicationName = $appName, updateSize = ${updates.size}"
                 )
             }
             return

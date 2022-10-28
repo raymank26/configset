@@ -94,18 +94,23 @@ class ClientTestUtil {
     ) {
 
         val version = updateVersion.incrementAndGet()
-        cmdQueue.add(Payload.Msg(PropertiesChangesResponse.newBuilder()
-            .setApplicationName(appName)
-            .setLastVersion(version)
-            .addItems(PropertyItem.newBuilder()
-                .setApplicationName(appName)
-                .setPropertyName(propertyName)
-                .setPropertyValue(propertyValue)
-                .setVersion(version)
-                .setDeleted(false)
-                .build())
-            .build()
-        ))
+        cmdQueue.add(
+            Payload.Msg(
+                PropertiesChangesResponse.newBuilder()
+                    .setApplicationName(appName)
+                    .setLastVersion(version)
+                    .addItems(
+                        PropertyItem.newBuilder()
+                            .setApplicationName(appName)
+                            .setPropertyName(propertyName)
+                            .setPropertyValue(propertyValue)
+                            .setVersion(version)
+                            .setDeleted(false)
+                            .build()
+                    )
+                    .build()
+            )
+        )
     }
 
     fun pushPropertyDeleted(
@@ -114,19 +119,21 @@ class ClientTestUtil {
     ) {
 
         val version = updateVersion.incrementAndGet()
-        cmdQueue.add(Payload.Msg(PropertiesChangesResponse.newBuilder()
-            .setApplicationName(appName)
-            .setLastVersion(version)
-            .addItems(
-                PropertyItem.newBuilder()
+        cmdQueue.add(
+            Payload.Msg(
+                PropertiesChangesResponse.newBuilder()
                     .setApplicationName(appName)
-                    .setPropertyName(propertyName)
-                    .setVersion(version)
-                    .setDeleted(true)
-                .build()
+                    .setLastVersion(version)
+                    .addItems(
+                        PropertyItem.newBuilder()
+                            .setApplicationName(appName)
+                            .setPropertyName(propertyName)
+                            .setVersion(version)
+                            .setDeleted(true)
+                            .build()
+                    )
+                    .build()
             )
-            .build()
-        )
         )
     }
 
