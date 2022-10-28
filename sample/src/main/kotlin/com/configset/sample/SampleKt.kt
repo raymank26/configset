@@ -23,7 +23,7 @@ fun main() {
     val backendPort = System.getenv()["config_server.port"]!!.toInt()
 
     val configuration: ConfigurationRegistry = ConfigurationRegistryFactory.getConfiguration(
-        ConfigurationTransport.RemoteGrpc(hostname, BILLING_APP, backendHost, backendPort)
+        ConfigurationTransport.RemoteGrpc(hostname, BILLING_APP, backendHost, backendPort, 10000)
     )
 
     val sampleAppConfiguration: Configuration = configuration.getConfiguration(BILLING_APP)

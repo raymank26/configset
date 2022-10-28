@@ -15,11 +15,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
-import kotlin.concurrent.write
 
 private val LOG = createLoggerStatic<GrpcRemoteConnector>()
 
@@ -148,7 +145,6 @@ class PersistentWatcher(
     private var stopped = false
     private lateinit var observer: StreamObserver<WatchRequest>
     private val requestExecutors = Executors.newCachedThreadPool(ThreadFactoryBuilder().setDaemon(true).build())
-    private val sendRequestLock = ReentrantReadWriteLock()
     private val reconnectionLock = ReentrantLock()
 
     fun connect() {
@@ -190,10 +186,9 @@ class PersistentWatcher(
         requestExecutors.submit {
             while (true) {
                 try {
-                    sendRequestLock.read {
-                        if (stopped) {
-                            return@submit
-                        }
+                    if (!stopped) {
+                        // at this time observer might be already closed, but guarding this call with r/w lock doesn't
+                        // work reliably. Sometimes the call is stuck during testing (sync block in InProcessTransport).
                         observer.onNext(watchRequest)
                     }
                     return@submit
@@ -206,10 +201,8 @@ class PersistentWatcher(
     }
 
     fun stop() {
-        sendRequestLock.write {
-            stopped = true
-            observer.onCompleted()
-        }
+        stopped = true
+        requestExecutors.shutdownNow()
         (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
     }
 }

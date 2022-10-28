@@ -5,6 +5,7 @@ import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
+import com.configset.common.client.DeadlineInterceptor
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 
@@ -42,7 +43,7 @@ object ConfigurationRegistryFactory {
             .usePlaintext()
             .keepAliveTime(5000, TimeUnit.MILLISECONDS)
             .build()
-        return ConfigurationServiceGrpc.newStub(channel)
+        return ConfigurationServiceGrpc.newStub(channel).withInterceptors(DeadlineInterceptor(transport.deadlineMs))
     }
 
     private fun createLocalClasspath(transport: ConfigurationTransport.LocalClasspath): ConfigurationRepository {

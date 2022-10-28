@@ -16,6 +16,7 @@ class SearchPageTest : SeleniumTest() {
 
     @BeforeEach
     fun beforeSearchPage() {
+        mockConfigServiceExt.whenListApplications().answer(listOf())
         authenticated()
     }
 
