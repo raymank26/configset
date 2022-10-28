@@ -1,8 +1,8 @@
 package com.configset.client
 
+import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
-import com.configset.sdk.proto.ConfigurationServiceGrpc
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 

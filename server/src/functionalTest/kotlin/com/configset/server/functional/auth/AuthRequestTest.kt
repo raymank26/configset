@@ -1,6 +1,6 @@
 package com.configset.server.functional.auth
 
-import com.configset.sdk.proto.ApplicationCreateRequest
+import com.configset.client.proto.ApplicationCreateRequest
 import com.configset.server.functional.CrudServiceRule
 import io.grpc.Status
 import io.grpc.StatusRuntimeException

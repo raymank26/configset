@@ -1,14 +1,14 @@
 package com.configset.server.functional
 
-import com.configset.sdk.proto.ApplicationCreateRequest
-import com.configset.sdk.proto.ApplicationCreatedResponse
-import com.configset.sdk.proto.CreateHostRequest
-import com.configset.sdk.proto.DeletePropertyRequest
-import com.configset.sdk.proto.DeletePropertyResponse
-import com.configset.sdk.proto.EmptyRequest
-import com.configset.sdk.proto.SearchPropertiesRequest
-import com.configset.sdk.proto.UpdatePropertyRequest
-import com.configset.sdk.proto.UpdatePropertyResponse
+import com.configset.client.proto.ApplicationCreateRequest
+import com.configset.client.proto.ApplicationCreatedResponse
+import com.configset.client.proto.CreateHostRequest
+import com.configset.client.proto.DeletePropertyRequest
+import com.configset.client.proto.DeletePropertyResponse
+import com.configset.client.proto.EmptyRequest
+import com.configset.client.proto.SearchPropertiesRequest
+import com.configset.client.proto.UpdatePropertyRequest
+import com.configset.client.proto.UpdatePropertyResponse
 import com.configset.server.fixtures.TEST_APP_NAME
 import com.configset.server.fixtures.TEST_HOST
 import org.amshove.kluent.shouldBe

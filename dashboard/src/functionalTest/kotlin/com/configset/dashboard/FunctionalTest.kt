@@ -1,10 +1,10 @@
 package com.configset.dashboard
 
+import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.common.backend.auth.Admin
 import com.configset.common.backend.auth.AuthenticationProvider
 import com.configset.common.backend.auth.StubAuthenticationProvider.Companion.stubAuthenticationProvider
 import com.configset.common.client.ConfigSetClient
-import com.configset.sdk.proto.ConfigurationServiceGrpc
 import com.configset.server.fixtures.SERVER_PORT
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.grpc.ManagedChannel

@@ -5,7 +5,7 @@ import com.codeborne.selenide.Condition.text
 import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.element
 import com.codeborne.selenide.SelenideElement
-import com.configset.sdk.proto.PropertyItem
+import com.configset.client.proto.PropertyItem
 import org.openqa.selenium.By
 
 object SearchPage {

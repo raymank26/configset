@@ -5,10 +5,10 @@ import com.codeborne.selenide.Condition.visible
 import com.codeborne.selenide.Selenide.open
 import com.codeborne.selenide.Selenide.webdriver
 import com.codeborne.selenide.WebDriverConditions
+import com.configset.client.proto.PropertyItem
+import com.configset.client.proto.SearchPropertiesRequest
 import com.configset.dashboard.selenium.pages.LeftNavPage
 import com.configset.dashboard.selenium.pages.SearchPage
-import com.configset.sdk.proto.PropertyItem
-import com.configset.sdk.proto.SearchPropertiesRequest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

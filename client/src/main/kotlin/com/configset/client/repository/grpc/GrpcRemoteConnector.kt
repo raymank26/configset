@@ -2,12 +2,12 @@ package com.configset.client.repository.grpc
 
 import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.PropertiesChangesResponse
+import com.configset.client.proto.SubscribeApplicationRequest
+import com.configset.client.proto.UpdateReceived
+import com.configset.client.proto.WatchRequest
 import com.configset.common.client.extension.createLoggerStatic
-import com.configset.sdk.proto.ConfigurationServiceGrpc
-import com.configset.sdk.proto.PropertiesChangesResponse
-import com.configset.sdk.proto.SubscribeApplicationRequest
-import com.configset.sdk.proto.UpdateReceived
-import com.configset.sdk.proto.WatchRequest
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver

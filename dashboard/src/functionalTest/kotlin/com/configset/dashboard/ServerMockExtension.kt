@@ -1,26 +1,26 @@
 package com.configset.dashboard
 
+import com.configset.client.proto.ApplicationCreateRequest
+import com.configset.client.proto.ApplicationCreatedResponse
+import com.configset.client.proto.ApplicationDeleteRequest
+import com.configset.client.proto.ApplicationDeletedResponse
+import com.configset.client.proto.ApplicationUpdateRequest
+import com.configset.client.proto.ApplicationUpdatedResponse
+import com.configset.client.proto.ApplicationsResponse
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.CreateHostRequest
+import com.configset.client.proto.CreateHostResponse
+import com.configset.client.proto.DeletePropertyRequest
+import com.configset.client.proto.DeletePropertyResponse
+import com.configset.client.proto.ListHostsResponse
+import com.configset.client.proto.PropertyItem
+import com.configset.client.proto.ReadPropertyRequest
+import com.configset.client.proto.ReadPropertyResponse
+import com.configset.client.proto.SearchPropertiesRequest
+import com.configset.client.proto.SearchPropertiesResponse
+import com.configset.client.proto.UpdatePropertyRequest
+import com.configset.client.proto.UpdatePropertyResponse
 import com.configset.common.client.Application
-import com.configset.sdk.proto.ApplicationCreateRequest
-import com.configset.sdk.proto.ApplicationCreatedResponse
-import com.configset.sdk.proto.ApplicationDeleteRequest
-import com.configset.sdk.proto.ApplicationDeletedResponse
-import com.configset.sdk.proto.ApplicationUpdateRequest
-import com.configset.sdk.proto.ApplicationUpdatedResponse
-import com.configset.sdk.proto.ApplicationsResponse
-import com.configset.sdk.proto.ConfigurationServiceGrpc
-import com.configset.sdk.proto.CreateHostRequest
-import com.configset.sdk.proto.CreateHostResponse
-import com.configset.sdk.proto.DeletePropertyRequest
-import com.configset.sdk.proto.DeletePropertyResponse
-import com.configset.sdk.proto.ListHostsResponse
-import com.configset.sdk.proto.PropertyItem
-import com.configset.sdk.proto.ReadPropertyRequest
-import com.configset.sdk.proto.ReadPropertyResponse
-import com.configset.sdk.proto.SearchPropertiesRequest
-import com.configset.sdk.proto.SearchPropertiesResponse
-import com.configset.sdk.proto.UpdatePropertyRequest
-import com.configset.sdk.proto.UpdatePropertyResponse
 import io.grpc.stub.StreamObserver
 import io.mockk.MockKMatcherScope
 import io.mockk.every
@@ -41,7 +41,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
                             val builder = ApplicationsResponse.newBuilder()
                             response.forEach {
                                 builder.addApplications(
-                                    com.configset.sdk.proto.Application.newBuilder()
+                                    com.configset.client.proto.Application.newBuilder()
                                         .setId(it.id.id.toString())
                                         .setApplicationName(it.name)
                                         .build()

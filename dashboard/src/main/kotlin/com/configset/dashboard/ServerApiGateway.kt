@@ -3,26 +3,26 @@ package com.configset.dashboard
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.configset.client.proto.ApplicationCreateRequest
+import com.configset.client.proto.ApplicationCreatedResponse
+import com.configset.client.proto.ApplicationDeleteRequest
+import com.configset.client.proto.ApplicationDeletedResponse
+import com.configset.client.proto.ApplicationUpdateRequest
+import com.configset.client.proto.ApplicationUpdatedResponse
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.CreateHostRequest
+import com.configset.client.proto.CreateHostResponse
+import com.configset.client.proto.DeletePropertyRequest
+import com.configset.client.proto.DeletePropertyResponse
+import com.configset.client.proto.EmptyRequest
+import com.configset.client.proto.PropertyItem
+import com.configset.client.proto.ReadPropertyRequest
+import com.configset.client.proto.UpdatePropertyRequest
+import com.configset.client.proto.UpdatePropertyResponse
 import com.configset.common.backend.auth.UserInfo
 import com.configset.common.client.Application
 import com.configset.common.client.ApplicationId
 import com.configset.common.client.ConfigSetClient
-import com.configset.sdk.proto.ApplicationCreateRequest
-import com.configset.sdk.proto.ApplicationCreatedResponse
-import com.configset.sdk.proto.ApplicationDeleteRequest
-import com.configset.sdk.proto.ApplicationDeletedResponse
-import com.configset.sdk.proto.ApplicationUpdateRequest
-import com.configset.sdk.proto.ApplicationUpdatedResponse
-import com.configset.sdk.proto.ConfigurationServiceGrpc
-import com.configset.sdk.proto.CreateHostRequest
-import com.configset.sdk.proto.CreateHostResponse
-import com.configset.sdk.proto.DeletePropertyRequest
-import com.configset.sdk.proto.DeletePropertyResponse
-import com.configset.sdk.proto.EmptyRequest
-import com.configset.sdk.proto.PropertyItem
-import com.configset.sdk.proto.ReadPropertyRequest
-import com.configset.sdk.proto.UpdatePropertyRequest
-import com.configset.sdk.proto.UpdatePropertyResponse
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -104,7 +104,7 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         userInfo: UserInfo,
     ): List<ShowPropertyItem> {
         val response = withClient(userInfo).searchProperties(
-            com.configset.sdk.proto.SearchPropertiesRequest
+            com.configset.client.proto.SearchPropertiesRequest
                 .newBuilder()
                 .apply {
                     if (searchPropertiesRequest.applicationName != null) {

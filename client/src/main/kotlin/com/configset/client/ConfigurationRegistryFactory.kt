@@ -1,10 +1,10 @@
 package com.configset.client
 
+import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
-import com.configset.sdk.proto.ConfigurationServiceGrpc
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 

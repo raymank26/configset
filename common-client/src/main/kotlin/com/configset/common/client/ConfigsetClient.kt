@@ -1,6 +1,6 @@
 package com.configset.common.client
 
-import com.configset.sdk.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.ConfigurationServiceGrpc
 import io.grpc.ManagedChannel
 import io.grpc.ManagedChannelBuilder
 import io.grpc.Metadata
