@@ -105,8 +105,9 @@ class GrpcRemoteConnector(
         if (lastVersion <= watchState.lastVersion) {
             if (updates.isNotEmpty()) {
                 LOG.debug(
-                    "Obsolete value has come, known version = ${watchState.lastVersion}," +
-                            "received = $lastVersion, applicationName = $appName, updateSize = ${updates.size}"
+                    """Obsolete value has come, known version = ${watchState.lastVersion},
+                        | received = $lastVersion, applicationName = $appName, updateSize = ${updates.size}"""
+                        .trimMargin()
                 )
             }
             return
@@ -114,8 +115,9 @@ class GrpcRemoteConnector(
         val filteredUpdates = updates.filter { it.version > watchState.lastVersion }
         if (filteredUpdates.size != updates.size) {
             LOG.debug(
-                "Some updates where filtered (they are obsolete)" +
-                        ", before size = ${updates.size}, after size = ${filteredUpdates.size}"
+                """Some updates where filtered (they are obsolete), before size = ${updates.size},
+                | after size = ${filteredUpdates.size}"""
+                    .trimMargin()
             )
         }
         LOG.info("Configuration updated {}", filteredUpdates)
