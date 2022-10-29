@@ -3,8 +3,7 @@ package com.configset.dashboard.util
 import arrow.core.Either
 
 // An "arrow.core" library already contains "either.eager" method to chain Either type together. But it's build on
-// of coroutines which is good but for it's harder to debug due to bloated stack trace. This version is much easier to
-// understand and debug.
+// coroutines which it's harder to debug due to bloated stack trace. This version provides simpler implementation.
 fun <K, V> binding(lambda: BindingContext.() -> Either<K, V>): Either<K, V> {
     return try {
         lambda.invoke(BindingContext())
@@ -21,4 +20,4 @@ class BindingContext {
     }
 }
 
-class LeftException(val failedEither: Either<*, *>) : Exception()
+private class LeftException(val failedEither: Either<*, *>) : Exception()
