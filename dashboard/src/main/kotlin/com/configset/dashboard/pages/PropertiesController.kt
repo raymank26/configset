@@ -1,8 +1,8 @@
 package com.configset.dashboard.pages
 
 import arrow.core.Either
-import arrow.core.computations.either
 import arrow.core.handleError
+import arrow.core.right
 import com.configset.dashboard.SearchPropertiesRequest
 import com.configset.dashboard.ServerApiGatewayErrorType
 import com.configset.dashboard.TablePropertyItem
@@ -14,6 +14,7 @@ import com.configset.dashboard.forms.InvalidForm
 import com.configset.dashboard.property.CrudPropertyService
 import com.configset.dashboard.property.ListPropertiesService
 import com.configset.dashboard.util.RequestIdProducer
+import com.configset.dashboard.util.binding
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
@@ -108,7 +109,7 @@ class PropertiesController(
             ctx.redirect("/properties")
         }
         get("properties") { ctx ->
-            val result: SearchPropertiesResult = either.eager<InvalidForm, SearchPropertiesResult> {
+            val result = binding<InvalidForm, SearchPropertiesResult> {
                 val (form) = propertySearchForm.performValidation(ctx.queryParamMap()).bind()
 
                 val applicationName = form.getField("applicationName").value ?: ""
@@ -117,7 +118,7 @@ class PropertiesController(
                 val propertyValue = form.getField("propertyValue").value ?: ""
 
                 if (applicationName == "" && hostName == "" && propertyName == "" && propertyValue == "") {
-                    SearchPropertiesResult(emptyList(), false, form)
+                    SearchPropertiesResult(emptyList(), false, form).right()
                 } else {
                     val properties = listPropertiesService.searchProperties(
                         SearchPropertiesRequest(
@@ -128,7 +129,7 @@ class PropertiesController(
                         ),
                         ctx.userInfo()
                     )
-                    SearchPropertiesResult(properties, true, form)
+                    SearchPropertiesResult(properties, true, form).right()
                 }
             }.handleError {
                 SearchPropertiesResult(emptyList(), false, it.form)
@@ -208,7 +209,7 @@ class PropertiesController(
         }
 
         val updateHandler = Handler { ctx ->
-            val result = either.eager<UpdateError, Form> {
+            val result = binding<UpdateError, Form> {
                 val validatedForm = propertyForm.performValidation(ctx.formParamMap())
                     .map { it.form }
                     .mapLeft { UpdateError.FormValidationError(it.form) }
@@ -231,7 +232,6 @@ class PropertiesController(
                 )
                     .mapLeft { UpdateError.ServerApiError(validatedForm, it) }
                     .map { validatedForm }
-                    .bind()
             }.mapLeft {
                 if (it is UpdateError.ServerApiError && it.error == ServerApiGatewayErrorType.APPLICATION_NOT_FOUND)
                     UpdateError.FormValidationError(it.form.withFieldError("applicationName", "Application not found"))

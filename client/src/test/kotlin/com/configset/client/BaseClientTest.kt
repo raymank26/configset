@@ -39,8 +39,8 @@ abstract class BaseClientTest {
 
     @AfterEach
     fun after() {
-        clientUtil.stop()
         registry.stop()
+        clientUtil.stop()
     }
 }
 

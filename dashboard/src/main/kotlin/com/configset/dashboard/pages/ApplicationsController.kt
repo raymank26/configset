@@ -1,7 +1,6 @@
 package com.configset.dashboard.pages
 
 import arrow.core.Either
-import arrow.core.computations.either
 import com.configset.common.backend.auth.Admin
 import com.configset.common.client.ApplicationId
 import com.configset.dashboard.ServerApiGateway
@@ -10,6 +9,7 @@ import com.configset.dashboard.forms.Form
 import com.configset.dashboard.forms.FormField
 import com.configset.dashboard.forms.FormFieldValidator
 import com.configset.dashboard.util.RequestIdProducer
+import com.configset.dashboard.util.binding
 import com.configset.dashboard.util.formParamSafe
 import com.configset.dashboard.util.htmxRedirect
 import com.configset.dashboard.util.htmxShowAlert
@@ -100,7 +100,7 @@ class ApplicationsController(
             if (!ctx.userInfo().roles.contains(Admin)) {
                 permissionDenied()
             }
-            val res = either.eager<UpdateError, Form> {
+            val res = binding<UpdateError, Form> {
                 val validForm = applicationForm.performValidation(ctx.formParamMap())
                     .map { it.form }
                     .mapLeft { UpdateError.FormValidationError(it.form) }
@@ -112,7 +112,6 @@ class ApplicationsController(
                     serverApiGateway.createApplication(requestId, applicationName, ctx.userInfo())
                         .mapLeft { UpdateError.ServerApiError(validForm, it) }
                         .map { validForm }
-                        .bind()
                 } else {
                     serverApiGateway.updateApplication(
                         id = ApplicationId(applicationId),
@@ -122,7 +121,6 @@ class ApplicationsController(
                     )
                         .mapLeft { UpdateError.ServerApiError(validForm, it) }
                         .map { validForm }
-                        .bind()
                 }
             }
 
