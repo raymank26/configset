@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test
 class ReconnectionTest : BaseClientTest() {
 
     @Test
-    fun testDeletePropertyDuringConnectionLoss() {
+    fun `reconnection should happen when connected is dropped`() {
+        // given
         val propertyName = "configuration.property"
         var confUpdates = 0
         val confProperty: ConfProperty<String?> = defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
@@ -17,11 +18,9 @@ class ReconnectionTest : BaseClientTest() {
         confProperty.subscribe {
             confUpdates++
         }
-        confProperty.getValue() shouldBeEqualTo null
 
         // when
         clientUtil.pushPropertyUpdate(APP_NAME, propertyName, expectedValueAfterUpdate)
-
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate
         }
@@ -29,13 +28,12 @@ class ReconnectionTest : BaseClientTest() {
         clientUtil.dropConnection()
 
         confProperty.getValue() shouldBeEqualTo expectedValueAfterUpdate // here we check that property wasn't changed
-
         clientUtil.pushPropertyDeleted(APP_NAME, propertyName)
 
+        // then
         Awaitility.await().untilAsserted {
             confProperty.getValue() shouldBeEqualTo null
         }
-
         confUpdates shouldBeEqualTo 2
     }
 }

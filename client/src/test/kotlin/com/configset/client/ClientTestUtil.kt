@@ -25,8 +25,11 @@ class ClientTestUtil {
 
     private val service = object : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
-        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
-            var isShuttedDown = false
+        @Volatile
+        var isShuttedDown = false
+
+        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>):
+                StreamObserver<WatchRequest> {
 
             return object : StreamObserver<WatchRequest> {
                 override fun onNext(value: WatchRequest) {
@@ -64,8 +67,8 @@ class ClientTestUtil {
                         while (!isShuttedDown) {
                             when (val cmd = cmdQueue.take()) {
                                 Payload.DropConnection -> {
-                                    isShuttedDown = true
                                     responseObserver.onCompleted()
+                                    return@thread
                                 }
 
                                 is Payload.Msg -> responseObserver.onNext(cmd.data)
@@ -79,10 +82,11 @@ class ClientTestUtil {
 
     fun start() {
         server = InProcessServerBuilder.forName("mytest")
-            .directExecutor().addService(service).build().start()
+            .addService(service)
+            .build()
+            .start()
         channel = InProcessChannelBuilder.forName("mytest")
             .intercept(DeadlineInterceptor(10_000))
-            .directExecutor()
             .build()
         asyncClient = ConfigSetClient(channel).asyncClient
     }
