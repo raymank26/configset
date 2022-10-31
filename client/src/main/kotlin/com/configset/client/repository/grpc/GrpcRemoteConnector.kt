@@ -15,8 +15,11 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
+import kotlin.concurrent.write
 
 private val LOG = createLoggerStatic<GrpcRemoteConnector>()
 
@@ -146,6 +149,7 @@ class PersistentWatcher(
     private lateinit var observer: StreamObserver<WatchRequest>
     private val requestExecutors = Executors.newCachedThreadPool(ThreadFactoryBuilder().setDaemon(true).build())
     private val reconnectionLock = ReentrantLock()
+    private val sendRwLock = ReentrantReadWriteLock()
 
     fun connect() {
         if (stopped) {
@@ -173,7 +177,7 @@ class PersistentWatcher(
     }
 
     private fun emitReconnection() {
-        thread {
+        thread(name = "Grpc-watch-reconnection") {
             Thread.sleep(reconnectionTimeoutMs)
             reconnectionLock.withLock(resubscribeCallback)
         }
@@ -186,10 +190,10 @@ class PersistentWatcher(
         requestExecutors.submit {
             while (true) {
                 try {
-                    if (!stopped) {
-                        // at this time observer might be already closed, but guarding this call with r/w lock doesn't
-                        // work reliably. Sometimes the call is stuck during testing (sync block in InProcessTransport).
-                        observer.onNext(watchRequest)
+                    sendRwLock.read {
+                        if (!stopped) {
+                            observer.onNext(watchRequest)
+                        }
                     }
                     return@submit
                 } catch (e: Exception) {
@@ -201,7 +205,10 @@ class PersistentWatcher(
     }
 
     fun stop() {
-        stopped = true
+        sendRwLock.write {
+            stopped = true
+        }
+        observer.onCompleted()
         requestExecutors.shutdownNow()
         (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
     }
