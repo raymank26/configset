@@ -1,6 +1,6 @@
 package com.configset.server
 
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.extension.createLogger
 import com.configset.server.network.grpc.GrpcConfigurationServer
 import org.koin.dsl.koinApplication
 import java.util.concurrent.CompletableFuture
@@ -20,10 +20,12 @@ object Main {
             modules(createAppModules(config))
         }
         val shutdownFuture = CompletableFuture<Any>()
-        Runtime.getRuntime().addShutdownHook(Thread {
-            koinApp.close()
-            shutdownFuture.complete(Unit)
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                koinApp.close()
+                shutdownFuture.complete(Unit)
+            }
+        )
         koinApp.koin.get<GrpcConfigurationServer>().start()
         LOG.info("Server started")
         shutdownFuture.get()

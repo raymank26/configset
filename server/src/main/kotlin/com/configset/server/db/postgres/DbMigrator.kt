@@ -1,6 +1,6 @@
 package com.configset.server.db.postgres
 
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.server.TableMetaED
 import org.jdbi.v3.core.Jdbi
 import org.jdbi.v3.core.mapper.RowMapper
@@ -10,32 +10,31 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import org.postgresql.util.PSQLException
 import java.sql.ResultSet
-import java.util.stream.Collectors
+import kotlin.streams.toList
 
 private val logger = createLoggerStatic<DbMigrator>()
 
 class DbMigrator(private val dbi: Jdbi) {
+
     init {
         dbi.registerRowMapper(TableMetaEDMapper())
     }
 
     fun migrate() {
         val lastVersion = getLastVersion()
-        val resource = javaClass.classLoader.getResource("migration/list.txt")
-        require(resource != null)
-        val migrations: List<Migration> = resource
-            .openStream()
-            .use { stream ->
-                stream.bufferedReader()
-                    .lines()
-                    .map { line ->
-                        val version = line.split("__")[0]
-                        Migration(version.toLong(), line)
-                    }
-                    .filter { it.version > lastVersion }
-                    .sorted(compareBy { it.version })
-                    .collect(Collectors.toList())
+        val migrations = Thread.currentThread().contextClassLoader
+            .getResourceAsStream("migration")
+            .bufferedReader()
+            .use { it.lines().toList() }
+            .asSequence()
+            .map { fileName ->
+                val version = fileName.split("__").getOrNull(0)
+                    ?: error("Cannot find '__' substring in filename = $fileName")
+                Migration(version.toLong(), fileName)
             }
+            .filter { it.version > lastVersion }
+            .sortedBy { it.version }
+            .toList()
         logger.info("Found last table version = $lastVersion and new migrations ${migrations.size})")
         dbi.useHandle<Exception> { handle ->
             for (migrationName in migrations) {
@@ -60,7 +59,7 @@ class DbMigrator(private val dbi: Jdbi) {
             val lastSavedVersion = getLastVersion()
             require(lastSavedVersion == lastApplied.version)
         }
-        logger.info("Initialization completed")
+        logger.info("Migration completed")
     }
 
     private fun getLastVersion(): Long {
@@ -103,4 +102,3 @@ private class TableMetaEDMapper : RowMapper<TableMetaED> {
         return TableMetaED(rs.getLong("version"))
     }
 }
-

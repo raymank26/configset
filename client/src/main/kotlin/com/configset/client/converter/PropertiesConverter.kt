@@ -1,9 +1,9 @@
 package com.configset.client.converter
 
 import java.io.StringReader
-import java.util.*
+import java.util.Properties
 
-internal class ConverterProperties : Converter<Properties> {
+internal class PropertiesConverter : Converter<Properties> {
     override fun convert(value: String): Properties {
         val res = Properties()
         res.load(StringReader(value))

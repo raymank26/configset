@@ -6,4 +6,3 @@ data class PropertyItem(
     val version: Long,
     val value: String?,
 )
-

@@ -1,18 +1,14 @@
 package com.configset.client
 
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
-import io.grpc.testing.GrpcCleanupRule
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 
 abstract class BaseClientTest {
 
-    @Rule
-    @JvmField
-    val grpcRule = GrpcCleanupRule()
-
-    val clientUtil = ClientTestUtil(grpcRule)
+    lateinit var clientUtil: ClientTestUtil
 
     val defaultConfiguration: Configuration by lazy {
         registry.getConfiguration(APP_NAME)
@@ -20,13 +16,17 @@ abstract class BaseClientTest {
 
     private lateinit var registry: ConfigurationRegistry
 
-    @Before
+    @BeforeEach
     fun before() {
+        clientUtil = ClientTestUtil()
+        clientUtil.start()
         val repository = GrpcConfigurationRepository(
             applicationHostname = APP_NAME,
             defaultApplicationName = APP_NAME,
-            grpcClientFactory = {
-                clientUtil.asyncClient
+            grpcClientFactory = object : GrpcClientFactory {
+                override fun createAsyncClient(): ConfigurationServiceGrpc.ConfigurationServiceStub {
+                    return clientUtil.asyncClient
+                }
             },
             reconnectionTimeoutMs = 1000
         )
@@ -37,9 +37,10 @@ abstract class BaseClientTest {
     open fun setUp() {
     }
 
-    @After
+    @AfterEach
     fun after() {
         registry.stop()
+        clientUtil.stop()
     }
 }
 

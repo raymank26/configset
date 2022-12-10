@@ -1,9 +1,11 @@
 package com.configset.client
 
+import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.repository.ConfigurationRepository
+import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
-import com.configset.sdk.proto.ConfigurationServiceGrpc
+import com.configset.common.client.DeadlineInterceptor
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 
@@ -27,10 +29,13 @@ object ConfigurationRegistryFactory {
         return GrpcConfigurationRepository(
             applicationHostname = transport.hostName,
             defaultApplicationName = transport.defaultApplicationName,
-            grpcClientFactory = {
-                prepareGrpcStub(transport)
+            grpcClientFactory = object : GrpcClientFactory {
+                override fun createAsyncClient(): ConfigurationServiceGrpc.ConfigurationServiceStub {
+                    return prepareGrpcStub(transport)
+                }
             },
-            reconnectionTimeoutMs = 5000)
+            reconnectionTimeoutMs = 5000
+        )
     }
 
     private fun prepareGrpcStub(transport: ConfigurationTransport.RemoteGrpc): ConfigurationServiceGrpc.ConfigurationServiceStub {
@@ -38,7 +43,7 @@ object ConfigurationRegistryFactory {
             .usePlaintext()
             .keepAliveTime(5000, TimeUnit.MILLISECONDS)
             .build()
-        return ConfigurationServiceGrpc.newStub(channel)
+        return ConfigurationServiceGrpc.newStub(channel).withInterceptors(DeadlineInterceptor(transport.deadlineMs))
     }
 
     private fun createLocalClasspath(transport: ConfigurationTransport.LocalClasspath): ConfigurationRepository {

@@ -1,8 +1,9 @@
 package com.configset.dashboard.property
 
+import arrow.core.Either
+import com.configset.common.backend.auth.UserInfo
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.ServerApiGatewayErrorType
-import com.configset.dashboard.throwException
 import com.configset.dashboard.util.RequestIdProducer
 
 class CrudPropertyService(
@@ -17,27 +18,28 @@ class CrudPropertyService(
         propertyName: String,
         propertyValue: String,
         version: Long?,
-        accessToken: String,
-    ) {
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
         // TODO: move logic below to config server
-        val apps = serverApiGateway.listApplications(accessToken)
-        if (!apps.contains(appName)) {
-            ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.throwException()
-        }
         if (version == null) {
-            val hosts = serverApiGateway.listHosts(accessToken)
+            val hosts = serverApiGateway.listHosts(userInfo)
             if (!hosts.contains(hostName)) {
-                serverApiGateway.createHost(requestId, hostName, accessToken)
+                val hostCreateResult = serverApiGateway.createHost(requestId, hostName, userInfo)
+                if (hostCreateResult.isLeft()) {
+                    return hostCreateResult
+                }
             }
         }
 
         val updatePropertyRequestId = requestIdProducer.nextRequestId(requestId)
-        return serverApiGateway.updateProperty(updatePropertyRequestId,
+        return serverApiGateway.updateProperty(
+            updatePropertyRequestId,
             appName,
             hostName,
             propertyName,
             propertyValue,
-            version, accessToken)
+            version, userInfo
+        )
     }
 
     fun deleteProperty(
@@ -46,8 +48,8 @@ class CrudPropertyService(
         hostName: String,
         propertyName: String,
         version: Long,
-        accessToken: String,
-    ) {
-        return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, accessToken)
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
+        return serverApiGateway.deleteProperty(requestId, appName, hostName, propertyName, version, userInfo)
     }
 }

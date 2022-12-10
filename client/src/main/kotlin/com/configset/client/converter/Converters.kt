@@ -1,6 +1,6 @@
 package com.configset.client.converter
 
-import java.util.*
+import java.util.Properties
 
 object Converters {
     val STRING = GenericConverter { it }
@@ -14,7 +14,7 @@ object Converters {
     val BYTE = GenericConverter { str -> str.toByte() }
     val DOUBLE = GenericConverter { it.toDouble() }
     val SHORT = GenericConverter { it.toShort() }
-    val PROPERTIES: Converter<Properties> = ConverterProperties()
+    val PROPERTIES: Converter<Properties> = PropertiesConverter()
     val LIST_STRING: Converter<List<String>> = listConverter(STRING)
     val LIST_LONG: Converter<List<Long>> = listConverter(LONG)
 }

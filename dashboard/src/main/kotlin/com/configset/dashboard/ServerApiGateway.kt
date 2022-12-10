@@ -1,18 +1,28 @@
 package com.configset.dashboard
 
-import com.configset.sdk.client.ConfigSetClient
-import com.configset.sdk.proto.ApplicationCreateRequest
-import com.configset.sdk.proto.ApplicationCreatedResponse
-import com.configset.sdk.proto.ConfigurationServiceGrpc
-import com.configset.sdk.proto.CreateHostRequest
-import com.configset.sdk.proto.CreateHostResponse
-import com.configset.sdk.proto.DeletePropertyRequest
-import com.configset.sdk.proto.DeletePropertyResponse
-import com.configset.sdk.proto.EmptyRequest
-import com.configset.sdk.proto.PropertyItem
-import com.configset.sdk.proto.ReadPropertyRequest
-import com.configset.sdk.proto.UpdatePropertyRequest
-import com.configset.sdk.proto.UpdatePropertyResponse
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.configset.client.proto.ApplicationCreateRequest
+import com.configset.client.proto.ApplicationCreatedResponse
+import com.configset.client.proto.ApplicationDeleteRequest
+import com.configset.client.proto.ApplicationDeletedResponse
+import com.configset.client.proto.ApplicationUpdateRequest
+import com.configset.client.proto.ApplicationUpdatedResponse
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.CreateHostRequest
+import com.configset.client.proto.CreateHostResponse
+import com.configset.client.proto.DeletePropertyRequest
+import com.configset.client.proto.DeletePropertyResponse
+import com.configset.client.proto.EmptyRequest
+import com.configset.client.proto.PropertyItem
+import com.configset.client.proto.ReadPropertyRequest
+import com.configset.client.proto.UpdatePropertyRequest
+import com.configset.client.proto.UpdatePropertyResponse
+import com.configset.common.backend.auth.UserInfo
+import com.configset.common.client.Application
+import com.configset.common.client.ApplicationId
+import com.configset.common.client.ConfigSetClient
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -21,61 +31,112 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
     fun createApplication(
         requestId: String,
         appName: String,
-        accessToken: String,
-    ) {
-        val res = withClient(accessToken).createApplication(ApplicationCreateRequest.newBuilder()
-            .setRequestId(requestId)
-            .setApplicationName(appName)
-            .build()
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
+        val res = withClient(userInfo).createApplication(
+            ApplicationCreateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .build()
         )
 
         return when (res.type) {
-            ApplicationCreatedResponse.Type.OK -> Unit
-            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.throwException()
+            ApplicationCreatedResponse.Type.OK -> Unit.right()
+            ApplicationCreatedResponse.Type.ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.left()
             else -> throw RuntimeException("Unrecognized type for msg = $res")
         }
     }
 
-    fun listApplications(accessToken: String): List<String> {
-        val response = withClient(accessToken).listApplications(EmptyRequest.getDefaultInstance())
-        return response.applicationsList.map { it }
+    fun deleteApplication(applicationName: String, requestId: String, userInfo: UserInfo):
+            Either<ServerApiGatewayErrorType, Unit> {
+
+        val res = withClient(userInfo).deleteApplication(
+            ApplicationDeleteRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(applicationName)
+                .build()
+        )
+
+        return when (res.type) {
+            ApplicationDeletedResponse.Type.OK -> Unit.right()
+            ApplicationDeletedResponse.Type.APPLICATION_NOT_FOUND ->
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND
+                    .left()
+
+            else -> throw RuntimeException("Unrecognized type for msg = $res")
+        }
     }
 
-    fun listHosts(accessToken: String): List<String> {
-        return withClient(accessToken).listHosts(EmptyRequest.getDefaultInstance())
+    fun updateApplication(id: ApplicationId, name: String, requestId: String, userInfo: UserInfo):
+            Either<ServerApiGatewayErrorType, Unit> {
+
+        val res = withClient(userInfo).updateApplication(
+            ApplicationUpdateRequest.newBuilder()
+                .setRequestId(requestId)
+                .setId(id.id.toString())
+                .setApplicationName(name)
+                .build()
+        )
+        return when (res.type) {
+            ApplicationUpdatedResponse.Type.OK -> Unit.right()
+            ApplicationUpdatedResponse.Type.APPLICATION_NOT_FOUND ->
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.left()
+
+            else -> throw RuntimeException("Unrecognized type for msg = $res")
+        }
+    }
+
+    fun listApplications(userInfo: UserInfo): List<Application> {
+        val response = withClient(userInfo).listApplications(EmptyRequest.getDefaultInstance())
+        return response.applicationsList.map {
+            Application(ApplicationId(it.id), it.applicationName)
+        }
+    }
+
+    fun listHosts(userInfo: UserInfo): List<String> {
+        return withClient(userInfo).listHosts(EmptyRequest.getDefaultInstance())
             .hostNamesList
             .map { it }
     }
 
     fun searchProperties(
         searchPropertiesRequest: SearchPropertiesRequest,
-        accessToken: String,
+        userInfo: UserInfo,
     ): List<ShowPropertyItem> {
-        val response = withClient(accessToken).searchProperties(com.configset.sdk.proto.SearchPropertiesRequest
-            .newBuilder()
-            .apply {
-                if (searchPropertiesRequest.applicationName != null) {
-                    applicationName = searchPropertiesRequest.applicationName
+        val response = withClient(userInfo).searchProperties(
+            com.configset.client.proto.SearchPropertiesRequest
+                .newBuilder()
+                .apply {
+                    if (searchPropertiesRequest.applicationName != null) {
+                        applicationName = searchPropertiesRequest.applicationName
+                    }
+                    if (searchPropertiesRequest.hostNameQuery != null) {
+                        hostName = searchPropertiesRequest.hostNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyNameQuery != null) {
+                        propertyName = searchPropertiesRequest.propertyNameQuery
+                    }
+                    if (searchPropertiesRequest.propertyValueQuery != null) {
+                        propertyValue = searchPropertiesRequest.propertyValueQuery
+                    }
                 }
-                if (searchPropertiesRequest.hostNameQuery != null) {
-                    hostName = searchPropertiesRequest.hostNameQuery
-                }
-                if (searchPropertiesRequest.propertyNameQuery != null) {
-                    propertyName = searchPropertiesRequest.propertyNameQuery
-                }
-                if (searchPropertiesRequest.propertyValueQuery != null) {
-                    propertyValue = searchPropertiesRequest.propertyValueQuery
-                }
-            }
-            .build())
+                .build()
+        )
 
         return response.itemsList.map { item ->
-            ShowPropertyItem(item.applicationName, item.hostName, item.propertyName, item.propertyValue, item.version)
+            ShowPropertyItem(
+                id = item.id,
+                applicationName = item.applicationName,
+                hostName = item.hostName,
+                propertyName = item.propertyName,
+                propertyValue = item.propertyValue,
+                version = item.version
+            )
         }
     }
 
-    fun listProperties(appName: String, accessToken: String): List<String> {
-        return searchProperties(SearchPropertiesRequest(appName, null, null, null), accessToken)
+    fun listProperties(appName: String, userInfo: UserInfo): List<String> {
+        return searchProperties(SearchPropertiesRequest(appName, null, null, null), userInfo)
             .mapNotNull {
                 if (it.applicationName == appName) {
                     it.propertyName
@@ -85,24 +146,30 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
             }
     }
 
-    fun createHost(requestId: String, hostName: String, accessToken: String) {
-        val response = withClient(accessToken).createHost(CreateHostRequest.newBuilder()
-            .setRequestId(requestId)
-            .setHostName(hostName)
-            .build())
+    fun createHost(requestId: String, hostName: String, userInfo: UserInfo): Either<ServerApiGatewayErrorType, Unit> {
+        val response = withClient(userInfo)
+            .createHost(
+                CreateHostRequest.newBuilder()
+                    .setRequestId(requestId)
+                    .setHostName(hostName)
+                    .build()
+            )
         return when (response.type) {
-            CreateHostResponse.Type.OK -> Unit
-            CreateHostResponse.Type.HOST_ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.throwException()
+            CreateHostResponse.Type.OK -> Unit.right()
+            CreateHostResponse.Type.HOST_ALREADY_EXISTS -> ServerApiGatewayErrorType.CONFLICT.left()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
 
-    fun readProperty(appName: String, hostName: String, propertyName: String, accessToken: String): PropertyItem? {
-        val response = withClient(accessToken).readProperty(ReadPropertyRequest.newBuilder()
-            .setApplicationName(appName)
-            .setHostName(hostName)
-            .setPropertyName(propertyName)
-            .build())
+    fun readProperty(appName: String, hostName: String, propertyName: String, userInfo: UserInfo): PropertyItem? {
+        val response = withClient(userInfo)
+            .readProperty(
+                ReadPropertyRequest.newBuilder()
+                    .setApplicationName(appName)
+                    .setHostName(hostName)
+                    .setPropertyName(propertyName)
+                    .build()
+            )
         return if (response.hasItem) {
             response.item
         } else {
@@ -117,24 +184,33 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         propertyName: String,
         propertyValue: String,
         version: Long?,
-        accessToken: String,
-    ) {
-        val response = withClient(accessToken)
-            .updateProperty(UpdatePropertyRequest.newBuilder()
-                .setRequestId(requestId)
-                .setApplicationName(appName)
-                .setHostName(hostName)
-                .setPropertyName(propertyName)
-                .setPropertyValue(propertyValue)
-                .setVersion(version ?: 0)
-                .build())
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
+        val response = withClient(userInfo)
+            .updateProperty(
+                UpdatePropertyRequest.newBuilder()
+                    .setRequestId(requestId)
+                    .setApplicationName(appName)
+                    .setHostName(hostName)
+                    .setPropertyName(propertyName)
+                    .setPropertyValue(propertyValue)
+                    .setVersion(version ?: 0)
+                    .build()
+            )
 
         return when (response.type) {
-            UpdatePropertyResponse.Type.OK -> Unit
-            UpdatePropertyResponse.Type.HOST_NOT_FOUND -> ServerApiGatewayErrorType.HOST_NOT_FOUND.throwException()
+            UpdatePropertyResponse.Type.OK ->
+                Unit.right()
+
+            UpdatePropertyResponse.Type.HOST_NOT_FOUND ->
+                ServerApiGatewayErrorType.HOST_NOT_FOUND.left()
+
             UpdatePropertyResponse.Type.APPLICATION_NOT_FOUND ->
-                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.throwException()
-            UpdatePropertyResponse.Type.UPDATE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.throwException()
+                ServerApiGatewayErrorType.APPLICATION_NOT_FOUND.left()
+
+            UpdatePropertyResponse.Type.UPDATE_CONFLICT ->
+                ServerApiGatewayErrorType.CONFLICT.left()
+
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
@@ -145,30 +221,27 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         hostName: String,
         propertyName: String,
         version: Long,
-        accessToken: String,
-    ) {
-        val response = withClient(accessToken).deleteProperty(DeletePropertyRequest.newBuilder()
-            .setRequestId(requestId)
-            .setApplicationName(appName)
-            .setHostName(hostName)
-            .setPropertyName(propertyName)
-            .setVersion(version)
-            .build()
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
+        val response = withClient(userInfo).deleteProperty(
+            DeletePropertyRequest.newBuilder()
+                .setRequestId(requestId)
+                .setApplicationName(appName)
+                .setHostName(hostName)
+                .setPropertyName(propertyName)
+                .setVersion(version)
+                .build()
         )
         return when (response.type) {
-            DeletePropertyResponse.Type.OK -> Unit
-            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ServerApiGatewayErrorType.PROPERTY_NOT_FOUND.throwException()
-            DeletePropertyResponse.Type.DELETE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.throwException()
+            DeletePropertyResponse.Type.OK -> Unit.right()
+            DeletePropertyResponse.Type.PROPERTY_NOT_FOUND -> ServerApiGatewayErrorType.PROPERTY_NOT_FOUND.left()
+            DeletePropertyResponse.Type.DELETE_CONFLICT -> ServerApiGatewayErrorType.CONFLICT.left()
             else -> throw RuntimeException("Unrecognized type for msg = $response")
         }
     }
 
-    private fun withClient(accessToken: String): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
-        return configSetClient.getAuthBlockingClient(accessToken)
-    }
-
-    fun stop() {
-        configSetClient.stop()
+    private fun withClient(userInfo: UserInfo): ConfigurationServiceGrpc.ConfigurationServiceBlockingStub {
+        return configSetClient.getAuthBlockingClient(userInfo.accessToken)
     }
 }
 
@@ -180,6 +253,8 @@ data class SearchPropertiesRequest(
 )
 
 data class ShowPropertyItem @JsonCreator constructor(
+    @JsonProperty("id")
+    val id: String,
     @JsonProperty("applicationName")
     val applicationName: String,
     @JsonProperty("hostName")
@@ -192,3 +267,13 @@ data class ShowPropertyItem @JsonCreator constructor(
     val version: Long,
 )
 
+data class TablePropertyItem @JsonCreator constructor(
+    @JsonProperty("id")
+    val id: String,
+    @JsonProperty("applicationName")
+    val applicationName: String,
+    @JsonProperty("propertyName")
+    val propertyName: String,
+    @JsonProperty("hostProperties")
+    val hostProperties: List<ShowPropertyItem>,
+)

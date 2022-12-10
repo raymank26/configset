@@ -3,7 +3,7 @@ package com.configset.client
 import com.configset.client.converter.Converters
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 

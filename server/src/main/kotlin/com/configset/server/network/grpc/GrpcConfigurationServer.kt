@@ -1,6 +1,6 @@
 package com.configset.server.network.grpc
 
-import com.configset.server.auth.Authenticator
+import com.configset.common.backend.auth.AuthenticationProvider
 import io.grpc.Server
 import io.grpc.ServerInterceptors
 import io.grpc.netty.NettyServerBuilder
@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 class GrpcConfigurationServer(
     grpcConfigurationService: GrpcConfigurationService,
-    authenticator: Authenticator,
+    authenticator: AuthenticationProvider,
     port: Int,
 ) {
 
@@ -16,11 +16,14 @@ class GrpcConfigurationServer(
     private val server: Server = NettyServerBuilder.forPort(port)
         .permitKeepAliveWithoutCalls(true)
         .permitKeepAliveTime(4, TimeUnit.SECONDS)
-        .addService(ServerInterceptors.intercept(grpcConfigurationService,
-            LoggingInterceptor(),
-            AuthInterceptor(authenticator)))
+        .addService(
+            ServerInterceptors.intercept(
+                grpcConfigurationService,
+                LoggingInterceptor(),
+                AuthInterceptor(authenticator)
+            )
+        )
         .build()
-
 
     fun start() {
         server.start()

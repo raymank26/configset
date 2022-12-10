@@ -1,8 +1,9 @@
 package com.configset.dashboard.property
 
+import com.configset.common.backend.auth.UserInfo
+import com.configset.common.client.extension.createLoggerStatic
 import com.configset.dashboard.ServerApiGateway
 import com.configset.dashboard.util.RequestIdProducer
-import com.configset.sdk.extension.createLoggerStatic
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper
@@ -21,7 +22,7 @@ class PropertyImportService(
         requestId: String,
         appName: String,
         properties: String,
-        accessToken: String,
+        userInfo: UserInfo,
     ) {
         val root = try {
             xmlMapper.readValue(properties, PropertiesXml::class.java)
@@ -30,10 +31,10 @@ class PropertyImportService(
             throw ImportErrorType.ILLEGAL_FORMAT.throwException()
         }
         var curRequestId = requestId
-        val hosts = serverApiGateway.listHosts(accessToken).toSet()
+        val hosts = serverApiGateway.listHosts(userInfo).toSet()
         for (property in root.properties) {
             if (!hosts.contains(property.host)) {
-                serverApiGateway.createHost(curRequestId, property.host, accessToken)
+                serverApiGateway.createHost(curRequestId, property.host, userInfo)
                 curRequestId = requestIdProducer.nextRequestId(curRequestId)
             }
 
@@ -41,7 +42,7 @@ class PropertyImportService(
                 appName,
                 property.host,
                 property.name,
-                accessToken
+                userInfo
             )
             val version = alreadyCreatedProperty?.version
 
@@ -52,7 +53,7 @@ class PropertyImportService(
                 property.name,
                 property.value,
                 version,
-                accessToken
+                userInfo
             )
         }
     }
@@ -64,7 +65,6 @@ class PropertiesXml {
     @JacksonXmlProperty(localName = "property")
     @JacksonXmlElementWrapper(useWrapping = false)
     var properties: MutableList<PropertyXml> = ArrayList()
-
 }
 
 class PropertyXml {

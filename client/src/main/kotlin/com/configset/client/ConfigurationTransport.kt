@@ -7,6 +7,7 @@ sealed class ConfigurationTransport {
         val defaultApplicationName: String,
         val backendHost: String,
         val backendPort: Int,
+        val deadlineMs: Long
     ) : ConfigurationTransport()
 
     class LocalClasspath(

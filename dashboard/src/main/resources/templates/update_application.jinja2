@@ -1,0 +1,23 @@
+{% extends "base.jinja2" %}
+{% import "macros/forms.jinja2" as forms %}
+
+{% block main %}
+    <div class="column is-4 pt-0">
+        <h3>Create/Update application</h3>
+        <div>
+            <form method="post">
+                {{ forms.input(form.getField('applicationName')) }}
+                {% if form.commonError %}
+                    <div class="application-update-error content">
+                        <p class="has-text-danger">{{ form.commonError }}</p>
+                    </div>
+                {% endif %}
+                {% if form.hasField('applicationId') %}
+                    {{ forms.hiddenInput(form.getField('applicationId')) }}
+                {% endif %}
+                {{ forms.hiddenInput(form.getField('requestId')) }}
+                <button class="button is-link application-update-button" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

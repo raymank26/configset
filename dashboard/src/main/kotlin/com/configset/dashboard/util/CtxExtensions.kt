@@ -1,12 +1,32 @@
 package com.configset.dashboard.util
 
+import com.configset.common.backend.auth.UserInfo
+import com.configset.dashboard.RequestExtender.Companion.objectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import io.javalin.http.Context
 
 fun Context.requestId() = this.formParam("requestId") ?: throw BadRequest("requestId")
 
-fun Context.accessToken() = this.header("Authorization")?.split(" ")?.getOrNull(1)
-    ?: error("No Authentication header found")
+fun Context.userInfoOrNull(): UserInfo? = this.attribute("user_info") as? UserInfo
+
+fun Context.userInfo(): UserInfo = userInfoOrNull() ?: error("No userInfo found")
 
 fun Context.formParamSafe(name: String) = this.formParam(name) ?: throw BadRequest("param.not.found", name)
 
 fun Context.queryParamSafe(name: String) = this.queryParam(name) ?: throw BadRequest("queryParam.not.found", name)
+
+fun Context.htmxRedirect(location: String) {
+    this.header("HX-Redirect", location)
+}
+
+fun Context.htmxTriggerEvent(event: HtmxEvent) {
+    val obj = this.objectMapper.createObjectNode()
+    obj.set(event.name, objectMapper.valueToTree(event.payload) as ObjectNode) as ObjectNode
+    this.header("HX-Trigger", objectMapper.writeValueAsString(obj))
+}
+
+fun Context.htmxShowAlert(text: String) {
+    htmxTriggerEvent(HtmxEvent("showAlert", mapOf("text" to text)))
+}
+
+data class HtmxEvent(val name: String, val payload: Map<String, String>)

@@ -1,7 +1,7 @@
 package com.configset.client.converter
 
 import java.io.StringReader
-import java.util.*
+import java.util.Properties
 
 class PojoConverter<T>(private val mapper: (ValuesProvider) -> T) : Converter<T> {
     override fun convert(value: String): T {
@@ -31,4 +31,3 @@ internal class ProviderProperty(private val content: String) : ValuesProvider {
         return prop.getProperty(key)!!
     }
 }
-

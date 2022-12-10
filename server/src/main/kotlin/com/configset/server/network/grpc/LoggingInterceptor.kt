@@ -1,6 +1,6 @@
 package com.configset.server.network.grpc
 
-import com.configset.sdk.extension.createLogger
+import com.configset.common.client.extension.createLogger
 import io.grpc.ForwardingServerCallListener
 import io.grpc.Metadata
 import io.grpc.ServerCall
@@ -24,9 +24,12 @@ class LoggingInterceptor : ServerInterceptor {
                     if (e is StatusRuntimeException) {
                         call.close(e.status, Metadata())
                     } else {
-                        call.close(Status.INTERNAL
-                            .withCause(e)
-                            .withDescription(e.toString()), Metadata())
+                        call.close(
+                            Status.INTERNAL
+                                .withCause(e)
+                                .withDescription(e.toString()),
+                            Metadata()
+                        )
                     }
                 }
             }

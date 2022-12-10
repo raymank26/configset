@@ -1,6 +1,8 @@
 plugins {
     id 'com.bmuschko.docker-java-application' version '6.4.0'
     id 'com.bmuschko.docker-remote-api' version '6.4.0'
+    id 'java-test-fixtures'
+    id 'org.unbroken-dome.test-sets' version '4.0.0'
 }
 
 
@@ -11,32 +13,48 @@ apply plugin: 'application'
 
 mainClassName = "com.configset.dashboard.Main"
 
+testSets {
+    functionalTest
+}
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjvm-default=all']
+    }
+}
+
 dependencies {
-    implementation project(':sdk')
+    implementation project(':common-client')
+    implementation project(':common-backend')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: "$logbackVersion"
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "$jacksonVersion"
+    implementation group: "com.fasterxml.jackson.dataformat", name: 'jackson-dataformat-xml', version: "$jacksonDataformatVersion"
+    implementation "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+    implementation "io.javalin:javalin:$javalinVersion"
+    implementation "com.squareup.okhttp3:okhttp:$okHttpVersion"
+    implementation group: 'commons-codec', name: 'commons-codec', version: "$commonsCodecVersion"
+    implementation "com.hubspot.jinjava:jinjava:$jinjavaVersion"
+    implementation "com.google.guava:guava:$guavaVersion"
+    implementation "com.auth0:java-jwt:$authZeroVersion"
+    implementation "io.arrow-kt:arrow-core:$arrowCore"
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
 
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.1'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.6'
-    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.8.6'
-    implementation 'org.slf4j:slf4j-api:1.7.21'
-    implementation "org.koin:koin-core:2.1.5"
-    implementation "javax.annotation:javax.annotation-api:1.3.2"
-    implementation 'com.googlecode.lanterna:lanterna:3.0.2'
-    implementation 'io.javalin:javalin:3.8.0'
-    implementation "com.squareup.okhttp3:okhttp:4.5.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1"
-    implementation group: 'commons-codec', name: 'commons-codec', version: '1.14'
 
     testImplementation(testFixtures(project(":server")))
-    testImplementation 'org.awaitility:awaitility:4.0.2'
-    testImplementation 'junit:junit:4.12'
-    testImplementation group: 'io.mockk', name: 'mockk', version: '1.9.3'
-    testImplementation "org.testcontainers:testcontainers:1.12.2"
-    testImplementation "org.testcontainers:postgresql:1.12.2"
-    testImplementation "com.github.tomakehurst:wiremock-jre8:2.25.1"
-    testImplementation 'org.amshove.kluent:kluent:1.59'
-    testImplementation "io.arrow-kt:arrow-core:1.0.1"
+    testImplementation "org.awaitility:awaitility:$awaitilityVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$jupiterVersion"
+
+    testImplementation group: 'io.mockk', name: 'mockk', version: "$mockkVersion"
+    testImplementation "org.testcontainers:testcontainers:$testcontainersVersion"
+    testImplementation "org.testcontainers:postgresql:$testcontainersPostgresVersion"
+    testImplementation "com.github.tomakehurst:wiremock-jre8:$wiremockVersion"
+
+    testImplementation "org.amshove.kluent:kluent:$kluentVersion"
+    testImplementation "com.codeborne:selenide:$selenideVersion"
+    testImplementation "com.codeborne:selenide-proxy:$selenideVersion"
 }
 
 run {
@@ -111,4 +129,13 @@ task dockerBuildDefaultImage(type: DockerBuildImage) {
     dependsOn "dockerPrepareDefaultCtx"
     images.set(["configset-dashboard:${version}", 'configset-dashboard:latest'])
 }
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+    options {
+        systemProperties(System.getProperties())
+    }
+}
+
+check.dependsOn functionalTest
 

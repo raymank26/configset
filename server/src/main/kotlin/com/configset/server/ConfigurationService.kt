@@ -1,7 +1,9 @@
 package com.configset.server
 
+import com.configset.common.client.ApplicationId
 import com.configset.server.db.ConfigurationDao
 import com.configset.server.db.DbHandleFactory
+import com.configset.server.db.PropertyItemED
 import com.configset.server.db.RequestIdDao
 import com.configset.server.db.common.DbHandle
 
@@ -13,13 +15,29 @@ class ConfigurationService(
 ) {
 
     fun listApplications(): List<ApplicationED> {
-        return configurationDao.listApplications()
+        return dbHandleFactory.withHandle {
+            configurationDao.listApplications(it)
+        }
     }
 
     fun createApplication(requestId: String, appName: String): CreateApplicationResult {
         checkRequestId(requestId)
         return executeMutable(requestId, CreateApplicationResult.OK) {
             configurationDao.createApplication(it, appName)
+        }
+    }
+
+    fun deleteApplication(requestId: String, applicationName: String): DeleteApplicationResult {
+        checkRequestId(requestId)
+        return executeMutable(requestId, DeleteApplicationResult.OK) {
+            configurationDao.deleteApplication(it, applicationName)
+        }
+    }
+
+    fun updateApplication(requestId: String, id: ApplicationId, applicationName: String): UpdateApplicationResult {
+        checkRequestId(requestId)
+        return executeMutable(requestId, UpdateApplicationResult.OK) {
+            configurationDao.updateApplication(it, id, applicationName)
         }
     }
 
@@ -31,48 +49,70 @@ class ConfigurationService(
     }
 
     fun listHosts(): List<HostED> {
-        return configurationDao.listHosts()
+        return dbHandleFactory.withHandle {
+            configurationDao.listHosts(it)
+        }
     }
 
-    fun updateProperty(requestId: String, appName: String, hostName: String, propertyName: String, value: String, version: Long?): PropertyCreateResult {
+    fun updateProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        value: String,
+        version: Long?,
+    ): PropertyCreateResult {
         checkRequestId(requestId)
         return executeMutable(requestId, PropertyCreateResult.OK) {
             configurationDao.updateProperty(it, appName, propertyName, value, version, hostName)
         }
     }
 
-    fun deleteProperty(requestId: String, appName: String, hostName: String, propertyName: String, version: Long): DeletePropertyResult {
+    fun deleteProperty(
+        requestId: String,
+        appName: String,
+        hostName: String,
+        propertyName: String,
+        version: Long,
+    ): DeletePropertyResult {
         checkRequestId(requestId)
         return executeMutable(requestId, DeletePropertyResult.OK) {
             configurationDao.deleteProperty(it, appName, hostName, propertyName, version)
         }
     }
 
-    fun subscribeApplication(
-        subscriberId: String, defaultApplicationName: String, hostName: String,
-        applicationName: String, lastKnownVersion: Long,
+    fun subscribeToApplication(
+        subscriberId: String,
+        defaultApplicationName: String,
+        hostName: String,
+        applicationName: String,
+        lastKnownVersion: Long,
+        subscriber: WatchSubscriber,
     ): PropertiesChanges? {
-        return propertiesWatchDispatcher.subscribeApplication(subscriberId,
+        return propertiesWatchDispatcher.subscribeToApplication(
+            subscriberId,
             defaultApplicationName,
             hostName,
             applicationName,
-            lastKnownVersion)
+            lastKnownVersion,
+            subscriber
+        )
     }
 
-    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItem.Updated> {
-        return configurationDao.searchProperties(searchPropertyRequest)
+    fun searchProperties(searchPropertyRequest: SearchPropertyRequest): List<PropertyItemED> {
+        return dbHandleFactory.withHandle {
+            configurationDao.searchProperties(it, searchPropertyRequest)
+        }
     }
 
     fun listProperties(applicationName: String): List<String> {
-        return configurationDao.listProperties(applicationName)
+        return dbHandleFactory.withHandle {
+            configurationDao.listProperties(it, applicationName)
+        }
     }
 
     fun updateLastVersion(subscriberId: String, applicationName: String, version: Long) {
         propertiesWatchDispatcher.updateVersion(subscriberId, applicationName, version)
-    }
-
-    fun watchChanges(subscriber: WatchSubscriber) {
-        propertiesWatchDispatcher.watchChanges(subscriber)
     }
 
     fun unsubscribe(subscriberId: String) {
@@ -85,8 +125,10 @@ class ConfigurationService(
         }
     }
 
-    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItem? {
-        return configurationDao.readProperty(applicationName, hostName, propertyName)
+    fun readProperty(applicationName: String, hostName: String, propertyName: String): PropertyItemED? {
+        return dbHandleFactory.withHandle {
+            configurationDao.readProperty(it, hostName, propertyName, applicationName)
+        }
     }
 
     private fun <T> executeMutable(requestId: String, persistedValue: T, action: (DbHandle) -> T): T {
@@ -109,34 +151,6 @@ interface WatchSubscriber {
     fun pushChanges(applicationName: String, changes: PropertiesChanges)
 }
 
-sealed class PropertyItem {
-
-    abstract val applicationName: String
-    abstract val name: String
-    abstract val version: Long
-    abstract val hostName: String
-
-    data class Updated(
-            override val applicationName: String,
-            override val name: String,
-            override val hostName: String,
-            override val version: Long,
-            val value: String
-    ) : PropertyItem()
-
-    data class Deleted(
-            override val applicationName: String,
-            override val name: String,
-            override val hostName: String,
-            override val version: Long
-    ) : PropertyItem()
-}
-
-sealed class CreateApplicationResult {
-    object OK : CreateApplicationResult()
-    object ApplicationAlreadyExists : CreateApplicationResult()
-}
-
 sealed class HostCreateResult {
     object OK : HostCreateResult()
     object HostAlreadyExists : HostCreateResult()
@@ -155,10 +169,41 @@ sealed class DeletePropertyResult {
     object PropertyNotFound : DeletePropertyResult()
 }
 
-data class ApplicationED(val id: Long?, val name: String, val lastVersion: Long, val createdMs: Long, val modifiedMs: Long)
+sealed class DeleteApplicationResult {
+    object OK : DeleteApplicationResult()
+    object ApplicationNotFound : DeleteApplicationResult()
+}
 
-data class HostED(val id: Long?, val name: String, val createdMs: Long, val modifiedMs: Long)
+sealed class UpdateApplicationResult {
+    object OK : UpdateApplicationResult()
+    object ApplicationNotFound : UpdateApplicationResult()
+}
 
-data class SearchPropertyRequest(val applicationName: String?, val propertyNameQuery: String?, val propertyValueQuery: String?, val hostNameQuery: String?)
+sealed class CreateApplicationResult {
+    object OK : CreateApplicationResult()
+    object ApplicationAlreadyExists : CreateApplicationResult()
+}
+
+data class ApplicationED(
+    val id: ApplicationId,
+    val name: String,
+    val lastVersion: Long,
+    val createdMs: Long,
+    val modifiedMs: Long,
+)
+
+data class HostED(
+    val id: Long?,
+    val name: String,
+    val createdMs: Long,
+    val modifiedMs: Long,
+)
+
+data class SearchPropertyRequest(
+    val applicationName: String?,
+    val propertyNameQuery: String?,
+    val propertyValueQuery: String?,
+    val hostNameQuery: String?,
+)
 
 data class TableMetaED(val version: Long)

@@ -1,7 +1,7 @@
 package com.configset.client.repository.grpc
 
-import com.configset.sdk.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.ConfigurationServiceGrpc
 
-fun interface GrpcClientFactory {
+interface GrpcClientFactory {
     fun createAsyncClient(): ConfigurationServiceGrpc.ConfigurationServiceStub
 }

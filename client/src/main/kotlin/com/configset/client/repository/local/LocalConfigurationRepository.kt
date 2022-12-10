@@ -5,7 +5,7 @@ import com.configset.client.PropertyItem
 import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import java.io.Reader
-import java.util.*
+import java.util.Properties
 
 class LocalConfigurationRepository(private val readerProvider: () -> Reader) : ConfigurationRepository {
 

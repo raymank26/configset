@@ -2,7 +2,8 @@ rootProject.name = 'configset'
 
 include 'server'
 include 'client'
-include 'sdk'
+include 'common-client'
 include 'dashboard'
 include 'sample'
+include 'common-backend'
 

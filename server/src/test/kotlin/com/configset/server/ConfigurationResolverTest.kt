@@ -1,7 +1,7 @@
 package com.configset.server
 
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 private const val defaultApp = "music"
 private const val targetApp = "web"
@@ -9,12 +9,12 @@ private const val targetApp = "web"
 class ConfigurationResolverTest {
 
     private val properties = mapOf(
-            "srvd1" to 1,
-            "host-music" to 2,
-            "host-web" to 3,
-            "test.group" to 4,
-            "group" to 5,
-            "anton.ermak" to 6
+        "srvd1" to 1,
+        "host-music" to 2,
+        "host-web" to 3,
+        "test.group" to 4,
+        "group" to 5,
+        "anton.ermak" to 6
     )
 
     @Test

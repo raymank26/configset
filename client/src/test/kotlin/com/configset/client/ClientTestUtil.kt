@@ -1,51 +1,35 @@
 package com.configset.client
 
-import com.configset.sdk.client.ConfigSetClient
-import com.configset.sdk.proto.ConfigurationServiceGrpc
-import com.configset.sdk.proto.PropertiesChangesResponse
-import com.configset.sdk.proto.PropertyItem
-import com.configset.sdk.proto.WatchRequest
+import com.configset.client.proto.ConfigurationServiceGrpc
+import com.configset.client.proto.PropertiesChangesResponse
+import com.configset.client.proto.PropertyItem
+import com.configset.client.proto.WatchRequest
+import com.configset.common.client.ConfigSetClient
+import com.configset.common.client.DeadlineInterceptor
+import io.grpc.ManagedChannel
+import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder
 import io.grpc.inprocess.InProcessServerBuilder
 import io.grpc.stub.StreamObserver
-import io.grpc.testing.GrpcCleanupRule
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.concurrent.thread
 
-class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
+class ClientTestUtil {
 
-    var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
+    lateinit var asyncClient: ConfigurationServiceGrpc.ConfigurationServiceStub
     private var updateVersion = AtomicLong()
     private val cmdQueue = LinkedBlockingQueue<Payload>()
+    private lateinit var channel: ManagedChannel
+    private lateinit var server: Server
 
     private val service = object : ConfigurationServiceGrpc.ConfigurationServiceImplBase() {
 
-        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
-            var isShuttedDown = false
+        @Volatile
+        var isShuttedDown = false
 
-            fun startSubscription(responseObserver: StreamObserver<PropertiesChangesResponse>) {
-                thread {
-                    val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
-                        (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
-                    } else {
-                        updateVersion.get()
-                    }
-                    responseObserver.onNext(PropertiesChangesResponse.newBuilder()
-                        .setApplicationName(APP_NAME)
-                        .setLastVersion(lastVersion)
-                        .build())
-                    while (!isShuttedDown) {
-                        when (val cmd = cmdQueue.take()) {
-                            Payload.DropConnection -> {
-                                isShuttedDown = true
-                                responseObserver.onCompleted()
-                            }
-                            is Payload.Msg -> responseObserver.onNext(cmd.data)
-                        }
-                    }
-                }
-            }
+        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>):
+                StreamObserver<WatchRequest> {
 
             return object : StreamObserver<WatchRequest> {
                 override fun onNext(value: WatchRequest) {
@@ -66,14 +50,44 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
                 override fun onCompleted() {
                     isShuttedDown = true
                 }
+
+                private fun startSubscription(responseObserver: StreamObserver<PropertiesChangesResponse>) {
+                    thread {
+                        val lastVersion = if (!cmdQueue.isEmpty() && cmdQueue.element() is Payload.Msg) {
+                            (cmdQueue.element() as Payload.Msg).data.lastVersion - 1
+                        } else {
+                            updateVersion.get()
+                        }
+                        responseObserver.onNext(
+                            PropertiesChangesResponse.newBuilder()
+                                .setApplicationName(APP_NAME)
+                                .setLastVersion(lastVersion)
+                                .build()
+                        )
+                        while (!isShuttedDown) {
+                            when (val cmd = cmdQueue.take()) {
+                                Payload.DropConnection -> {
+                                    responseObserver.onCompleted()
+                                    return@thread
+                                }
+
+                                is Payload.Msg -> responseObserver.onNext(cmd.data)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    init {
-        grpcCleanup.register(InProcessServerBuilder.forName("mytest")
-            .directExecutor().addService(service).build().start())
-        val channel = grpcCleanup.register(InProcessChannelBuilder.forName("mytest").directExecutor().build())
+    fun start() {
+        server = InProcessServerBuilder.forName("mytest")
+            .addService(service)
+            .build()
+            .start()
+        channel = InProcessChannelBuilder.forName("mytest")
+            .intercept(DeadlineInterceptor(10_000))
+            .build()
         asyncClient = ConfigSetClient(channel).asyncClient
     }
 
@@ -84,18 +98,23 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
     ) {
 
         val version = updateVersion.incrementAndGet()
-        cmdQueue.add(Payload.Msg(PropertiesChangesResponse.newBuilder()
-            .setApplicationName(appName)
-            .setLastVersion(version)
-            .addItems(PropertyItem.newBuilder()
-                .setApplicationName(appName)
-                .setPropertyName(propertyName)
-                .setPropertyValue(propertyValue)
-                .setVersion(version)
-                .setUpdateType(PropertyItem.UpdateType.UPDATE)
-                .build())
-            .build()
-        ))
+        cmdQueue.add(
+            Payload.Msg(
+                PropertiesChangesResponse.newBuilder()
+                    .setApplicationName(appName)
+                    .setLastVersion(version)
+                    .addItems(
+                        PropertyItem.newBuilder()
+                            .setApplicationName(appName)
+                            .setPropertyName(propertyName)
+                            .setPropertyValue(propertyValue)
+                            .setVersion(version)
+                            .setDeleted(false)
+                            .build()
+                    )
+                    .build()
+            )
+        )
     }
 
     fun pushPropertyDeleted(
@@ -104,21 +123,31 @@ class ClientTestUtil(grpcCleanup: GrpcCleanupRule) {
     ) {
 
         val version = updateVersion.incrementAndGet()
-        cmdQueue.add(Payload.Msg(PropertiesChangesResponse.newBuilder()
-            .setApplicationName(appName)
-            .setLastVersion(version)
-            .addItems(PropertyItem.newBuilder()
-                .setApplicationName(appName)
-                .setPropertyName(propertyName)
-                .setVersion(version)
-                .setUpdateType(PropertyItem.UpdateType.DELETE)
-                .build())
-            .build())
+        cmdQueue.add(
+            Payload.Msg(
+                PropertiesChangesResponse.newBuilder()
+                    .setApplicationName(appName)
+                    .setLastVersion(version)
+                    .addItems(
+                        PropertyItem.newBuilder()
+                            .setApplicationName(appName)
+                            .setPropertyName(propertyName)
+                            .setVersion(version)
+                            .setDeleted(true)
+                            .build()
+                    )
+                    .build()
+            )
         )
     }
 
     fun dropConnection() {
         cmdQueue.add(Payload.DropConnection)
+    }
+
+    fun stop() {
+        channel.shutdown()
+        server.shutdown()
     }
 }
 

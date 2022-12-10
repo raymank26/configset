@@ -12,6 +12,7 @@ services:
       - "db_type=postgres"
       - "authenticator_type=oauth"
       - "oauth_provider_url=http://keycloack:8080/auth/realms/demo"
+      - "client_id=demo-clientId"
       - "jdbc_url=jdbc:postgresql://db:5432/postgres?user=postgres&password=1234"
       - "log.level=DEBUG"
   dashboard:
@@ -23,12 +24,26 @@ services:
       - "config_server.hostname=backend"
       - "config_server.port=8080"
       - "client.keycloack_url=http://localhost:8077"
-      - "client.keycloack_realm=demo"
-      - "client.keycloack_clientId=demo-clientId"
+      - "templates.file.path=/templates"
+      - "js.file.path=/js"
+      - "auth.realm_uri=http://keycloack:8080/auth/realms/demo"
+      - "auth.auth_uri=http://localhost:8077/auth/realms/demo/protocol/openid-connect/auth"
+      - "auth.request_token_uri=http://keycloack:8080/auth/realms/demo/protocol/openid-connect/token"
+      - "auth.redirect_uri=http://localhost:8188/auth/redirect"
+      - "auth.client_id=demo-clientId"
+      - "auth.secret_key=e953a3fd-7390-4b23-8029-1294af5551f8"
+    volumes:
+      - "./dashboard/src/main/resources/templates:/templates"
+      - "./dashboard/src/main/resources/js:/js"
   keycloack:
     image: "quay.io/keycloak/keycloak:15.0.1"
     ports:
       - "8077:8080"
+    volumes:
+      - keycloak-data-volume:/var/lib/keycloak/data
     environment:
       - "KEYCLOAK_USER=admin"
       - "KEYCLOAK_PASSWORD=admin"
+
+volumes:
+  keycloak-data-volume:

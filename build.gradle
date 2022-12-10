@@ -12,14 +12,13 @@ buildscript {
     }()
 
     ext {
-        kotlin_version = '1.6.10'
+        kotlin_version = "$kotlinVersion"
         mavenUrl = localProperties.getProperty("mavenUrl")
         mavenLogin = localProperties.getProperty("mavenLogin")
         mavenPassword = localProperties.getProperty("mavenPassword")
     }
     repositories {
         mavenCentral()
-        jcenter()
         mavenLocal()
     }
     dependencies {
@@ -27,14 +26,21 @@ buildscript {
     }
 }
 
-apply plugin: 'maven-publish'
+plugins {
+    id("org.jmailen.kotlinter") version "3.7.0"
+}
 
-allprojects {
+subprojects {
     apply plugin: 'kotlin'
+    apply plugin: 'maven-publish'
+    apply plugin: 'org.jmailen.kotlinter'
 
     repositories {
         mavenLocal()
-        jcenter()
         mavenCentral()
+    }
+
+    kotlinter {
+        disabledRules = ['indent']
     }
 }

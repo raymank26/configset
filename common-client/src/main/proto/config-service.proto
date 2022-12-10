@@ -1,0 +1,206 @@
+syntax = "proto3";
+option java_multiple_files = true;
+
+package com.configset.client.proto;
+
+message ApplicationCreateRequest {
+  string applicationName = 1;
+  string requestId = 2;
+}
+
+message ApplicationDeleteRequest {
+  string applicationName = 1;
+  string requestId = 2;
+}
+
+message ApplicationDeletedResponse {
+  Type type = 1;
+  enum Type {
+    UNKNOWN = 0;
+    OK = 1;
+    APPLICATION_NOT_FOUND = 2;
+  }
+}
+
+message ApplicationUpdateRequest {
+  string id = 1;
+  string applicationName = 2;
+  string requestId = 3;
+}
+
+message ApplicationUpdatedResponse {
+  Type type = 1;
+  enum Type {
+    UNKNOWN = 0;
+    OK = 1;
+    APPLICATION_NOT_FOUND = 2;
+  }
+}
+
+message ApplicationCreatedResponse {
+  Type type = 1;
+  enum Type {
+    UNKNOWN = 0;
+    OK = 1;
+    ALREADY_EXISTS = 2;
+  }
+}
+
+message SubscriberInfoRequest {
+    string id = 1;
+}
+
+message PropertyItem {
+  string id = 1;
+  string applicationName = 2;
+  string hostName = 3;
+  string propertyName = 4;
+  string propertyValue = 5;
+  int64 version = 6;
+  bool deleted = 7;
+}
+
+message EmptyRequest {
+}
+
+message Application {
+  string id = 1;
+  string applicationName = 2;
+}
+
+message ApplicationsResponse {
+  repeated Application applications = 1;
+}
+
+message CreateHostRequest {
+  string hostName = 1;
+  string requestId = 2;
+}
+
+message CreateHostResponse {
+    Type type = 1;
+    enum Type {
+      UNKNOWN = 0;
+      OK = 1;
+      HOST_ALREADY_EXISTS = 2;
+    }
+}
+
+message UpdatePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+    int64 version = 5;
+    string requestId = 6;
+}
+
+message UpdatePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+      UNKNOWN = 0;
+      OK = 1;
+      HOST_NOT_FOUND = 2;
+      APPLICATION_NOT_FOUND = 3;
+      UPDATE_CONFLICT = 4;
+    }
+}
+
+message DeletePropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string requestId = 4;
+    int64 version = 5;
+}
+
+message DeletePropertyResponse {
+    Type type = 1;
+
+    enum Type {
+      UNKNOWN = 0;
+      OK = 1;
+      PROPERTY_NOT_FOUND = 2;
+      DELETE_CONFLICT = 3;
+    }
+}
+
+message ReadPropertyRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+}
+
+message ReadPropertyResponse {
+    bool hasItem = 1;
+    PropertyItem item = 2;
+}
+
+message PropertiesChangesResponse {
+    int64 lastVersion = 1;
+    string applicationName = 2;
+    repeated PropertyItem items = 3;
+}
+
+message WatchRequest {
+    Type type = 1;
+    UpdateReceived updateReceived = 2;
+    SubscribeApplicationRequest subscribeApplicationRequest = 3;
+
+    enum Type {
+      UNKNOWN = 0;
+      UPDATE_RECEIVED = 1;
+      SUBSCRIBE_APPLICATION = 2;
+    }
+}
+
+message SubscribeApplicationRequest {
+    string hostName = 1;
+    string applicationName = 3;
+    string defaultApplicationName = 4;
+    int64 lastKnownVersion = 5;
+}
+
+message UpdateReceived {
+    string applicationName = 1;
+    int64 version = 2;
+}
+
+message SearchPropertiesRequest {
+    string applicationName = 1;
+    string hostName = 2;
+    string propertyName = 3;
+    string propertyValue = 4;
+}
+
+message SearchPropertiesResponse {
+  repeated PropertyItem items = 1;
+}
+
+message ListPropertiesRequest {
+    string applicationName = 1;
+}
+
+message ListPropertiesResponse {
+    repeated string propertyNames = 1;
+}
+
+message ListHostsResponse {
+    repeated string hostNames = 1;
+}
+
+service ConfigurationService {
+  rpc createApplication (ApplicationCreateRequest) returns (ApplicationCreatedResponse);
+  rpc deleteApplication (ApplicationDeleteRequest) returns (ApplicationDeletedResponse);
+  rpc updateApplication (ApplicationUpdateRequest) returns (ApplicationUpdatedResponse);
+  rpc listApplications (EmptyRequest) returns (ApplicationsResponse);
+  rpc searchProperties (SearchPropertiesRequest) returns (SearchPropertiesResponse);
+  rpc listProperties (ListPropertiesRequest) returns (ListPropertiesResponse);
+  rpc createHost (CreateHostRequest) returns (CreateHostResponse);
+  rpc listHosts (EmptyRequest) returns (ListHostsResponse);
+  rpc readProperty (ReadPropertyRequest) returns (ReadPropertyResponse);
+  rpc updateProperty (UpdatePropertyRequest) returns (UpdatePropertyResponse);
+  rpc deleteProperty (DeletePropertyRequest) returns (DeletePropertyResponse);
+  rpc watchChanges (stream WatchRequest) returns (stream PropertiesChangesResponse);
+}

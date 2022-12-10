@@ -2,7 +2,7 @@ package com.configset.client
 
 import com.configset.client.converter.Converter
 import com.configset.client.repository.ConfigApplication
-import com.configset.sdk.extension.createLoggerStatic
+import com.configset.common.client.extension.createLoggerStatic
 
 private val LOG = createLoggerStatic<ApplicationRegistry>()
 
@@ -25,7 +25,7 @@ class ApplicationRegistry(
     @Synchronized
     private fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
-            LOG.info("Update come for appName = ${appName}, property = $propertyItem")
+            LOG.info("Update come for appName = $appName, property = $propertyItem")
             val dynValue = snapshot[propertyItem.name]
             if (dynValue != null) {
                 dynValue.observable.push(propertyItem.value)

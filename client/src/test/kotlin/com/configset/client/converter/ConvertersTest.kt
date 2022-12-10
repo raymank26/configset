@@ -7,10 +7,12 @@ class ConvertersTest {
 
     @Test
     fun testPropertiesConverter() {
-        val result = Converters.PROPERTIES.convert("""
+        val result = Converters.PROPERTIES.convert(
+            """
             str=value
             foo=bar
-        """.trimIndent())
+            """.trimIndent()
+        )
 
         result["str"] shouldBeEqualTo "value"
         result["foo"] shouldBeEqualTo "bar"
@@ -28,12 +30,20 @@ class ConvertersTest {
 
     @Test
     fun testPojo() {
-        val converter = PojoConverter { PojoExample(it.getString("foo"), it.getLong("bar"), it.getValueBy("bazz", Converters.LIST_STRING)) }
-        converter.convert("""
+        val converter = PojoConverter {
+            PojoExample(
+                it.getString("foo"),
+                it.getLong("bar"),
+                it.getValueBy("bazz", Converters.LIST_STRING)
+            )
+        }
+        converter.convert(
+            """
             foo=someValue
             bar=123
             bazz=a,b,c,d
-        """.trimIndent()) shouldBeEqualTo PojoExample("someValue", 123L, listOf("a", "b", "c", "d"))
+            """.trimIndent()
+        ) shouldBeEqualTo PojoExample("someValue", 123L, listOf("a", "b", "c", "d"))
     }
 
     @Test
