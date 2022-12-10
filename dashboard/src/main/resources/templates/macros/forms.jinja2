@@ -1,0 +1,70 @@
+{% macro input(field, inlineLabel=false) -%}
+    <div class="field" xmlns="http://www.w3.org/1999/html">
+        {% if not field.inlineLabel %}
+            <label class="label">{{ field.label }}</label>
+        {% endif %}
+        <div class="control">
+            <input class="input {% if field.error %}is-danger{% endif %} {% if field.readonly %}is-static{% endif %}"
+                   name="{{ field.name }}"
+                   value="{{ field.value }}"
+                   autocomplete="off"
+                    {% if field.inlineLabel %} placeholder="{{ field.label }}" {% endif %}
+                    {% if field.readonly %} readonly {% endif %}
+            />
+        </div>
+        {% if field.error %}
+            <p class="help is-danger">{{ field.error }}</p>
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro autocomplete_input(field, autocomplete_url, inlineLabel=false) -%}
+    <div class="field" xmlns="http://www.w3.org/1999/html"
+         x-data="autocompleteForm">
+        {% if not field.inlineLabel %}
+            <label class="label">{{ field.label }}</label>
+        {% endif %}
+        <div class="control">
+            <input class="input {% if field.error %}is-danger{% endif %} {% if field.readonly %}is-static{% endif %}"
+                   type="search"
+                   autocomplete="off"
+                   name="{{ field.name }}"
+                   x-model="value"
+                   data-initialValue="{{ field.value }}"
+                   x-init="value = $el.dataset.initialvalue"
+                   hx-push-url="false"
+                   hx-get="{{ autocomplete_url }}"
+                   hx-trigger="autocompleteAjaxTrigger delay:300ms"
+                   x-bind:hx-target="'#' + autocompleteContainerId"
+                   x-ref="autocompleteInput"
+                    {% if field.inlineLabel %} placeholder="{{ field.label }}" {% endif %}
+                    {% if field.readonly %} readonly {% endif %}
+            />
+            <div class="autocomplete-items"
+                 x-on:htmx:after-swap="$dispatch('autocompleteItemsUpdated')"
+                 x-show="autocompleteItems.length > 0"
+                 x-ref="autocompleteResult"
+                 x-bind:id="autocompleteContainerId"></div>
+        </div>
+        {% if field.error %}
+            <p class="help is-danger">{{ field.error }}</p>
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro hiddenInput(field) -%}
+    <input type="hidden" name="{{ field.name }}" value="{{ field.value }}"/>
+{%- endmacro %}
+
+{% macro textarea(field) -%}
+    <div class="field">
+        <label class="label">{{ field.label }}</label>
+        <div class="control">
+    <textarea class="textarea {% if field.error %}is-danger{% endif %}" name="{{ field.name }}"
+            {% if field.readonly %} readonly {% endif %}>{{ field.value }}</textarea>
+        </div>
+        {% if field.error %}
+            <p class="help is-danger">{{ field.error }}</p>
+        {% endif %}
+    </div>
+{%- endmacro %}

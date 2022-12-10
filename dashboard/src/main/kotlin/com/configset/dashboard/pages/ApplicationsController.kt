@@ -54,7 +54,7 @@ class ApplicationsController(
     fun bind() {
         get("applications") { ctx ->
             val applications = serverApiGateway.listApplications(ctx.userInfo())
-            ctx.html(templateRenderer.render(ctx, "applications.html", mapOf("applications" to applications)))
+            ctx.html(templateRenderer.render(ctx, "applications.jinja2", mapOf("applications" to applications)))
         }
         get("applications/create") { ctx ->
             if (!ctx.userInfo().roles.contains(Admin)) {
@@ -62,7 +62,7 @@ class ApplicationsController(
             }
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_application.html",
+                    ctx, "update_application.jinja2",
                     mapOf(
                         "form" to applicationForm.withDefaultValues(
                             mapOf(
@@ -83,7 +83,7 @@ class ApplicationsController(
                 ?: notFound()
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_application.html",
+                    ctx, "update_application.jinja2",
                     mapOf(
                         "form" to applicationForm.withDefaultValues(
                             mapOf(
@@ -129,7 +129,7 @@ class ApplicationsController(
                     is UpdateError.FormValidationError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_application.html",
+                                ctx, "update_application.jinja2",
                                 mapOf(
                                     "form" to updateError.form
                                 )
@@ -139,7 +139,7 @@ class ApplicationsController(
                     is UpdateError.ServerApiError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_application.html",
+                                ctx, "update_application.jinja2",
                                 mapOf(
                                     "form" to updateError.form
                                         .withCommonError(updateError.error.name)
@@ -172,7 +172,7 @@ class ApplicationsController(
                 .map { it.name }
             ctx.html(
                 templateRenderer.render(
-                    ctx, "autocomplete_items.html",
+                    ctx, "autocomplete_items.jinja2",
                     mapOf(
                         "items" to foundApplications
                     )

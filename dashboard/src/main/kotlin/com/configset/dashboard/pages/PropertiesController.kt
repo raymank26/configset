@@ -136,8 +136,8 @@ class PropertiesController(
             }.orNull()!!
 
             val templateName = if (ctx.header("HX-Request") == "true")
-                "properties_search_result_block.html"
-            else "properties.html"
+                "properties_search_result_block.jinja2"
+            else "properties.jinja2"
 
             ctx.html(
                 templateRenderer.render(
@@ -153,7 +153,7 @@ class PropertiesController(
         get("properties/create") { ctx ->
             ctx.html(
                 templateRenderer.render(
-                    ctx, "update_property.html",
+                    ctx, "update_property.jinja2",
                     mapOf(
                         "form" to propertyForm.withDefaultValues(
                             mapOf("requestId" to requestIdProducer.nextRequestId())
@@ -181,7 +181,7 @@ class PropertiesController(
                 )
             ).withReadonlyFields(propertyFormUpdateReadOnlyFields)
 
-            ctx.html(templateRenderer.render(ctx, "update_property.html", mapOf("form" to form)))
+            ctx.html(templateRenderer.render(ctx, "update_property.jinja2", mapOf("form" to form)))
         }
 
         delete("properties/delete") { ctx ->
@@ -245,7 +245,7 @@ class PropertiesController(
                     is UpdateError.FormValidationError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_property.html",
+                                ctx, "update_property.jinja2",
                                 mapOf(
                                     "form" to errorType.form
                                         .withReadonlyFields(readonlyFields),
@@ -256,7 +256,7 @@ class PropertiesController(
                     is UpdateError.ServerApiError ->
                         ctx.html(
                             templateRenderer.render(
-                                ctx, "update_property.html",
+                                ctx, "update_property.jinja2",
                                 mapOf(
                                     "form" to errorType.form
                                         .withCommonError(errorType.error.name)
