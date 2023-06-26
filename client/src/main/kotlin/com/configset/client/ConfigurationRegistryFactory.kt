@@ -5,6 +5,7 @@ import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
+import com.configset.client.repository.rewrite.RewriteConfigurationRepository
 import com.configset.common.client.DeadlineInterceptor
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
@@ -17,6 +18,16 @@ object ConfigurationRegistryFactory {
             is ConfigurationTransport.LocalClasspath -> createLocalClasspath(transport)
         }
         return getConfiguration(repository)
+    }
+
+    fun getLocalRewriteConfiguration(localClasspath: ConfigurationTransport.LocalClasspath):
+            RewriteConfigurationRegistry {
+
+        val localRepository = createLocalClasspath(localClasspath)
+        localRepository.start()
+
+        val rewriteRepository = RewriteConfigurationRepository(localRepository)
+        return RewriteConfigurationRegistry(rewriteRepository)
     }
 
     internal fun getConfiguration(repository: ConfigurationRepository): ConfigurationRegistry {

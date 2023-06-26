@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 private typealias AppName = String
 
-class ConfigurationRegistry(
+open class ConfigurationRegistry(
     private val configurationRepository: ConfigurationRepository,
 ) {
 
