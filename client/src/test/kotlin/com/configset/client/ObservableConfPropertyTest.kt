@@ -9,7 +9,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
-import org.junit.Assert
 import org.junit.jupiter.api.Test
 
 class ObservableConfPropertyTest {
@@ -143,7 +142,7 @@ class ObservableConfPropertyTest {
         val property = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ ->
-                Assert.fail("should not be called") as Nothing
+                error("Not reachable")
             },
             name = "property.name",
             defaultValue = null,

@@ -4,6 +4,7 @@ import com.configset.client.converter.Converters
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -57,6 +58,25 @@ class ClientTest : BaseClientTest() {
 
         Awaitility.await().untilAsserted { deleteCaught.get() shouldBe true }
         Awaitility.await().untilAsserted { called.get() shouldBe 2 }
+    }
+
+    @Test
+    fun shouldHandleNotNullProperty() {
+        val propertyName = "configuration.property"
+        clientUtil.pushPropertyUpdate(APP_NAME, propertyName, "text")
+
+        Awaitility.await().untilAsserted {
+            defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING)
+                .getValue() shouldBeEqualTo "text"
+        }
+    }
+
+    @Test
+    fun shouldThrowExceptionIfPropertyNotFound() {
+        val propertyName = "configuration.property"
+        Assertions.assertThrows(Exception::class.java) {
+            defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING).getValue()
+        }
     }
 
     @Test

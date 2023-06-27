@@ -6,7 +6,7 @@ import com.configset.client.repository.ConfigurationRepository
 
 class ObservableConfiguration<T : Configuration>(
     private val configurationRegistry: ConfigurationRegistry<T>,
-    appName: String,
+    private val appName: String,
     configurationRepository: ConfigurationRepository,
 ) : UpdatableConfiguration {
 
@@ -30,7 +30,7 @@ class ObservableConfiguration<T : Configuration>(
     private fun updatePropertyInternal(
         appName: String,
         name: String,
-        value: String?
+        value: String?,
     ) {
         registry.updateState(listOf(PropertyItem(appName, name, 1L, value)))
     }
@@ -41,6 +41,13 @@ class ObservableConfiguration<T : Configuration>(
 
     override fun <T> getConfProperty(name: String, converter: Converter<T>): ConfProperty<T?> {
         return registry.getConfProperty(name, converter)
+    }
+
+    override fun <T> getConfPropertyNotNull(name: String, converter: Converter<T>): ConfProperty<T> {
+        return registry.getConfProperty(name, converter).map {
+            require(it != null) { "Cannot find property for app = $appName, name = $name" }
+            it
+        }
     }
 
     override fun <T> getConfProperty(name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
