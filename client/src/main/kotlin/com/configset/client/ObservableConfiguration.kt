@@ -10,10 +10,13 @@ class ObservableConfiguration<T : Configuration>(
     configurationRepository: ConfigurationRepository,
 ) : UpdatableConfiguration {
 
-    private val registry =
-        ApplicationRegistry(configurationRepository.subscribeToProperties(appName)) { appName, propertyName ->
-            getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
-        }
+    private val resolver = PropertyFullResolver { appName, propertyName ->
+        getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
+    }
+
+    private val registry = ApplicationRegistry(configurationRepository.subscribeToProperties(appName), resolver)
+
+    private val interfaceFactory = InterfaceFactory(resolver)
 
     override fun updateProperty(appName: String, name: String, value: String) {
         updatePropertyInternal(appName, name, value)
@@ -42,5 +45,9 @@ class ObservableConfiguration<T : Configuration>(
 
     override fun <T> getConfProperty(name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
         return registry.getConfProperty(name, converter, defaultValue)
+    }
+
+    override fun <T> getConfPropertyInterface(name: String, cls: Class<T>): T {
+        return interfaceFactory.getInterfaceConfProperty(getConfProperty(name, Converters.STRING), cls)
     }
 }

@@ -20,13 +20,16 @@ class ObservableConfProperty<T>(
 
     init {
         evaluate(configurationSnapshot.get(name)?.value)
-        val subscriber = Subscriber<String?> { value -> evaluate(value) }
+        val subscriber = Subscriber<String?> { value ->
+            evaluate(value)
+            fireListeners(state.value.value)
+        }
 
         configurationSnapshot.subscribe(name, subscriber)
     }
 
     override fun getValue(): T {
-        return state.value
+        return state.value.value
     }
 
     @Synchronized
@@ -41,6 +44,7 @@ class ObservableConfProperty<T>(
                 if (token is Link) {
                     val sub = valueDependencyResolver.getConfProperty(token.appName, token.propertyName).subscribe {
                         evaluate(value)
+                        fireListeners(state.value.value)
                     }
                     depSubscriptions.add(sub)
                 }
@@ -49,8 +53,7 @@ class ObservableConfProperty<T>(
         } else {
             null
         }
-        state = PropertyState(convertSafely(currentValueStr), depSubscriptions)
-        fireListeners(state.value)
+        state = PropertyState(lazy { convertSafely(currentValueStr) }, depSubscriptions)
     }
 
     @Synchronized
@@ -89,4 +92,4 @@ class ObservableConfProperty<T>(
     }
 }
 
-data class PropertyState<T>(val value: T, val dependencySubscriptions: List<Subscription>)
+data class PropertyState<T>(val value: Lazy<T>, val dependencySubscriptions: List<Subscription>)
