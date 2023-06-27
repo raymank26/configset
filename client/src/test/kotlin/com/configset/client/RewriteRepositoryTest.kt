@@ -21,7 +21,7 @@ class RewriteRepositoryTest {
         println(targetPriceProperty.getValue())
 
         // when
-        rewriteRegistry.updateProperty("someApp", "targetPrice", "6")
+        rewriteRegistry.getConfiguration("someApp").updateProperty("someApp", "targetPrice", "6")
 
         // then
         println(targetPriceProperty.getValue())
@@ -47,7 +47,7 @@ class RewriteRepositoryTest {
         println(targetPriceProperty.getValue())
 
         // when
-        rewriteRegistry.updateProperty("someApp", "targetPrice", "6")
+        rewriteRegistry.getConfiguration("someApp").updateProperty("someApp", "targetPrice", "6")
 
         // then
         Awaitility.await().untilAsserted { subscriptionCalled shouldBe true }
@@ -68,7 +68,7 @@ class RewriteRepositoryTest {
         println(targetPriceProperty.getValue())
 
         // when
-        rewriteRegistry.deleteProperty("someApp", "targetPrice")
+        rewriteRegistry.getConfiguration("someApp").deleteProperty("someApp", "targetPrice")
 
         // then
         Awaitility.await().untilAsserted { targetPriceProperty.getValue() shouldBe null }

@@ -5,14 +5,13 @@ import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
-import com.configset.client.repository.rewrite.RewriteConfigurationRepository
 import com.configset.common.client.DeadlineInterceptor
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 
 object ConfigurationRegistryFactory {
 
-    fun getConfiguration(transport: ConfigurationTransport): ConfigurationRegistry {
+    fun getConfiguration(transport: ConfigurationTransport): ConfigurationRegistry<Configuration> {
         val repository = when (transport) {
             is ConfigurationTransport.RemoteGrpc -> createGrpcConfiguration(transport)
             is ConfigurationTransport.LocalClasspath -> createLocalClasspath(transport)
@@ -21,17 +20,16 @@ object ConfigurationRegistryFactory {
     }
 
     fun getLocalRewriteConfiguration(localClasspath: ConfigurationTransport.LocalClasspath):
-            RewriteConfigurationRegistry {
+            ConfigurationRegistry<UpdatableConfiguration> {
 
         val localRepository = createLocalClasspath(localClasspath)
         localRepository.start()
 
-        val rewriteRepository = RewriteConfigurationRepository(localRepository)
-        return RewriteConfigurationRegistry(rewriteRepository)
+        return getConfiguration(localRepository)
     }
 
-    internal fun getConfiguration(repository: ConfigurationRepository): ConfigurationRegistry {
-        val registry = ConfigurationRegistry(repository)
+    internal fun <T : Configuration> getConfiguration(repository: ConfigurationRepository): ConfigurationRegistry<T> {
+        val registry = ConfigurationRegistry<T>(repository)
         registry.start()
         return registry
     }

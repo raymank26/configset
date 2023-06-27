@@ -5,22 +5,23 @@ import java.util.concurrent.ConcurrentHashMap
 
 private typealias AppName = String
 
-open class ConfigurationRegistry(
+open class ConfigurationRegistry<T : Configuration>(
     private val configurationRepository: ConfigurationRepository,
 ) {
 
-    private val appConfigs = ConcurrentHashMap<AppName, Configuration>()
+    private val appConfigs = ConcurrentHashMap<AppName, T>()
 
     fun start() {
         configurationRepository.start()
     }
 
-    fun getConfiguration(appName: String): Configuration {
-        return appConfigs.getOrPut(appName) {
-            val conf = ObservableConfiguration(this, appName, configurationRepository)
+    fun getConfiguration(appName: String): T {
+        val a: T = appConfigs.getOrPut<String, T>(appName) {
+            val conf: ObservableConfiguration<T> = ObservableConfiguration(this, appName, configurationRepository)
             conf.start()
-            conf
+            (conf as T)
         }
+        return a
     }
 
     fun stop() {

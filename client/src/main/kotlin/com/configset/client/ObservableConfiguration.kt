@@ -4,11 +4,11 @@ import com.configset.client.converter.Converter
 import com.configset.client.converter.Converters
 import com.configset.client.repository.ConfigurationRepository
 
-class ObservableConfiguration(
-    private val configurationRegistry: ConfigurationRegistry,
+class ObservableConfiguration<T : Configuration>(
+    private val configurationRegistry: ConfigurationRegistry<T>,
     appName: String,
     configurationRepository: ConfigurationRepository,
-) : Configuration {
+) : UpdatableConfiguration {
 
     private val registry =
         ApplicationRegistry(configurationRepository.subscribeToProperties(appName)) { appName, propertyName ->
@@ -19,7 +19,24 @@ class ObservableConfiguration(
         registry.start()
     }
 
-    override fun getConfiguration(appName: String): Configuration {
+    override fun updateProperty(appName: String, name: String, value: String) {
+        updatePropertyInternal(appName, name, value)
+    }
+
+    override fun deleteProperty(appName: String, name: String) {
+        updatePropertyInternal(appName, name, null)
+    }
+
+    @Synchronized
+    private fun updatePropertyInternal(
+        appName: String,
+        name: String,
+        value: String?
+    ) {
+        registry.updateState(listOf(PropertyItem(appName, name, 1L, value)))
+    }
+
+    override fun getConfiguration(appName: String): T {
         return configurationRegistry.getConfiguration(appName)
     }
 

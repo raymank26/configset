@@ -22,8 +22,7 @@ class ApplicationRegistry(
         propertiesProvider.observable.onSubscribe { value -> updateState(value) }
     }
 
-    @Synchronized
-    private fun updateState(value: List<PropertyItem>) {
+    fun updateState(value: List<PropertyItem>) {
         for (propertyItem in value) {
             LOG.info("Update come for appName = $appName, property = $propertyItem")
             val dynValue = snapshot[propertyItem.name]

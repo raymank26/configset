@@ -14,7 +14,7 @@ abstract class BaseClientTest {
         registry.getConfiguration(APP_NAME)
     }
 
-    private lateinit var registry: ConfigurationRegistry
+    private lateinit var registry: ConfigurationRegistry<Configuration>
 
     @BeforeEach
     fun before() {

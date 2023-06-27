@@ -146,7 +146,7 @@ class ObservableConfPropertyTest {
             prop1=${'$'}{foo\prop2}
             prop2=${'$'}{foo\prop1}
         """.trimIndent()
-        val config: ConfigurationRegistry =
+        val config: ConfigurationRegistry<Configuration> =
             ConfigurationRegistryFactory.getConfiguration(TextConfigurationRepository(content))
         invoking {
             config.getConfiguration("foo").getConfProperty("prop2", Converters.STRING).getValue()
