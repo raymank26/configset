@@ -27,7 +27,7 @@ dependencies {
     }
     implementation project(':common-backend')
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     implementation group: 'org.jdbi', name: 'jdbi3-core', version: "$jdbiVersion"
     implementation group: 'org.jdbi', name: 'jdbi3-sqlobject', version: "$jdbiVersion"
     implementation group: 'org.jdbi', name: 'jdbi3-postgres', version: "$jdbiVersion"
