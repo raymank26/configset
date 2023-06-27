@@ -15,10 +15,6 @@ class ObservableConfiguration<T : Configuration>(
             getConfiguration(appName).getConfProperty(propertyName, Converters.STRING)
         }
 
-    fun start() {
-        registry.start()
-    }
-
     override fun updateProperty(appName: String, name: String, value: String) {
         updatePropertyInternal(appName, name, value)
     }

@@ -1,7 +1,6 @@
 package com.configset.client
 
 import com.configset.client.converter.Converters
-import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import org.amshove.kluent.invoking
 import org.amshove.kluent.should
@@ -24,7 +23,7 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.INTEGER,
-            dynamicValue = DynamicValue(expected, ChangingObservable())
+            configurationSnapshot = createOnePropertySnapshot("app", "property.name", expected)
         )
         property.getValue() shouldBeEqualTo expected.toInt()
     }
@@ -42,26 +41,38 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable())
+            configurationSnapshot = createOnePropertySnapshot(
+                "app", "property.name",
+                "some value \${linkApp\\linkName} suffix"
+            )
         )
 
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
     }
 
+    private fun createOnePropertySnapshot(
+        appName: String,
+        propertyName: String,
+        propertyValue: String
+    ): ConfigurationSnapshot {
+        return ConfigurationSnapshot(listOf(PropertyItem(appName, propertyName, 1L, propertyValue)))
+    }
+
     @Test
     fun testUnsubscription() {
-        val linkedPropertyObservable = DynamicValue<String?>("linkValue", ChangingObservable())
+        val linkedPropertySnapshot = createOnePropertySnapshot("linkApp", "linkName", "linkValue")
         val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ -> error("should not be called") },
-            name = "linked.name",
+            name = "linkName",
             defaultValue = "linkValue",
             converter = Converters.STRING,
-            dynamicValue = linkedPropertyObservable
+            configurationSnapshot = linkedPropertySnapshot
         )
-        val targetPropertyObservable = DynamicValue<String?>(
-            "some value \${linkApp\\linkName} suffix",
-            ChangingObservable()
+
+        val targetPropertyObservable = createOnePropertySnapshot(
+            "linkApp", "property.name",
+            "some value \${linkApp\\linkName} suffix"
         )
         val targetProperty = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
@@ -73,30 +84,30 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = targetPropertyObservable
+            configurationSnapshot = targetPropertyObservable
         )
 
-        targetPropertyObservable.observable.push("new value")
+        targetPropertyObservable.update(listOf(PropertyItem("linkApp", "property.name", 2L, "new value")))
 
         var subscriptionCalled = false
         targetProperty.subscribe {
             subscriptionCalled = true
         }
-        linkedPropertyObservable.observable.push("new linked value")
+        linkedPropertySnapshot.update(listOf(PropertyItem("linkApp", "linked.name", 2L, "new linked value")))
 
         subscriptionCalled shouldBe false
     }
 
     @Test
     fun testLinkUpdateRecalculation() {
-        val linkedPropertyObservable = DynamicValue<String?>("linkValue", ChangingObservable())
+        val linkedPropertyObservable = createOnePropertySnapshot("linkApp", "linked.name", "linkValue")
         val linkedProperty: ObservableConfProperty<String?> = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
             valueDependencyResolver = { _, _ -> error("should not be called") },
             name = "linked.name",
             defaultValue = "linkValue",
             converter = Converters.STRING,
-            dynamicValue = linkedPropertyObservable
+            configurationSnapshot = linkedPropertyObservable
         )
         val property = ObservableConfProperty(
             configPropertyLinkProcessor = ConfigPropertyLinkProcessor.INSTANCE,
@@ -108,7 +119,10 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.STRING,
-            dynamicValue = DynamicValue("some value \${linkApp\\linkName} suffix", ChangingObservable())
+            configurationSnapshot = createOnePropertySnapshot(
+                "linkApp", "property.name",
+                "some value \${linkApp\\linkName} suffix"
+            )
         )
         property.getValue() shouldBeEqualTo "some value linkValue suffix"
 
@@ -116,8 +130,8 @@ class ObservableConfPropertyTest {
         property.subscribe {
             subscriberInvocations++
         }
-//
-        linkedPropertyObservable.observable.push("link updated")
+
+        linkedPropertyObservable.update(listOf(PropertyItem("linkApp", "linked.name", 2L, "link updated")))
 
         property.getValue() shouldBeEqualTo "some value link updated suffix"
 
@@ -134,7 +148,7 @@ class ObservableConfPropertyTest {
             name = "property.name",
             defaultValue = null,
             converter = Converters.INTEGER,
-            dynamicValue = DynamicValue("Non integer", ChangingObservable())
+            configurationSnapshot = createOnePropertySnapshot("linkApp", "property.name", "Non integer")
         )
 
         property.getValue().shouldBeNull()
@@ -159,13 +173,13 @@ private class TextConfigurationRepository(val text: String) : ConfigurationRepos
     override fun start() {
     }
 
-    override fun subscribeToProperties(appName: String): ConfigApplication {
+    override fun subscribeToProperties(appName: String): ConfigurationSnapshot {
         val properties = text.lineSequence()
             .map { it.split('=') }
             .map { PropertyItem(appName, it[0], 1, it[1]) }
             .toList()
 
-        return ConfigApplication(appName, properties, ChangingObservable())
+        return ConfigurationSnapshot(properties)
     }
 
     override fun stop() {

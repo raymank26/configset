@@ -1,8 +1,7 @@
 package com.configset.client.repository.local
 
-import com.configset.client.ChangingObservable
+import com.configset.client.ConfigurationSnapshot
 import com.configset.client.PropertyItem
-import com.configset.client.repository.ConfigApplication
 import com.configset.client.repository.ConfigurationRepository
 import java.io.Reader
 import java.util.Properties
@@ -18,7 +17,7 @@ class LocalConfigurationRepository(private val readerProvider: () -> Reader) : C
         }
     }
 
-    override fun subscribeToProperties(appName: String): ConfigApplication {
+    override fun subscribeToProperties(appName: String): ConfigurationSnapshot {
         val appValue: MutableList<PropertyItem> = mutableListOf()
         for (propertyName in properties.stringPropertyNames()) {
             if (propertyName.startsWith(appName)) {
@@ -26,7 +25,7 @@ class LocalConfigurationRepository(private val readerProvider: () -> Reader) : C
                 appValue.add(PropertyItem(appName, nameParts[1], 0L, properties.getProperty(propertyName)))
             }
         }
-        return ConfigApplication(appName, appValue, ChangingObservable())
+        return ConfigurationSnapshot(appValue)
     }
 
     override fun stop() = Unit

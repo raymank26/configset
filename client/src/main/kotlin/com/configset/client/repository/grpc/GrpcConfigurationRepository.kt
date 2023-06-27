@@ -1,8 +1,6 @@
 package com.configset.client.repository.grpc
 
-import com.configset.client.ChangingObservable
-import com.configset.client.PropertyItem
-import com.configset.client.repository.ConfigApplication
+import com.configset.client.ConfigurationSnapshot
 import com.configset.client.repository.ConfigurationRepository
 import com.configset.common.client.extension.createLoggerStatic
 import java.util.concurrent.CompletableFuture
@@ -26,23 +24,27 @@ class GrpcConfigurationRepository(
         grpcRemoteConnector.init()
     }
 
-    override fun subscribeToProperties(appName: String): ConfigApplication {
-        val currentObservable = ChangingObservable<List<PropertyItem>>()
-        grpcRemoteConnector.subscribeForChanges(appName, defaultApplicationName, currentObservable)
-
-        val future = CompletableFuture<List<PropertyItem>>()
-        currentObservable.onSubscribe { value -> future.complete(value) }
-        var initialProperties: List<PropertyItem>
+    override fun subscribeToProperties(appName: String): ConfigurationSnapshot {
+        val future = CompletableFuture<Unit>()
+        val snapshot = ConfigurationSnapshot(emptyList())
+        var initialPropertiesSize: Int = -1
+        grpcRemoteConnector.subscribeForChanges(appName, defaultApplicationName) { properties ->
+            if (initialPropertiesSize < 0) {
+                initialPropertiesSize = properties.size
+            }
+            snapshot.update(properties)
+            future.complete(Unit)
+        }
         while (true) {
             try {
-                initialProperties = future.get(INITIAL_TIMEOUT_SEC, TimeUnit.SECONDS)
+                future.get(INITIAL_TIMEOUT_SEC, TimeUnit.SECONDS)
                 break
             } catch (e: TimeoutException) {
                 LOG.warn("Unable to get initial configuration for seconds = $INITIAL_TIMEOUT_SEC seconds, retrying..")
             }
         }
-        LOG.info("Initial properties for app = $appName received with size = ${initialProperties.size}")
-        return ConfigApplication(appName, initialProperties, currentObservable)
+        LOG.info("Initial properties for app = $appName received with size = $initialPropertiesSize")
+        return snapshot
     }
 
     override fun stop() {
@@ -53,5 +55,5 @@ class GrpcConfigurationRepository(
 data class WatchState(
     val appName: String,
     var lastVersion: Long,
-    val observable: ChangingObservable<List<PropertyItem>>,
+    val updateCallback: PropertiesUpdatedCallback,
 )

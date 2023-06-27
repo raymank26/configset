@@ -1,6 +1,5 @@
 package com.configset.client.repository.grpc
 
-import com.configset.client.ChangingObservable
 import com.configset.client.PropertyItem
 import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.proto.PropertiesChangesResponse
@@ -16,6 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.Consumer
 import kotlin.concurrent.read
 import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
@@ -66,9 +66,9 @@ class GrpcRemoteConnector(
     fun subscribeForChanges(
         appName: String,
         defaultApplicationName: String,
-        currentObservable: ChangingObservable<List<PropertyItem>>
+        updateCallback: PropertiesUpdatedCallback
     ) {
-        appWatchMappers[appName] = WatchState(appName, -1, currentObservable)
+        appWatchMappers[appName] = WatchState(appName, -1, updateCallback)
         val subscribeRequest = SubscribeApplicationRequest
             .newBuilder()
             .setApplicationName(appName)
@@ -121,7 +121,7 @@ class GrpcRemoteConnector(
             )
         }
         LOG.info("Configuration updated {}", filteredUpdates)
-        watchState.observable.push(filteredUpdates)
+        watchState.updateCallback.accept(filteredUpdates)
         watchState.lastVersion = lastVersion
         persistentWatcher.sendWatchRequest(
             WatchRequest.newBuilder()
@@ -213,3 +213,5 @@ class PersistentWatcher(
         (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
     }
 }
+
+fun interface PropertiesUpdatedCallback : Consumer<List<PropertyItem>>

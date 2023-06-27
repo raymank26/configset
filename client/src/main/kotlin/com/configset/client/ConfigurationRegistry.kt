@@ -18,7 +18,6 @@ open class ConfigurationRegistry<T : Configuration>(
     fun getConfiguration(appName: String): T {
         val a: T = appConfigs.getOrPut<String, T>(appName) {
             val conf: ObservableConfiguration<T> = ObservableConfiguration(this, appName, configurationRepository)
-            conf.start()
             (conf as T)
         }
         return a

@@ -11,7 +11,7 @@ class ObservableConfProperty<T>(
     private val name: String,
     private val defaultValue: T,
     private val converter: Converter<T>,
-    dynamicValue: DynamicValue<String?>,
+    configurationSnapshot: ConfigurationSnapshot,
 ) : ConfProperty<T> {
 
     @Volatile
@@ -19,9 +19,10 @@ class ObservableConfProperty<T>(
     private val listeners: MutableSet<Subscriber<T>> = HashSet()
 
     init {
-        evaluate(dynamicValue.value)
+        evaluate(configurationSnapshot.get(name)?.value)
         val subscriber = Subscriber<String?> { value -> evaluate(value) }
-        dynamicValue.observable.onSubscribe(subscriber)
+
+        configurationSnapshot.subscribe(name, subscriber)
     }
 
     override fun getValue(): T {

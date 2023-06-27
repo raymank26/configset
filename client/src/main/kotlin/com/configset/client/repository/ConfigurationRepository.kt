@@ -1,16 +1,9 @@
 package com.configset.client.repository
 
-import com.configset.client.ChangingObservable
-import com.configset.client.PropertyItem
+import com.configset.client.ConfigurationSnapshot
 
 interface ConfigurationRepository {
     fun start()
-    fun subscribeToProperties(appName: String): ConfigApplication
+    fun subscribeToProperties(appName: String): ConfigurationSnapshot
     fun stop()
 }
-
-data class ConfigApplication(
-    val appName: String,
-    val initial: List<PropertyItem>,
-    val observable: ChangingObservable<List<PropertyItem>>,
-)
