@@ -19,7 +19,7 @@ object ConfigurationRegistryFactory {
         return getConfiguration(repository)
     }
 
-    fun getLocalRewriteConfiguration(localClasspath: ConfigurationTransport.LocalClasspath):
+    fun getUpdatableLocalConfiguration(localClasspath: ConfigurationTransport.LocalClasspath):
             ConfigurationRegistry<UpdatableConfiguration> {
 
         val localRepository = createLocalClasspath(localClasspath)

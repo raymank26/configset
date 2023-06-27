@@ -11,7 +11,7 @@ class RewriteRepositoryTest {
     @Test
     fun propertyValueUpdated() {
         // given
-        val rewriteRegistry = ConfigurationRegistryFactory.getLocalRewriteConfiguration(
+        val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationTransport.LocalClasspath("/configuration.properties")
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
@@ -30,7 +30,7 @@ class RewriteRepositoryTest {
     @Test
     fun propertyListenersCalled() {
         // given
-        val rewriteRegistry = ConfigurationRegistryFactory.getLocalRewriteConfiguration(
+        val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationTransport.LocalClasspath("/configuration.properties")
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
@@ -58,7 +58,7 @@ class RewriteRepositoryTest {
     fun propertyDeleted() {
 
         // given
-        val rewriteRegistry = ConfigurationRegistryFactory.getLocalRewriteConfiguration(
+        val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationTransport.LocalClasspath("/configuration.properties")
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
