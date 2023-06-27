@@ -2,10 +2,18 @@ plugins {
     id 'maven-publish'
 }
 
+java {
+    registerFeature('tomlConfig') {
+        usingSourceSet(sourceSets.main)
+    }
+}
+
 dependencies {
     api project(':common-client')
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    tomlConfigImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jacksonDataformatVersion"
 
     testImplementation(testFixtures(project(":server")))
     testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"

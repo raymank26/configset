@@ -56,7 +56,7 @@ object ConfigurationRegistryFactory {
     }
 
     private fun createLocalClasspath(transport: ConfigurationTransport.LocalClasspath): ConfigurationRepository {
-        return LocalConfigurationRepository {
+        return LocalConfigurationRepository(transport.format) {
             ConfigurationRegistryFactory::class.java.getResourceAsStream(transport.pathToProperties).reader()
         }
     }

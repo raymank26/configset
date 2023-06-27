@@ -7,10 +7,17 @@ sealed class ConfigurationTransport {
         val defaultApplicationName: String,
         val backendHost: String,
         val backendPort: Int,
-        val deadlineMs: Long
+        val deadlineMs: Long,
     ) : ConfigurationTransport()
 
     class LocalClasspath(
         val pathToProperties: String,
+        val format: LocalFormat,
     ) : ConfigurationTransport()
+
+    enum class LocalFormat {
+        PROPERTIES,
+        TOML,
+        YAML
+    }
 }

@@ -8,7 +8,10 @@ class MapConverter<K, V>(
 ) : Converter<Map<K, V>> {
     override fun convert(value: String): Map<K, V> {
         return value.splitToSequence(*delimitersPair)
-            .map { pair ->
+            .mapNotNull { pair ->
+                if (pair.isBlank()) {
+                    return@mapNotNull null
+                }
                 val (key, value_) = pair.split(delimitersKeyValue)
                 keyConverter.convert(key) to valueConverter.convert(value_)
             }

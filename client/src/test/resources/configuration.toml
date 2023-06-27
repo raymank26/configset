@@ -1,0 +1,7 @@
+[music-app]
+someKey = "someValue"
+[web-app]
+multilineKey = """
+testKeyOne=testValueOne
+testKeyTwo=testValueTwo
+"""
