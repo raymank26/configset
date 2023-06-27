@@ -4,8 +4,8 @@ import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.proto.PropertiesChangesResponse
 import com.configset.client.proto.PropertyItem
 import com.configset.client.proto.WatchRequest
-import com.configset.common.client.ConfigSetClient
-import com.configset.common.client.DeadlineInterceptor
+import com.configset.common.client.grpc.ConfigSetClient
+import com.configset.common.client.grpc.DeadlineInterceptor
 import io.grpc.ManagedChannel
 import io.grpc.Server
 import io.grpc.inprocess.InProcessChannelBuilder

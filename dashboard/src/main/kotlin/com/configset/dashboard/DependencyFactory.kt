@@ -2,7 +2,7 @@ package com.configset.dashboard
 
 import com.configset.common.backend.auth.AuthenticationProvider
 import com.configset.common.backend.auth.RemoteAuthenticationProvider
-import com.configset.common.client.ConfigSetClient
+import com.configset.common.client.grpc.ConfigSetClient
 import com.configset.dashboard.auth.AuthController
 import com.configset.dashboard.auth.AuthInterceptor
 import com.configset.dashboard.pages.ApplicationsController

@@ -1,4 +1,4 @@
-package com.configset.common.client
+package com.configset.common.client.grpc
 
 import com.configset.client.proto.ConfigurationServiceGrpc
 import io.grpc.ManagedChannel

@@ -19,7 +19,12 @@ compileKotlin {
 }
 
 dependencies {
-    implementation project(':common-client')
+    implementation(project(":common-client"))
+    implementation(project(":common-client")) {
+        capabilities {
+            requireCapability("configset:common-client-grpc")
+        }
+    }
     implementation project(':common-backend')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -61,8 +66,6 @@ run {
 tasks.withType(Test) {
     useJUnitPlatform()
 }
-
-version = "0.0.3"
 
 sourceCompatibility = 11
 targetCompatibility = 8

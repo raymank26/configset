@@ -1,4 +1,4 @@
-package com.configset.common.client
+package com.configset.common.client.grpc
 
 import io.grpc.CallOptions
 import io.grpc.Channel

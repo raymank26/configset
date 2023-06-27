@@ -22,7 +22,7 @@ import com.configset.client.proto.UpdatePropertyResponse
 import com.configset.common.backend.auth.UserInfo
 import com.configset.common.client.Application
 import com.configset.common.client.ApplicationId
-import com.configset.common.client.ConfigSetClient
+import com.configset.common.client.grpc.ConfigSetClient
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 

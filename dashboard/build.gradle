@@ -24,7 +24,13 @@ compileKotlin {
 }
 
 dependencies {
-    implementation project(':common-client')
+    implementation(project(":common-client"))
+
+    implementation(project(":common-client")) {
+        capabilities {
+            requireCapability("configset:common-client-grpc")
+        }
+    }
     implementation project(':common-backend')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -65,8 +71,6 @@ application {
     applicationDefaultJvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5555"]
 }
 
-
-version = "0.0.3"
 
 //dev
 task createDevDockerfile(type: Dockerfile) {

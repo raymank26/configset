@@ -15,8 +15,8 @@ import com.configset.client.proto.UpdatePropertyRequest
 import com.configset.client.proto.UpdatePropertyResponse
 import com.configset.client.proto.UpdateReceived
 import com.configset.client.proto.WatchRequest
-import com.configset.common.client.ConfigSetClient
 import com.configset.common.client.extension.createLogger
+import com.configset.common.client.grpc.ConfigSetClient
 import com.configset.server.AppConfiguration
 import com.configset.server.PropertiesWatchDispatcher
 import com.configset.server.createAppModules

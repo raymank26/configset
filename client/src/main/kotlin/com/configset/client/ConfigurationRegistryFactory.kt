@@ -5,7 +5,7 @@ import com.configset.client.repository.ConfigurationRepository
 import com.configset.client.repository.grpc.GrpcClientFactory
 import com.configset.client.repository.grpc.GrpcConfigurationRepository
 import com.configset.client.repository.local.LocalConfigurationRepository
-import com.configset.common.client.DeadlineInterceptor
+import com.configset.common.client.grpc.DeadlineInterceptor
 import io.grpc.ManagedChannelBuilder
 import java.util.concurrent.TimeUnit
 

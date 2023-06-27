@@ -6,6 +6,9 @@ java {
     registerFeature('tomlConfig') {
         usingSourceSet(sourceSets.main)
     }
+    registerFeature('grpcConfig') {
+        usingSourceSet(sourceSets.main)
+    }
 }
 
 dependencies {
@@ -13,6 +16,11 @@ dependencies {
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
+    grpcConfigImplementation(project(":common-client")) {
+        capabilities {
+            requireCapability("configset:common-client-grpc")
+        }
+    }
     tomlConfigImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jacksonDataformatVersion"
 
     testImplementation(testFixtures(project(":server")))
@@ -24,8 +32,6 @@ dependencies {
     testImplementation group: 'io.mockk', name: 'mockk', version: "$mockkVersion"
     testImplementation group: 'ch.qos.logback', name: 'logback-classic', version: "$logbackVersion"
 }
-
-version = "0.0.5"
 
 compileKotlin {
     kotlinOptions {
