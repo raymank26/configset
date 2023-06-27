@@ -53,4 +53,24 @@ class RewriteRepositoryTest {
         Awaitility.await().untilAsserted { subscriptionCalled shouldBe true }
         newValue shouldBeEqualTo 6
     }
+
+    @Test
+    fun propertyDeleted() {
+
+        // given
+        val rewriteRegistry = ConfigurationRegistryFactory.getLocalRewriteConfiguration(
+            ConfigurationTransport.LocalClasspath("/configuration.properties")
+        )
+        val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
+
+        val targetPriceProperty = someAppConfiguration.getConfProperty("targetPrice", Converters.LONG)
+
+        println(targetPriceProperty.getValue())
+
+        // when
+        rewriteRegistry.deleteProperty("someApp", "targetPrice")
+
+        // then
+        Awaitility.await().untilAsserted { targetPriceProperty.getValue() shouldBe null }
+    }
 }

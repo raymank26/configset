@@ -13,4 +13,11 @@ class RewriteConfigurationRegistry(
     ) {
         rewriteConfigurationRepository.updateProperty(appName, name, value)
     }
+
+    fun deleteProperty(
+        appName: String,
+        name: String,
+    ) {
+        rewriteConfigurationRepository.updateProperty(appName, name, null)
+    }
 }
