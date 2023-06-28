@@ -16,7 +16,6 @@ class ConfigurationResolver {
         defaultApplication: String,
         lastVersion: Long,
     ): PropertiesChanges? {
-
         val properties: ConfigurationApplication = snapshot[targetApplication] ?: return null
 
         val collectedProperties = mutableListOf<PropertyItemED>()
@@ -24,7 +23,7 @@ class ConfigurationResolver {
         if (LOG.isDebugEnabled) {
             LOG.debug(
                 "Snapshot = $snapshot, app = $targetApplication, hostName = $hostName, defaultApplication = $defaultApplication," +
-                        "lastVersion = $lastVersion"
+                    "lastVersion = $lastVersion"
             )
         }
 

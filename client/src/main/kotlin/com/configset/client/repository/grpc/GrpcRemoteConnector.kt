@@ -37,7 +37,7 @@ class GrpcRemoteConnector(
             grpcClientFactory.createAsyncClient(),
             reconnectionTimeoutMs = reconnectionTimeoutMs,
             changesCallback = { processUpdate(it) },
-            resubscribeCallback = { resubscribe() }
+            resubscribeCallback = { resubscribe() },
         )
         resubscribe()
     }

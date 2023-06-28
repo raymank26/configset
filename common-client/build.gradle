@@ -61,8 +61,8 @@ protobuf {
     }
 }
 
-targetCompatibility = "1.8"
-sourceCompatibility = "1.8"
+sourceCompatibility = "$javaVersion"
+targetCompatibility = "$javaVersion"
 
 java {
     withSourcesJar()

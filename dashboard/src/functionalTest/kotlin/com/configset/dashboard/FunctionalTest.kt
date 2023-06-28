@@ -106,7 +106,6 @@ private class AuthCheckInterceptor : ServerInterceptor {
         headers: Metadata,
         next: ServerCallHandler<ReqT, RespT>,
     ): ServerCall.Listener<ReqT> {
-
         val authHeader = headers.get(Metadata.Key.of("Authentication", Metadata.ASCII_STRING_MARSHALLER))
         authHeader.shouldNotBeNull()
         return next.startCall(call, headers)

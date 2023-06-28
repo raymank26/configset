@@ -109,7 +109,7 @@ class PostgreSqlConfigurationDao(dbi: Jdbi) : ConfigurationDao {
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
                 | where ch.name = :hostName and ca.name = :appName and cp.name = :propertyName
-            """.trimMargin()
+                """.trimMargin()
             )
                 .bind("hostName", hostName)
                 .bind("appName", applicationName)
@@ -193,7 +193,7 @@ class PostgreSqlConfigurationDao(dbi: Jdbi) : ConfigurationDao {
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
                 | where ca.deleted = false
-            """.trimMargin()
+                """.trimMargin()
             )
                 .mapTo(PropertyItemED::class.java)
                 .list()
@@ -224,7 +224,7 @@ class PostgreSqlConfigurationDao(dbi: Jdbi) : ConfigurationDao {
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | join ConfigurationHost ch on ch.id = cp.hostId
                 | where ${conditionList.joinToString(" and ")} and not cp.deleted
-            """.trimMargin()
+                """.trimMargin()
             )
                 .bind("propertyName", likeWildcard(searchPropertyRequest.propertyNameQuery))
                 .bind("propertyValue", likeWildcard(searchPropertyRequest.propertyValueQuery))
@@ -247,7 +247,7 @@ class PostgreSqlConfigurationDao(dbi: Jdbi) : ConfigurationDao {
                 """select distinct cp.name from ConfigurationProperty cp
                 | join ConfigurationApplication ca on ca.id = cp.appId
                 | where ca.name = :appName and cp.deleted = false and ca.deleted = false
-            """.trimMargin()
+                """.trimMargin()
             )
                 .bind("appName", applicationName)
                 .mapTo(String::class.java)

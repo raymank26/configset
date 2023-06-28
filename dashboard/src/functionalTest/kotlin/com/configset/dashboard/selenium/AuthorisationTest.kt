@@ -69,7 +69,8 @@ class AuthorisationTest : SeleniumTest() {
                         """{
                         |"access_token": "$FULL_ROLES_ACCESS_TOKEN",
                         |"id_token": "${createIdTokenJwt()}" 
-                        |}""".trimMargin(),
+                        |}
+                        """.trimMargin(),
                         200
                     )
                 )

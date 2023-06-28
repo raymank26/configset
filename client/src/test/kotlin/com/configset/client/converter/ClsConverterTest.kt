@@ -13,7 +13,7 @@ class ClsConverterTest {
             firstConfig=12
             secondConfig=foobar
             listLong=23,34
-        """.trimIndent()
+            """.trimIndent()
         )
 
         cls.firstConfig() shouldBeEqualTo 12

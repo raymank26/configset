@@ -31,7 +31,6 @@ class InterfaceFactory(private val propertyResolver: PropertyFullResolver) {
         } as T
     }
 
-
     private fun transform(
         confProperty: ConfProperty<String?>,
         runtimeData: Map<Method, MethodInfo>,

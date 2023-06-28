@@ -26,9 +26,10 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
         configInterface.someValue() shouldBeEqualTo ""
 
         clientUtil.pushPropertyUpdate(
-            APP_NAME, "test.interface", """
+            APP_NAME, "test.interface",
+            """
             someValue=Hello
-        """.trimIndent()
+            """.trimIndent()
         )
 
         Awaitility.await().untilAsserted {
@@ -42,9 +43,10 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
         configInterface.nestedValue().getValue() shouldBeEqualTo null
 
         clientUtil.pushPropertyUpdate(
-            APP_NAME, "test.interface", """
+            APP_NAME, "test.interface",
+            """
             nestedValue=6
-        """.trimIndent()
+            """.trimIndent()
         )
 
         var receivedNewValue: Int? = null
@@ -64,9 +66,10 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
     @Test
     fun shouldHandleCustomMethodName() {
         clientUtil.pushPropertyUpdate(
-            APP_NAME, "test.interface", """
+            APP_NAME, "test.interface",
+            """
             customMethodName=Here
-        """.trimIndent()
+            """.trimIndent()
         )
 
         Awaitility.await().untilAsserted {
@@ -77,9 +80,10 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
     @Test
     fun shouldHandleCustomConverter() {
         clientUtil.pushPropertyUpdate(
-            APP_NAME, "test.interface", """
+            APP_NAME, "test.interface",
+            """
             custom=Sample data
-        """.trimIndent()
+            """.trimIndent()
         )
 
         Awaitility.await().untilAsserted {
@@ -163,4 +167,3 @@ private class CustomConverter : Converter<Foo> {
 }
 
 data class Foo(val data: String)
-

@@ -19,9 +19,7 @@ object ConfigurationRegistryFactory {
         return getConfiguration(repository)
     }
 
-    fun getUpdatableLocalConfiguration(localClasspath: ConfigurationSource.File):
-            ConfigurationRegistry<UpdatableConfiguration> {
-
+    fun getUpdatableLocalConfiguration(localClasspath: ConfigurationSource.File): ConfigurationRegistry<UpdatableConfiguration> {
         val repository = createFileRepository(localClasspath)
         repository.start()
 

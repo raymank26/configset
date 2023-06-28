@@ -15,5 +15,4 @@ sealed class ConfigurationSource {
         val sourceType: FileSourceType,
         val format: FileFormat,
     ) : ConfigurationSource()
-
 }

@@ -39,7 +39,6 @@ class RemoteAuthenticationProvider(
 
     override fun authenticate(accessToken: String): UserInfo? {
         return try {
-
             val decodedToken = createVerification().build().verify(accessToken)
             val payloadJson = String(Base64.getDecoder().decode(decodedToken.payload))
             val username = readFirst(

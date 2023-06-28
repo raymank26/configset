@@ -35,7 +35,6 @@ class PropertiesWatchDispatcher(
         lastKnownVersion: Long,
         subscriber: WatchSubscriber,
     ): PropertiesChanges? {
-
         val changes = configurationResolver.getChanges(
             configurationSnapshot,
             applicationName,

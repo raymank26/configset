@@ -35,7 +35,6 @@ class ClientTest : BaseClientTest() {
 
     @Test
     fun `test delete callback`() {
-
         val propertyName = "configuration.property"
         val confProperty: ConfProperty<String?> = defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
@@ -65,10 +64,12 @@ class ClientTest : BaseClientTest() {
         val propertyName = "configuration.property"
         clientUtil.pushPropertyUpdate(APP_NAME, propertyName, "text")
 
-        Awaitility.await().untilAsserted {
-            defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING)
-                .getValue() shouldBeEqualTo "text"
-        }
+        Awaitility.await()
+            .ignoreExceptions()
+            .untilAsserted {
+                defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING)
+                    .getValue() shouldBeEqualTo "text"
+            }
     }
 
     @Test

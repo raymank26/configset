@@ -40,20 +40,26 @@ dependencies {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "$javaVersion"
         freeCompilerArgs = ['-Xjvm-default=all']
     }
 
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "$javaVersion"
         freeCompilerArgs = ['-Xjvm-default=all']
     }
 }
 
-targetCompatibility = "1.8"
-sourceCompatibility = "1.8"
+//lintKotlinGrpc.dependsOn generateGrpcProto
+
+//tasks.named('lintKotlinGrpc') {
+//    dependsOn tasks.named('generateGrpcProto')
+//}
+
+targetCompatibility = "$javaVersion"
+sourceCompatibility = "$javaVersion"
 
 java {
     withJavadocJar()

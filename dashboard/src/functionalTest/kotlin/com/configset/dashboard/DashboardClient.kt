@@ -27,7 +27,6 @@ class DashboardClient {
         endpoint: String,
         queryParams: Map<String, String> = emptyMap(),
     ): Request.Builder {
-
         val urlBuilder = HttpUrl.Builder()
             .scheme("http")
             .host("localhost")
@@ -198,7 +197,6 @@ class DashboardClient {
         responseClass: JavaType,
         requestId: String = UUID.randomUUID().toString(),
     ): Either<DashboardHttpFailure, T?> {
-
         val formBody = FormBody.Builder()
         bodyParams.forEach { (key, value) -> formBody.add(key, value) }
         formBody.add("requestId", requestId)

@@ -12,8 +12,7 @@ class StubAuthenticationProvider private constructor(
 
     companion object {
 
-        fun stubAuthenticationProvider(config: StubAuthenticationProviderBuilder.() -> Unit):
-                StubAuthenticationProvider {
+        fun stubAuthenticationProvider(config: StubAuthenticationProviderBuilder.() -> Unit): StubAuthenticationProvider {
             val builder = StubAuthenticationProviderBuilder(mutableMapOf())
             config(builder)
             return StubAuthenticationProvider(builder.tokenToUser)
