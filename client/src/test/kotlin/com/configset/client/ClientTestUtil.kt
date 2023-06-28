@@ -2,7 +2,6 @@ package com.configset.client
 
 import com.configset.client.proto.ConfigurationServiceGrpc
 import com.configset.client.proto.PropertiesChangesResponse
-import com.configset.client.proto.PropertyItem
 import com.configset.client.proto.WatchRequest
 import com.configset.common.client.grpc.ConfigSetClient
 import com.configset.common.client.grpc.DeadlineInterceptor
@@ -28,9 +27,7 @@ class ClientTestUtil {
         @Volatile
         var isShuttedDown = false
 
-        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>):
-                StreamObserver<WatchRequest> {
-
+        override fun watchChanges(responseObserver: StreamObserver<PropertiesChangesResponse>): StreamObserver<WatchRequest> {
             return object : StreamObserver<WatchRequest> {
                 override fun onNext(value: WatchRequest) {
                     when (value.type) {
@@ -96,7 +93,6 @@ class ClientTestUtil {
         propertyName: String,
         propertyValue: String,
     ) {
-
         val version = updateVersion.incrementAndGet()
         cmdQueue.add(
             Payload.Msg(
@@ -121,7 +117,6 @@ class ClientTestUtil {
         appName: String,
         propertyName: String,
     ) {
-
         val version = updateVersion.incrementAndGet()
         cmdQueue.add(
             Payload.Msg(

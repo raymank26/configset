@@ -64,7 +64,6 @@ class RewriteRepositoryTest {
 
     @Test
     fun propertyDeleted() {
-
         // given
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(

@@ -35,7 +35,6 @@ class ClientTest : BaseClientTest() {
 
     @Test
     fun `test delete callback`() {
-
         val propertyName = "configuration.property"
         val confProperty: ConfProperty<String?> = defaultConfiguration.getConfProperty(propertyName, Converters.STRING)
 
