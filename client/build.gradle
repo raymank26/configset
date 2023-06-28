@@ -52,6 +52,12 @@ compileTestKotlin {
     }
 }
 
+//lintKotlinGrpc.dependsOn generateGrpcProto
+
+//tasks.named('lintKotlinGrpc') {
+//    dependsOn tasks.named('generateGrpcProto')
+//}
+
 targetCompatibility = "$javaVersion"
 sourceCompatibility = "$javaVersion"
 

@@ -24,6 +24,7 @@ testing {
                 //noinspection ConfigurationAvoidance
                 all {
                     testTask.configure {
+                        systemProperties(System.getProperties())
                         shouldRunAfter(test)
                     }
                 }
