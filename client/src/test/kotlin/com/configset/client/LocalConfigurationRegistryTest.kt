@@ -2,7 +2,10 @@ package com.configset.client
 
 import com.configset.client.converter.Converters
 import com.configset.client.reflect.PropertyInfo
+import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.junit.jupiter.api.Test
 
 class LocalConfigurationRegistryTest {
@@ -12,7 +15,7 @@ class LocalConfigurationRegistryTest {
         val registry = ConfigurationRegistryFactory.getConfiguration(
             ConfigurationSource.File(
                 "/configuration.properties",
-                FileSourceType.CLASSPATH,
+                FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES
             )
         )
@@ -29,18 +32,40 @@ class LocalConfigurationRegistryTest {
 
     @Test
     fun testReadToml() {
+        // given
         val registry = ConfigurationRegistryFactory.getConfiguration(
             ConfigurationSource.File(
                 "/configuration.toml",
-                FileSourceType.CLASSPATH,
+                FileLocation.CLASSPATH,
                 FileFormat.TOML
             )
         )
-        val someAppConfiguration = registry.getConfiguration("web-app")
-            .getConfPropertyInterface("multilineKey", TomlInterface::class.java)
+        // when
+        val configuration = registry.getConfiguration("web-app")
 
-        someAppConfiguration.testKeyOne() shouldBeEqualTo "testValueOne"
-        someAppConfiguration.testKeyTwo() shouldBeEqualTo "testValueTwo"
+        // then
+        configuration.getConfProperty("multiline", Converters.STRING).getValue() shouldBeEqualTo
+                """some
+                |multiline value
+                |""".trimMargin("|")
+
+        val obj = configuration.getConfPropertyInterface("subconfig", TomlInterface::class.java)
+        obj.testKeyOne() shouldBeEqualTo "testValueOne"
+        obj.testKeyTwo() shouldBeEqualTo "testValueTwo"
+    }
+
+    @Test
+    fun testNestedMultilineException() {
+        // then
+        invoking {
+            ConfigurationRegistryFactory.getConfiguration(
+                ConfigurationSource.File(
+                    "/configuration_nested_multiline.toml",
+                    FileLocation.CLASSPATH,
+                    FileFormat.TOML
+                )
+            )
+        } shouldThrow Exception::class withMessage "Nested multiline values are not supported"
     }
 }
 

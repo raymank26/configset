@@ -3,7 +3,7 @@ package com.configset.client.repository.local
 import com.configset.client.ConfigurationSnapshot
 import com.configset.client.ConfigurationSource
 import com.configset.client.FileFormat
-import com.configset.client.FileSourceType
+import com.configset.client.FileLocation
 import com.configset.client.PropertyItem
 import com.configset.client.repository.ConfigurationRepository
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -42,8 +42,21 @@ class FileTransportRepository(
 
     private fun parseValues(appName: String, appConfig: ObjectNode): List<PropertyItem> {
         return appConfig.fields().asSequence().map { (key, value) ->
-            PropertyItem(appName, key, 1L, value.asText())
+            val propertyValue = if (value is ObjectNode) {
+                serializeObjectToPropertyValue(value)
+            } else {
+                value.asText()
+            }
+            PropertyItem(appName, key, 1L, propertyValue)
         }.toList()
+    }
+
+    private fun serializeObjectToPropertyValue(value: ObjectNode): String {
+        return value.fields().asSequence().map { (key, value) ->
+            val textValue = value.asText()
+            require(!textValue.contains("\n")) { "Nested multiline values are not supported" }
+            "$key=$textValue"
+        }.joinToString("\n")
     }
 
     private fun parseProperties(): Map<String, List<PropertyItem>> {
@@ -62,19 +75,19 @@ class FileTransportRepository(
 
     private fun openReader(): Reader {
         val path = configurationSource.path
-        return when (configurationSource.sourceType) {
-            FileSourceType.CLASSPATH -> {
+        return when (configurationSource.location) {
+            FileLocation.CLASSPATH -> {
                 this::class.java.getResourceAsStream(path)?.reader()
                     ?: error("Cannot find file $path in classpath")
             }
 
-            FileSourceType.FILE_SYSTEM -> {
+            FileLocation.FILE_SYSTEM -> {
                 val filePath = Paths.get(path)
                 require(Files.exists(filePath)) { "Cannot find file $filePath in file system" }
                 Files.newBufferedReader(filePath)
             }
 
-            FileSourceType.GOOGLE_STORAGE -> {
+            FileLocation.GOOGLE_STORAGE -> {
                 val channel = StorageOptions.getDefaultInstance().service.reader(BlobId.fromGsUtilUri(path))
                 Channels.newReader(channel, StandardCharsets.UTF_8)
             }

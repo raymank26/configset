@@ -1,7 +1,13 @@
 [music-app]
 someKey = "someValue"
+
 [web-app]
-multilineKey = """
-testKeyOne=testValueOne
-testKeyTwo=testValueTwo
+one = "two"
+multiline = """
+some
+multiline value
 """
+
+[web-app.subconfig]
+testKeyOne = "testValueOne"
+testKeyTwo = "testValueTwo"

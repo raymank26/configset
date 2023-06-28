@@ -12,7 +12,7 @@ sealed class ConfigurationSource {
 
     data class File(
         val path: String,
-        val sourceType: FileSourceType,
+        val location: FileLocation,
         val format: FileFormat,
     ) : ConfigurationSource()
 }

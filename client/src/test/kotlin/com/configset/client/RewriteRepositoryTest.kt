@@ -14,7 +14,7 @@ class RewriteRepositoryTest {
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
                 "/configuration.properties",
-                FileSourceType.CLASSPATH,
+                FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )
         )
@@ -37,7 +37,7 @@ class RewriteRepositoryTest {
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
                 "/configuration.properties",
-                FileSourceType.CLASSPATH,
+                FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )
         )
@@ -68,7 +68,7 @@ class RewriteRepositoryTest {
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
                 "/configuration.properties",
-                FileSourceType.CLASSPATH,
+                FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )
         )
