@@ -9,6 +9,9 @@ java {
     registerFeature('grpcConfig') {
         usingSourceSet(sourceSets.main)
     }
+    registerFeature('googleStorage') {
+        usingSourceSet(sourceSets.main)
+    }
 }
 
 dependencies {
@@ -22,6 +25,8 @@ dependencies {
         }
     }
     tomlConfigImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jacksonDataformatVersion"
+    googleStorageImplementation(platform("com.google.cloud:libraries-bom:26.6.0"))
+    googleStorageImplementation("com.google.cloud:google-cloud-storage")
 
     testImplementation(testFixtures(project(":server")))
     testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"

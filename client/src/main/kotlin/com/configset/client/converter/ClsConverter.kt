@@ -13,13 +13,12 @@ class ClsConverter<T>(private val cls: Class<T>) : Converter<T> {
 
         val converter = MapConverter(Converters.STRING, Converters.STRING)
         val mapValues = converter.convert(value)
+        val methodToValue = runtimeData.mapValues { (_, methodInfo) ->
+            methodInfo.returnInfo.converter.convert(mapValues[methodInfo.methodName] ?: methodInfo.defaultValue)
+        }
 
         return Proxy.newProxyInstance(this.javaClass.classLoader, arrayOf(cls)) { proxy, method, args ->
-            val methodInfo = runtimeData[method]
-                ?: return@newProxyInstance method.invoke(proxy, args)
-
-            val propertyValue = mapValues[methodInfo.methodName]
-            methodInfo.returnInfo.converter.convert(propertyValue ?: methodInfo.defaultValue)
+            methodToValue[method] ?: method.invoke(proxy, args)
         } as T
     }
 }

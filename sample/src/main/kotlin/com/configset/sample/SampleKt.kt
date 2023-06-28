@@ -4,7 +4,7 @@ import com.configset.client.ConfProperty
 import com.configset.client.Configuration
 import com.configset.client.ConfigurationRegistry
 import com.configset.client.ConfigurationRegistryFactory
-import com.configset.client.ConfigurationTransport
+import com.configset.client.ConfigurationSource
 import com.configset.client.converter.Converters
 import com.configset.common.client.extension.createLoggerStatic
 import java.util.concurrent.Semaphore
@@ -23,7 +23,7 @@ fun main() {
     val backendPort = System.getenv()["config_server.port"]!!.toInt()
 
     val configuration: ConfigurationRegistry<Configuration> = ConfigurationRegistryFactory.getConfiguration(
-        ConfigurationTransport.RemoteGrpc(hostname, BILLING_APP, backendHost, backendPort, 10000)
+        ConfigurationSource.Grpc(hostname, BILLING_APP, backendHost, backendPort, 10000)
     )
 
     val sampleAppConfiguration: Configuration = configuration.getConfiguration(BILLING_APP)

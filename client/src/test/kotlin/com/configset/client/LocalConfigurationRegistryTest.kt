@@ -10,9 +10,10 @@ class LocalConfigurationRegistryTest {
     @Test
     fun testReadProperties() {
         val registry = ConfigurationRegistryFactory.getConfiguration(
-            ConfigurationTransport.LocalClasspath(
+            ConfigurationSource.File(
                 "/configuration.properties",
-                ConfigurationTransport.LocalFormat.PROPERTIES
+                FileSourceType.CLASSPATH,
+                FileFormat.PROPERTIES
             )
         )
 
@@ -29,9 +30,10 @@ class LocalConfigurationRegistryTest {
     @Test
     fun testReadToml() {
         val registry = ConfigurationRegistryFactory.getConfiguration(
-            ConfigurationTransport.LocalClasspath(
+            ConfigurationSource.File(
                 "/configuration.toml",
-                ConfigurationTransport.LocalFormat.TOML
+                FileSourceType.CLASSPATH,
+                FileFormat.TOML
             )
         )
         val someAppConfiguration = registry.getConfiguration("web-app")

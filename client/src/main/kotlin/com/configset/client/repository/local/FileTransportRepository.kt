@@ -1,33 +1,38 @@
 package com.configset.client.repository.local
 
 import com.configset.client.ConfigurationSnapshot
-import com.configset.client.ConfigurationTransport
+import com.configset.client.ConfigurationSource
+import com.configset.client.FileFormat
+import com.configset.client.FileSourceType
 import com.configset.client.PropertyItem
 import com.configset.client.repository.ConfigurationRepository
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.dataformat.toml.TomlMapper
+import com.google.cloud.storage.BlobId
+import com.google.cloud.storage.StorageOptions
 import java.io.Reader
+import java.nio.channels.Channels
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.Properties
 
-class LocalConfigurationRepository(
-    private val localFormat: ConfigurationTransport.LocalFormat,
-    private val readerProvider: () -> Reader,
+class FileTransportRepository(
+    private val configurationSource: ConfigurationSource.File,
 ) : ConfigurationRepository {
 
     private lateinit var properties: Map<String, List<PropertyItem>>
 
     override fun start() {
-        properties = when (localFormat) {
-            ConfigurationTransport.LocalFormat.TOML -> parseToml()
-            ConfigurationTransport.LocalFormat.PROPERTIES -> parseProperties()
-            else -> error("Unknown format $localFormat")
+        properties = when (configurationSource.format) {
+            FileFormat.TOML -> parseToml()
+            FileFormat.PROPERTIES -> parseProperties()
         }
     }
 
     private fun parseToml(): Map<String, List<PropertyItem>> {
         val tomlMapper = TomlMapper()
-        return readerProvider.invoke().use { reader ->
+        return openReader().use { reader ->
             val tree = tomlMapper.readTree(reader) as ObjectNode
             tree.fields().asSequence().map { (appName, value) ->
                 appName to parseValues(appName, value as ObjectNode)
@@ -37,13 +42,12 @@ class LocalConfigurationRepository(
 
     private fun parseValues(appName: String, appConfig: ObjectNode): List<PropertyItem> {
         return appConfig.fields().asSequence().map { (key, value) ->
-            require(value is TextNode) { "Value for key = $key should contain text value" }
-            PropertyItem(appName, key, 1L, value.textValue())
+            PropertyItem(appName, key, 1L, value.asText())
         }.toList()
     }
 
     private fun parseProperties(): Map<String, List<PropertyItem>> {
-        return readerProvider.invoke().use { reader ->
+        return openReader().use { reader ->
             val properties = Properties()
             properties.load(reader)
 
@@ -53,6 +57,27 @@ class LocalConfigurationRepository(
                 config.merge(appName, listOf(PropertyItem(appName, propName, 1L, value as String))) { a, b -> a + b }
             }
             config
+        }
+    }
+
+    private fun openReader(): Reader {
+        val path = configurationSource.path
+        return when (configurationSource.sourceType) {
+            FileSourceType.CLASSPATH -> {
+                this::class.java.getResourceAsStream(path)?.reader()
+                    ?: error("Cannot find file $path in classpath")
+            }
+
+            FileSourceType.FILE_SYSTEM -> {
+                val filePath = Paths.get(path)
+                require(Files.exists(filePath)) { "Cannot find file $filePath in file system" }
+                Files.newBufferedReader(filePath)
+            }
+
+            FileSourceType.GOOGLE_STORAGE -> {
+                val channel = StorageOptions.getDefaultInstance().service.reader(BlobId.fromGsUtilUri(path))
+                Channels.newReader(channel, StandardCharsets.UTF_8)
+            }
         }
     }
 
