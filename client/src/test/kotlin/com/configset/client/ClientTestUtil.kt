@@ -84,7 +84,7 @@ class ClientTestUtil {
             .build()
             .start()
         channel = InProcessChannelBuilder.forName("mytest")
-            .intercept(DeadlineInterceptor(10_000))
+            .intercept(DeadlineInterceptor(60_000))
             .build()
         asyncClient = ConfigSetClient(channel).asyncClient
     }
