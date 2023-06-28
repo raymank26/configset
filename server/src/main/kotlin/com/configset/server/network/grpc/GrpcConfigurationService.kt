@@ -83,7 +83,6 @@ class GrpcConfigurationService(
         request: ApplicationDeleteRequest,
         responseObserver: StreamObserver<ApplicationDeletedResponse>
     ) {
-
         requireRole(Admin)
         when (configurationService.deleteApplication(request.requestId, request.applicationName)) {
             DeleteApplicationResult.ApplicationNotFound -> responseObserver.onNext(
@@ -338,7 +337,8 @@ class GrpcConfigurationService(
                             """Subscriber with id = $subscriberId calls subscribe for 
                             |app = ${subscribeRequest.applicationName},
                             |lastVersion = ${subscribeRequest.lastKnownVersion},
-                            |hostName = ${subscribeRequest.hostName}""".trimMargin()
+                            |hostName = ${subscribeRequest.hostName}
+                            """.trimMargin()
                         )
                         val subscriber = object : WatchSubscriber {
                             override fun getId(): String {

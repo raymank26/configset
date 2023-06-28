@@ -33,7 +33,6 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         return object : ServerMockContext<List<Application>>() {
             override fun answer(response: List<Application>) {
                 every { mockConfigService.listApplications(any(), any()) } answers {
-
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ApplicationsResponse>)
                     observer.onNext(
@@ -64,9 +63,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenCreateApplication(request: MockKMatcherScope.() -> ApplicationCreateRequest):
-            ServerMockContext<ApplicationCreatedResponse.Type> {
-
+    fun whenCreateApplication(request: MockKMatcherScope.() -> ApplicationCreateRequest): ServerMockContext<ApplicationCreatedResponse.Type> {
         return object : ServerMockContext<ApplicationCreatedResponse.Type>() {
             override fun answer(response: ApplicationCreatedResponse.Type) {
                 every { mockConfigService.createApplication(request(), any()) } answers {
@@ -83,9 +80,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenUpdateApplication(request: MockKMatcherScope.() -> ApplicationUpdateRequest):
-            ServerMockContext<ApplicationUpdatedResponse.Type> {
-
+    fun whenUpdateApplication(request: MockKMatcherScope.() -> ApplicationUpdateRequest): ServerMockContext<ApplicationUpdatedResponse.Type> {
         return object : ServerMockContext<ApplicationUpdatedResponse.Type>() {
             override fun answer(response: ApplicationUpdatedResponse.Type) {
                 every { mockConfigService.updateApplication(request(), any()) } answers {
@@ -102,9 +97,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenDeleteApplication(request: MockKMatcherScope.() -> ApplicationDeleteRequest):
-            ServerMockContext<ApplicationDeletedResponse> {
-
+    fun whenDeleteApplication(request: MockKMatcherScope.() -> ApplicationDeleteRequest): ServerMockContext<ApplicationDeletedResponse> {
         return object : ServerMockContext<ApplicationDeletedResponse>() {
             override fun answer(response: ApplicationDeletedResponse) {
                 every { mockConfigService.deleteApplication(request(), any()) } answers {
@@ -122,7 +115,6 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         return object : ServerMockContext<List<HostName>>() {
             override fun answer(response: List<HostName>) {
                 every { mockConfigService.listHosts(any(), any()) } answers {
-
                     @Suppress("UNCHECKED_CAST")
                     val observer = (invocation.args[1] as StreamObserver<ListHostsResponse>)
                     val builder = ListHostsResponse.newBuilder()
@@ -169,7 +161,6 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         return object : ServerMockContext<PropertyItem?>() {
             override fun answer(response: PropertyItem?) {
                 every { mockConfigService.readProperty(request(), any()) } answers {
-
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<ReadPropertyResponse>)
 
@@ -193,9 +184,7 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         }
     }
 
-    fun whenDeleteProperty(request: MockKMatcherScope.() -> DeletePropertyRequest):
-            ServerMockContext<DeletePropertyResponse> {
-
+    fun whenDeleteProperty(request: MockKMatcherScope.() -> DeletePropertyRequest): ServerMockContext<DeletePropertyResponse> {
         return object : ServerMockContext<DeletePropertyResponse>() {
             override fun answer(response: DeletePropertyResponse) {
                 every { mockConfigService.deleteProperty(request(), any()) } answers {
@@ -213,7 +202,6 @@ class ServerMockExtension(private val mockConfigService: ConfigurationServiceGrp
         return object : ServerMockContext<List<PropertyItem>>() {
             override fun answer(response: List<PropertyItem>) {
                 every { mockConfigService.searchProperties(request(), any()) } answers {
-
                     @Suppress("UNCHECKED_CAST")
                     val observer = (it.invocation.args[1] as StreamObserver<SearchPropertiesResponse>)
 

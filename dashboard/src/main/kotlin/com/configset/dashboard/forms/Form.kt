@@ -63,9 +63,11 @@ class Form(
                 it.copy(error = "Required")
             } else if (value == null) {
                 it
-            } else when (val validationRes = it.validation.validate(value)) {
-                is FormError.Ok -> it.copy(value = value)
-                is FormError.CustomError -> it.copy(error = validationRes.text, value = value)
+            } else {
+                when (val validationRes = it.validation.validate(value)) {
+                    is FormError.Ok -> it.copy(value = value)
+                    is FormError.CustomError -> it.copy(error = validationRes.text, value = value)
+                }
             }
         }
         val res = Form(validatedFields, commonError)

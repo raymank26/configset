@@ -47,9 +47,11 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun deleteApplication(applicationName: String, requestId: String, userInfo: UserInfo):
-            Either<ServerApiGatewayErrorType, Unit> {
-
+    fun deleteApplication(
+        applicationName: String,
+        requestId: String,
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
         val res = withClient(userInfo).deleteApplication(
             ApplicationDeleteRequest.newBuilder()
                 .setRequestId(requestId)
@@ -67,9 +69,12 @@ class ServerApiGateway(private val configSetClient: ConfigSetClient) {
         }
     }
 
-    fun updateApplication(id: ApplicationId, name: String, requestId: String, userInfo: UserInfo):
-            Either<ServerApiGatewayErrorType, Unit> {
-
+    fun updateApplication(
+        id: ApplicationId,
+        name: String,
+        requestId: String,
+        userInfo: UserInfo,
+    ): Either<ServerApiGatewayErrorType, Unit> {
         val res = withClient(userInfo).updateApplication(
             ApplicationUpdateRequest.newBuilder()
                 .setRequestId(requestId)

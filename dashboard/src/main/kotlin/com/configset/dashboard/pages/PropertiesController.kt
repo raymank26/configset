@@ -135,9 +135,11 @@ class PropertiesController(
                 SearchPropertiesResult(emptyList(), false, it.form)
             }.orNull()!!
 
-            val templateName = if (ctx.header("HX-Request") == "true")
+            val templateName = if (ctx.header("HX-Request") == "true") {
                 "properties_search_result_block.jinja2"
-            else "properties.jinja2"
+            } else {
+                "properties.jinja2"
+            }
 
             ctx.html(
                 templateRenderer.render(
@@ -233,12 +235,17 @@ class PropertiesController(
                     .mapLeft { UpdateError.ServerApiError(validatedForm, it) }
                     .map { validatedForm }
             }.mapLeft {
-                if (it is UpdateError.ServerApiError && it.error == ServerApiGatewayErrorType.APPLICATION_NOT_FOUND)
+                if (it is UpdateError.ServerApiError && it.error == ServerApiGatewayErrorType.APPLICATION_NOT_FOUND) {
                     UpdateError.FormValidationError(it.form.withFieldError("applicationName", "Application not found"))
-                else it
+                } else {
+                    it
+                }
             }
-            val readonlyFields = if (ctx.path() == "/properties/create")
-                emptySet() else propertyFormUpdateReadOnlyFields
+            val readonlyFields = if (ctx.path() == "/properties/create") {
+                emptySet()
+            } else {
+                propertyFormUpdateReadOnlyFields
+            }
 
             when (result) {
                 is Either.Left -> when (val errorType = result.value) {

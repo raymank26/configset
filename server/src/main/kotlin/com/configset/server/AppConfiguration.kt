@@ -57,7 +57,6 @@ class ConfigKeyRequired(val configKey: String) : RuntimeException("Configuration
 enum class DaoType {
     IN_MEMORY,
     POSTGRES,
-    ;
 }
 
 sealed interface AuthenticatorConfig

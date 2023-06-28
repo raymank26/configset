@@ -160,7 +160,6 @@ class CrudServiceRule : BeforeAllCallback, BeforeEachCallback, AfterEachCallback
         version: Long,
         expectedType: DeletePropertyResponse.Type = DeletePropertyResponse.Type.OK,
     ) {
-
         val res: DeletePropertyResponse = blockingClient.deleteProperty(
             DeletePropertyRequest.newBuilder()
                 .setRequestId(createRequestId())
