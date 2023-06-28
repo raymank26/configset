@@ -64,10 +64,12 @@ class ClientTest : BaseClientTest() {
         val propertyName = "configuration.property"
         clientUtil.pushPropertyUpdate(APP_NAME, propertyName, "text")
 
-        Awaitility.await().untilAsserted {
-            defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING)
-                .getValue() shouldBeEqualTo "text"
-        }
+        Awaitility.await()
+            .ignoreExceptions()
+            .untilAsserted {
+                defaultConfiguration.getConfPropertyNotNull(propertyName, Converters.STRING)
+                    .getValue() shouldBeEqualTo "text"
+            }
     }
 
     @Test
