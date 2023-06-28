@@ -15,7 +15,7 @@ class RewriteRepositoryTest {
             ConfigurationSource.File(
                 "/configuration.properties",
                 FileSourceType.CLASSPATH,
-                FileFormat.PROPERTIES
+                FileFormat.PROPERTIES,
             )
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
@@ -38,7 +38,7 @@ class RewriteRepositoryTest {
             ConfigurationSource.File(
                 "/configuration.properties",
                 FileSourceType.CLASSPATH,
-                FileFormat.PROPERTIES
+                FileFormat.PROPERTIES,
             )
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")
@@ -70,7 +70,7 @@ class RewriteRepositoryTest {
             ConfigurationSource.File(
                 "/configuration.properties",
                 FileSourceType.CLASSPATH,
-                FileFormat.PROPERTIES
+                FileFormat.PROPERTIES,
             )
         )
         val someAppConfiguration = rewriteRegistry.getConfiguration("someApp")

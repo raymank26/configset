@@ -9,8 +9,10 @@ import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.statement.SqlQuery
 import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import org.postgresql.util.PSQLException
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.sql.ResultSet
-import kotlin.streams.toList
+import java.util.stream.Collectors
 
 private val logger = createLoggerStatic<DbMigrator>()
 
@@ -22,10 +24,19 @@ class DbMigrator(private val dbi: Jdbi) {
 
     fun migrate() {
         val lastVersion = getLastVersion()
-        val migrations = Thread.currentThread().contextClassLoader
-            .getResourceAsStream("migration")
-            .bufferedReader()
-            .use { it.lines().toList() }
+        val migrationFolder = DbMigrator::class.java.getResource("/migration")
+            ?: error("Migrations not found")
+
+        val files = FileSystems.newFileSystem(migrationFolder.toURI(), emptyMap<String, Any>()).use { fs ->
+            Files.walk(fs.getPath("/migration"))
+                .use { filesStream ->
+                    filesStream.filter(Files::isRegularFile)
+                        .map { it.fileName.toString() }
+                        .collect(Collectors.toList())
+                }
+        }
+
+        val migrations = files
             .asSequence()
             .map { fileName ->
                 val version = fileName.split("__").getOrNull(0)

@@ -33,6 +33,3 @@ class ConfigurationSnapshot(values: List<PropertyItem>) {
 }
 
 private data class SnapshotKey(val propertyKey: String)
-
-
-

@@ -50,7 +50,6 @@ internal object ClsRuntimeExplorer {
         return methodName
     }
 
-
     private fun getMethodReturnInfo(
         methodName: String,
         genericType: Type,
@@ -80,7 +79,6 @@ internal object ClsRuntimeExplorer {
         }
         return MethodReturnInfo(converter, nested)
     }
-
 }
 
 internal data class MethodInfo(
@@ -93,4 +91,3 @@ internal data class MethodReturnInfo(
     val converter: Converter<*>,
     val nested: Boolean,
 )
-

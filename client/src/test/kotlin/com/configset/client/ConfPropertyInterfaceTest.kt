@@ -163,4 +163,3 @@ private class CustomConverter : Converter<Foo> {
 }
 
 data class Foo(val data: String)
-

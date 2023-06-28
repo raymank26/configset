@@ -1,11 +1,8 @@
 plugins {
-    id 'com.bmuschko.docker-java-application' version '6.4.0'
-    id 'com.bmuschko.docker-remote-api' version '6.4.0'
-    id 'java-test-fixtures'
-    id 'org.unbroken-dome.test-sets' version '4.0.0'
+    id 'com.bmuschko.docker-java-application' version '9.3.1'
+    id 'com.bmuschko.docker-remote-api' version '9.3.1'
+    id 'jvm-test-suite'
 }
-
-
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
@@ -13,8 +10,26 @@ apply plugin: 'application'
 
 mainClassName = "com.configset.dashboard.Main"
 
-testSets {
-    functionalTest
+testing {
+    //noinspection GroovyAssignabilityCheck
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+
+        //noinspection GroovyAssignabilityCheck
+        functionalTest(JvmTestSuite) {
+
+            targets {
+                //noinspection ConfigurationAvoidance
+                all {
+                    testTask.configure {
+                        shouldRunAfter(test)
+                    }
+                }
+            }
+        }
+    }
 }
 
 compileKotlin {
@@ -61,6 +76,8 @@ dependencies {
     testImplementation "org.amshove.kluent:kluent:$kluentVersion"
     testImplementation "com.codeborne:selenide:$selenideVersion"
     testImplementation "com.codeborne:selenide-proxy:$selenideVersion"
+
+    functionalTestImplementation project
 }
 
 run {
@@ -70,7 +87,6 @@ run {
 application {
     applicationDefaultJvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5555"]
 }
-
 
 //dev
 task createDevDockerfile(type: Dockerfile) {
@@ -134,11 +150,8 @@ task dockerBuildDefaultImage(type: DockerBuildImage) {
     images.set(["configset-dashboard:${version}", 'configset-dashboard:latest'])
 }
 
-tasks.withType(Test) {
-    useJUnitPlatform()
-    options {
-        systemProperties(System.getProperties())
-    }
+configurations {
+    functionalTestImplementation.extendsFrom testImplementation
 }
 
 check.dependsOn functionalTest
