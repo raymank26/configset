@@ -67,6 +67,15 @@ class LocalConfigurationRegistryTest {
             )
         } shouldThrow Exception::class withMessage "Nested multiline values are not supported"
     }
+
+    @Test
+    fun testImplicitConfig() {
+        val configuration = ConfigurationRegistryFactory.getConfiguration(
+            env = mapOf("CONFIG_URI" to "classpath:///configuration.toml?format=toml")
+        ).getConfiguration("music-app")
+
+        configuration.getConfPropertyNotNull("someKey", Converters.STRING).getValue() shouldBeEqualTo "someValue"
+    }
 }
 
 private interface TomlInterface {
