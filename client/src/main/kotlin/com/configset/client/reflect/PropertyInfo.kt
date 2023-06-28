@@ -7,5 +7,5 @@ import kotlin.reflect.KClass
 annotation class PropertyInfo(
     val name: String = "",
     val converter: KClass<out Converter<*>> = Converter::class,
-    val defaultValue: String = "",
+    val defaultValue: Array<String> = [],
 )

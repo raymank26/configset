@@ -28,7 +28,7 @@ internal object ClsRuntimeExplorer {
                 MethodInfo(
                     getMethodReturnInfo(methodName, it.genericReturnType, it.returnType, annotation),
                     methodName,
-                    annotation.defaultValue
+                    annotation.defaultValue.firstOrNull()
                 )
             }
     }
@@ -84,7 +84,7 @@ internal object ClsRuntimeExplorer {
 internal data class MethodInfo(
     val returnInfo: MethodReturnInfo,
     val methodName: String,
-    val defaultValue: String,
+    val defaultValue: String?,
 )
 
 internal data class MethodReturnInfo(

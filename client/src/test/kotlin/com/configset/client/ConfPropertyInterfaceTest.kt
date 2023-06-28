@@ -21,9 +21,14 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
     }
 
     @Test
+    fun shouldResolveDefaultProperty() {
+        configInterface.defaultValue() shouldBeEqualTo "someDefault"
+    }
+
+    @Test
     fun shouldCreateSimpleInterface() {
         // then
-        configInterface.someValue() shouldBeEqualTo ""
+        configInterface.someValue() shouldBeEqualTo null
 
         clientUtil.pushPropertyUpdate(
             APP_NAME, "test.interface",
@@ -146,6 +151,9 @@ interface SampleInterface {
 
     @PropertyInfo(converter = CustomConverter::class)
     fun custom(): Foo
+
+    @PropertyInfo(defaultValue = ["someDefault"])
+    fun defaultValue(): String
 }
 
 interface NoReturnValueInterface {

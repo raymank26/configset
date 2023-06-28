@@ -20,6 +20,7 @@ class ClsConverterTest {
         cls.secondConfig() shouldBeEqualTo "foobar"
         cls.thirdDefault() shouldBeEqualTo 2389
         cls.listLong() shouldBeEqualTo listOf(23L, 34L)
+        cls.nullableProperty() shouldBeEqualTo null
     }
 }
 
@@ -31,11 +32,14 @@ interface CustomInterface {
     @PropertyInfo
     fun secondConfig(): String
 
-    @PropertyInfo(defaultValue = "2389")
+    @PropertyInfo(defaultValue = ["2389"])
     fun thirdDefault(): Int
 
     @PropertyInfo(converter = ListLongConverter::class)
     fun listLong(): List<Long>
+
+    @PropertyInfo
+    fun nullableProperty(): String?
 }
 
 class ListLongConverter : Converter<List<Long>> {
