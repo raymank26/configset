@@ -12,8 +12,8 @@ class MapConverter<K, V>(
                 if (pair.isBlank()) {
                     return@mapNotNull null
                 }
-                val (key, value_) = pair.split(delimitersKeyValue)
-                keyConverter.convert(key) to valueConverter.convert(value_)
+                val (key, v) = pair.split(delimitersKeyValue, limit = 2)
+                keyConverter.convert(key) to valueConverter.convert(v)
             }
             .toMap()
     }
