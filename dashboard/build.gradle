@@ -1,6 +1,6 @@
 plugins {
-    id 'com.bmuschko.docker-java-application' version '9.3.1'
-    id 'com.bmuschko.docker-remote-api' version '9.3.1'
+    id 'com.bmuschko.docker-java-application' version "$dockerPluginVersion"
+    id 'com.bmuschko.docker-remote-api' version "$dockerPluginVersion"
     id 'jvm-test-suite'
 }
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage

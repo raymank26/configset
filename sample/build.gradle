@@ -1,8 +1,6 @@
 plugins {
-    id 'com.bmuschko.docker-java-application' version '6.4.0'
+    id 'com.bmuschko.docker-java-application' version "$dockerPluginVersion"
 }
-
-version '0.0.1'
 
 sourceCompatibility = "$javaVersion"
 targetCompatibility = "$javaVersion"
@@ -13,9 +11,8 @@ repositories {
 
 dependencies {
     implementation project(':client')
-    implementation 'org.slf4j:slf4j-api:1.7.21'
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
 
 docker {

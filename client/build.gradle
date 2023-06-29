@@ -25,7 +25,7 @@ dependencies {
         }
     }
     tomlConfigImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jacksonDataformatVersion"
-    googleStorageImplementation(platform("com.google.cloud:libraries-bom:26.6.0"))
+    googleStorageImplementation(platform("com.google.cloud:libraries-bom:$googlePlatformVersion"))
     googleStorageImplementation("com.google.cloud:google-cloud-storage")
 
     testImplementation(testFixtures(project(":server")))
