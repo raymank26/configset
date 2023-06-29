@@ -50,11 +50,11 @@ class ObservableConfiguration<T : Configuration>(
         }
     }
 
-    override fun <T> getConfProperty(name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
+    override fun <T : Any> getConfProperty(name: String, converter: Converter<T>, defaultValue: T): ConfProperty<T> {
         return registry.getConfProperty(name, converter, defaultValue)
     }
 
-    override fun <T> getConfPropertyInterface(name: String, cls: Class<T>): T {
+    override fun <T : Any> getConfPropertyInterface(name: String, cls: Class<T>): T {
         return interfaceFactory.getInterfaceConfProperty(getConfProperty(name, Converters.STRING), cls)
     }
 }

@@ -12,8 +12,8 @@ class InterfaceFactory(private val propertyResolver: PropertyFullResolver) {
 
     private val stringMapConverter = MapConverter(Converters.STRING, Converters.STRING)
 
-    fun <T> getInterfaceConfProperty(confProperty: ConfProperty<String?>, cls: Class<T>): T {
-        val runtimeData = ClsRuntimeExplorer.getRuntimeData(cls)
+    fun <T : Any> getInterfaceConfProperty(confProperty: ConfProperty<String?>, cls: Class<T>): T {
+        val runtimeData = ClsRuntimeExplorer.getRuntimeData(cls.kotlin)
         val repository = ConfPropertyRepository(transform(confProperty, runtimeData))
         val configurationSnapshot = repository.subscribeToProperties("app")
         val registry = ApplicationRegistry(configurationSnapshot, propertyResolver)
@@ -26,7 +26,9 @@ class InterfaceFactory(private val propertyResolver: PropertyFullResolver) {
             return@newProxyInstance if (methodInfo.returnInfo.nested) {
                 registry.getConfProperty(methodInfo.methodName, methodInfo.returnInfo.converter)
             } else {
-                registry.getConfProperty(methodInfo.methodName, methodInfo.returnInfo.converter).getValue()
+                val value = registry.getConfProperty(methodInfo.methodName, methodInfo.returnInfo.converter).getValue()
+                methodInfo.validateReturnValue(value)
+                value
             }
         } as T
     }

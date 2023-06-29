@@ -2,7 +2,10 @@ package com.configset.client
 
 import com.configset.client.converter.Converter
 import com.configset.client.reflect.PropertyInfo
+import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,6 +26,13 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
     @Test
     fun shouldResolveDefaultProperty() {
         configInterface.defaultValue() shouldBeEqualTo "someDefault"
+    }
+
+    @Test
+    fun shouldThrowIfNull() {
+        invoking {
+            configInterface.foo()
+        } shouldThrow Exception::class withMessage "Non-nullable method \"customMethodName\" returns null but it's declared non-nullable"
     }
 
     @Test

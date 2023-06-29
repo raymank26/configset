@@ -1,7 +1,10 @@
 package com.configset.client.converter
 
 import com.configset.client.reflect.PropertyInfo
+import org.amshove.kluent.invoking
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldThrow
+import org.amshove.kluent.withMessage
 import org.junit.jupiter.api.Test
 
 class ClsConverterTest {
@@ -21,6 +24,9 @@ class ClsConverterTest {
         cls.thirdDefault() shouldBeEqualTo 2389
         cls.listLong() shouldBeEqualTo listOf(23L, 34L)
         cls.nullableProperty() shouldBeEqualTo null
+        invoking {
+            cls.notNullProperty()
+        } shouldThrow Exception::class withMessage "Non-nullable method \"notNullProperty\" returns null but it's declared non-nullable"
     }
 }
 
@@ -40,6 +46,9 @@ interface CustomInterface {
 
     @PropertyInfo
     fun nullableProperty(): String?
+
+    @PropertyInfo
+    fun notNullProperty(): String
 }
 
 class ListLongConverter : Converter<List<Long>> {

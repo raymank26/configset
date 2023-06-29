@@ -6,12 +6,14 @@ import com.configset.client.converter.Converters
 import java.lang.reflect.Method
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.kotlinFunction
 
 internal object ClsRuntimeExplorer {
 
-    fun getRuntimeData(cls: Class<*>): Map<Method, MethodInfo> {
-        require(cls.isInterface)
-        return cls.methods
+    fun getRuntimeData(cls: KClass<*>): Map<Method, MethodInfo> {
+        require(cls.java.isInterface)
+        return cls.java.methods
             .map { method ->
                 if (!method.isDefault && method.getAnnotation(PropertyInfo::class.java) == null) {
                     error("Non-default method $method without @PropertyInfo annotation")
@@ -25,8 +27,15 @@ internal object ClsRuntimeExplorer {
                     error("Method $it doesn't have return value")
                 }
                 val annotation = it.getAnnotation(PropertyInfo::class.java)
+
                 MethodInfo(
-                    getMethodReturnInfo(methodName, it.genericReturnType, it.returnType, annotation),
+                    getMethodReturnInfo(
+                        methodName = methodName,
+                        isNullable = it.kotlinFunction!!.returnType.isMarkedNullable,
+                        genericType = it.genericReturnType,
+                        returnType = it.returnType,
+                        annotation = annotation
+                    ),
                     methodName,
                     annotation.defaultValue.firstOrNull()
                 )
@@ -52,6 +61,7 @@ internal object ClsRuntimeExplorer {
 
     private fun getMethodReturnInfo(
         methodName: String,
+        isNullable: Boolean,
         genericType: Type,
         returnType: Class<*>,
         annotation: PropertyInfo,
@@ -60,6 +70,7 @@ internal object ClsRuntimeExplorer {
         var realReturnType = genericType
         if (returnType == ConfProperty::class.java) {
             realReturnType = (genericType as ParameterizedType).actualTypeArguments[0]
+            require(!isNullable) { "Nested ConfProperty cannot be declared as nullable" }
             nested = true
         }
         val converter: Converter<*> = when (realReturnType) {
@@ -77,7 +88,7 @@ internal object ClsRuntimeExplorer {
                 error("Converter not found for methodName = $methodName")
             }
         }
-        return MethodReturnInfo(converter, nested)
+        return MethodReturnInfo(converter, isNullable, nested)
     }
 }
 
@@ -85,9 +96,17 @@ internal data class MethodInfo(
     val returnInfo: MethodReturnInfo,
     val methodName: String,
     val defaultValue: String?,
-)
+) {
+
+    fun validateReturnValue(value: Any?) {
+        if (!returnInfo.isNullable && value == null) {
+            error("Non-nullable method \"${methodName}\" returns null but it's declared non-nullable")
+        }
+    }
+}
 
 internal data class MethodReturnInfo(
     val converter: Converter<*>,
+    val isNullable: Boolean,
     val nested: Boolean,
 )
