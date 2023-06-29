@@ -59,9 +59,12 @@ class ObservableConfProperty<T>(
     @Synchronized
     override fun subscribe(listener: Subscriber<T>): Subscription {
         listeners.add(listener)
+        val that = this
         return object : Subscription {
             override fun unsubscribe() {
-                listeners.remove(listener)
+                synchronized(that) {
+                    listeners.remove(listener)
+                }
             }
         }
     }
@@ -79,14 +82,14 @@ class ObservableConfProperty<T>(
         }
     }
 
+    @Synchronized
     private fun fireListeners(value: T) {
-        // it might be possible that somebody unsubscribes while iterating. That's why we do a copy here.
-        for (listener in HashSet(listeners)) {
+        for (listener in listeners) {
             try {
-                LOG.debug("Listener of {}", this)
+                LOG.debug("Calling listener of propertyName = {}, value = {}", name, value)
                 listener.process(value)
             } catch (e: Exception) {
-                LOG.warn("For propertyName = $name unable to call listener for value = $value", e)
+                LOG.warn("For propertyName = {} unable to call listener for value = {}", name, value, e)
             }
         }
     }

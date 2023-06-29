@@ -20,8 +20,8 @@ class GrpcConfigurationRepository(
     private lateinit var grpcRemoteConnector: GrpcRemoteConnector
 
     override fun start() {
-        grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, grpcClientFactory, reconnectionTimeoutMs)
-        grpcRemoteConnector.init()
+        grpcRemoteConnector = GrpcRemoteConnector(applicationHostname, reconnectionTimeoutMs, grpcClientFactory)
+        grpcRemoteConnector.resubscribe()
     }
 
     override fun subscribeToProperties(appName: String): ConfigurationSnapshot {
@@ -54,6 +54,6 @@ class GrpcConfigurationRepository(
 
 data class WatchState(
     val appName: String,
-    var lastVersion: Long,
+    val lastVersion: Long,
     val updateCallback: PropertiesUpdatedCallback,
 )
