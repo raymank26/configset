@@ -100,7 +100,7 @@ internal data class MethodInfo(
 
     fun validateReturnValue(value: Any?) {
         if (!returnInfo.isNullable && value == null) {
-            error("Non-nullable method \"${methodName}\" returns null but it's declared non-nullable")
+            error("A method \"${methodName}\" returns null but it's declared as non-nullable type")
         }
     }
 }

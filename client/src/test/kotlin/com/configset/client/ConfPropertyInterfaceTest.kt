@@ -32,7 +32,7 @@ class ConfPropertyInterfaceTest : BaseClientTest() {
     fun shouldThrowIfNull() {
         invoking {
             configInterface.foo()
-        } shouldThrow Exception::class withMessage "Non-nullable method \"customMethodName\" returns null but it's declared non-nullable"
+        } shouldThrow Exception::class withMessage "A method \"customMethodName\" returns null but it's declared as non-nullable type"
     }
 
     @Test

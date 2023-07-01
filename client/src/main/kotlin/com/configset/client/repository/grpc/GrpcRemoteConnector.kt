@@ -10,7 +10,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.Consumer
 import kotlin.concurrent.read
@@ -138,7 +137,7 @@ class GrpcRemoteConnector(
         observer.onCompleted()
         requestExecutor.shutdownNow()
         updateExecutor.shutdownNow()
-        (asyncClient.channel as ManagedChannel).shutdownNow().awaitTermination(5, TimeUnit.SECONDS)
+        (asyncClient.channel as ManagedChannel).shutdown()
     }
 
     @Synchronized

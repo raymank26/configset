@@ -26,7 +26,7 @@ class ClsConverterTest {
         cls.nullableProperty() shouldBeEqualTo null
         invoking {
             cls.notNullProperty()
-        } shouldThrow Exception::class withMessage "Non-nullable method \"notNullProperty\" returns null but it's declared non-nullable"
+        } shouldThrow Exception::class withMessage "A method \"notNullProperty\" returns null but it's declared as non-nullable type"
     }
 }
 

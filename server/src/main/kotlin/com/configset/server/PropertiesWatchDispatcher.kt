@@ -83,7 +83,7 @@ class PropertiesWatchDispatcher(
             configurationDao.getConfigurationSnapshotList(it)
         }
         LOG.debug("Properties size in memory = ${properties.size}")
-        LOG.trace("Properties = $properties")
+        LOG.trace("Properties = {}", properties)
         configurationSnapshot = properties
             .groupBy { it.applicationName }
             .mapValues { entry ->
