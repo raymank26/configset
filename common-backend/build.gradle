@@ -10,6 +10,13 @@ compileKotlin {
     }
 }
 
+sourceCompatibility = "$javaVersion"
+targetCompatibility = "$javaVersion"
+
+kotlin {
+    jvmToolchain(11)
+}
+
 dependencies {
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
     implementation project(':common-client')

@@ -91,6 +91,11 @@ run {
 sourceCompatibility = "$javaVersion"
 targetCompatibility = "$javaVersion"
 
+kotlin {
+    jvmToolchain(11)
+}
+
+
 docker {
     javaApplication {
         baseImage = 'openjdk:12'
