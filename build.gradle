@@ -8,17 +8,31 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "gradle.plugin.com.google.cloud.artifactregistry:artifactregistry-gradle-plugin:2.2.1"
     }
 }
 
 subprojects {
     apply plugin: 'kotlin'
     apply plugin: 'maven-publish'
-    apply plugin: "com.google.cloud.artifactregistry.gradle-plugin"
 
     repositories {
         mavenLocal()
         mavenCentral()
+    }
+
+    publishing {
+        repositories {
+            var customMavenUrl = findProperty("customMavenUrl")
+            if (customMavenUrl != null) {
+                maven {
+                    name "customMaven"
+                    url customMavenUrl
+                    credentials {
+                        username = findProperty("customMavenUrlUsername")
+                        password = findProperty("customMavenUrlPassword")
+                    }
+                }
+            }
+        }
     }
 }
