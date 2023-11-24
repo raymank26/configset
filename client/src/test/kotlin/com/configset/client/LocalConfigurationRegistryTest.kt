@@ -7,6 +7,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldThrow
 import org.amshove.kluent.withMessage
 import org.junit.jupiter.api.Test
+import java.net.URI
 
 class LocalConfigurationRegistryTest {
 
@@ -14,7 +15,7 @@ class LocalConfigurationRegistryTest {
     fun testReadProperties() {
         val registry = ConfigurationRegistryFactory.getConfiguration(
             ConfigurationSource.File(
-                "/configuration.properties",
+                URI("/configuration.properties"),
                 FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES
             )
@@ -35,7 +36,7 @@ class LocalConfigurationRegistryTest {
         // given
         val registry = ConfigurationRegistryFactory.getConfiguration(
             ConfigurationSource.File(
-                "/configuration.toml",
+                URI("/configuration.toml"),
                 FileLocation.CLASSPATH,
                 FileFormat.TOML
             )
@@ -60,7 +61,7 @@ class LocalConfigurationRegistryTest {
         invoking {
             ConfigurationRegistryFactory.getConfiguration(
                 ConfigurationSource.File(
-                    "/configuration_nested_multiline.toml",
+                    URI("/configuration_nested_multiline.toml"),
                     FileLocation.CLASSPATH,
                     FileFormat.TOML
                 )

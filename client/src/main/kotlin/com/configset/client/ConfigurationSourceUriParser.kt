@@ -7,18 +7,21 @@ object ConfigurationSourceUriParser {
     fun parse(uri: String): ConfigurationSource {
         val innerUri = URI(uri)
         val params = parseQueryParams(innerUri)
-        val (location, path) = when {
-
+        val location = when {
             uri.startsWith("file://") -> {
-                FileLocation.FILE_SYSTEM to innerUri.path
+                FileLocation.FILE_SYSTEM
             }
 
             uri.startsWith("gs://") -> {
-                FileLocation.GOOGLE_STORAGE to "gs://" + innerUri.host + innerUri.path
+                FileLocation.GOOGLE_STORAGE
             }
 
             uri.startsWith("classpath://") -> {
-                FileLocation.CLASSPATH to innerUri.path
+                FileLocation.CLASSPATH
+            }
+
+            uri.startsWith("s3://") -> {
+                FileLocation.S3
             }
 
             uri.startsWith("grpc://") -> {
@@ -43,7 +46,7 @@ object ConfigurationSourceUriParser {
             else -> error("Unknown format $rawFormat")
         }
 
-        return ConfigurationSource.File(path, location, format)
+        return ConfigurationSource.File(innerUri, location, format)
     }
 
     private fun parseQueryParams(innerUri: URI): Map<String, String> {

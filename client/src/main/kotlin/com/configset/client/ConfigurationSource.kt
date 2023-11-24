@@ -1,5 +1,7 @@
 package com.configset.client
 
+import java.net.URI
+
 sealed class ConfigurationSource {
 
     data class Grpc(
@@ -11,7 +13,7 @@ sealed class ConfigurationSource {
     ) : ConfigurationSource()
 
     data class File(
-        val path: String,
+        val path: URI,
         val location: FileLocation,
         val format: FileFormat,
     ) : ConfigurationSource()

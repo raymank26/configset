@@ -14,7 +14,6 @@ class ConfigurationSourceUriParserTest {
         val fileSource = (res as ConfigurationSource.File)
 
         fileSource.format shouldBeEqualTo FileFormat.TOML
-        fileSource.path shouldBeEqualTo "/absolute/path"
         fileSource.location shouldBeEqualTo FileLocation.FILE_SYSTEM
     }
 
@@ -26,7 +25,6 @@ class ConfigurationSourceUriParserTest {
         val fileSource = (res as ConfigurationSource.File)
 
         fileSource.format shouldBeEqualTo FileFormat.PROPERTIES
-        fileSource.path shouldBeEqualTo "gs://absolute/path"
         fileSource.location shouldBeEqualTo FileLocation.GOOGLE_STORAGE
     }
 
@@ -44,5 +42,25 @@ class ConfigurationSourceUriParserTest {
         grpcSource.deadlineMs shouldBeEqualTo 10000L
         grpcSource.backendHost shouldBeEqualTo "some-host"
         grpcSource.backendPort shouldBeEqualTo 8082
+    }
+
+    @Test
+    fun shouldParseS3Config() {
+        val res = ConfigurationSourceUriParser.parse(
+            buildString {
+                append("s3://some-bucket/object-path?")
+                append("region=some-region")
+                append("&accessKeyId=someAccessKey")
+                append("&secretKey=someSecretKey")
+                append("&endpointOverride=https://foo.com")
+                append("&forcePathStyle=true")
+                append("&format=toml")
+            }
+        )
+        res shouldBeInstanceOf ConfigurationSource.File::class.java
+        val fileSource = (res as ConfigurationSource.File)
+
+        fileSource.format shouldBeEqualTo FileFormat.TOML
+        fileSource.location shouldBeEqualTo FileLocation.S3
     }
 }

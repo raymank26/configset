@@ -12,6 +12,9 @@ java {
     registerFeature('googleStorage') {
         usingSourceSet(sourceSets.main)
     }
+    registerFeature('s3') {
+        usingSourceSet(sourceSets.main)
+    }
 }
 
 dependencies {
@@ -28,6 +31,9 @@ dependencies {
     tomlConfigImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jacksonDataformatVersion"
     googleStorageImplementation(platform("com.google.cloud:libraries-bom:$googlePlatformVersion"))
     googleStorageImplementation("com.google.cloud:google-cloud-storage")
+
+    s3Implementation(platform("software.amazon.awssdk:bom:2.21.1"))
+    s3Implementation("software.amazon.awssdk:s3")
 
     testImplementation(testFixtures(project(":server")))
     testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"

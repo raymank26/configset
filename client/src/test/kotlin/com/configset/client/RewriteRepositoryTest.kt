@@ -5,6 +5,7 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.Test
+import java.net.URI
 
 class RewriteRepositoryTest {
 
@@ -13,7 +14,7 @@ class RewriteRepositoryTest {
         // given
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
-                "/configuration.properties",
+                URI("/configuration.properties"),
                 FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )
@@ -36,7 +37,7 @@ class RewriteRepositoryTest {
         // given
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
-                "/configuration.properties",
+                URI("/configuration.properties"),
                 FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )
@@ -67,7 +68,7 @@ class RewriteRepositoryTest {
         // given
         val rewriteRegistry = ConfigurationRegistryFactory.getUpdatableLocalConfiguration(
             ConfigurationSource.File(
-                "/configuration.properties",
+                URI("/configuration.properties"),
                 FileLocation.CLASSPATH,
                 FileFormat.PROPERTIES,
             )

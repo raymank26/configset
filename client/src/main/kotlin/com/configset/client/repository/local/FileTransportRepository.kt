@@ -1,21 +1,23 @@
 package com.configset.client.repository.local
 
-import com.configset.client.ConfigurationSnapshot
-import com.configset.client.ConfigurationSource
-import com.configset.client.FileFormat
-import com.configset.client.FileLocation
-import com.configset.client.PropertyItem
+import com.configset.client.*
 import com.configset.client.repository.ConfigurationRepository
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.toml.TomlMapper
 import com.google.cloud.storage.BlobId
 import com.google.cloud.storage.StorageOptions
+import org.apache.http.client.utils.URLEncodedUtils
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import java.io.Reader
+import java.net.URI
 import java.nio.channels.Channels
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.util.Properties
+import java.util.*
 
 class FileTransportRepository(
     private val configurationSource: ConfigurationSource.File,
@@ -74,22 +76,50 @@ class FileTransportRepository(
     }
 
     private fun openReader(): Reader {
-        val path = configurationSource.path
+        val uri = configurationSource.path
         return when (configurationSource.location) {
             FileLocation.CLASSPATH -> {
-                this::class.java.getResourceAsStream(path)?.reader()
-                    ?: error("Cannot find file $path in classpath")
+                this::class.java.getResourceAsStream(uri.path)?.reader()
+                    ?: error("Cannot find file $uri in classpath")
             }
 
             FileLocation.FILE_SYSTEM -> {
-                val filePath = Paths.get(path)
+                val filePath = Paths.get(uri.path)
                 require(Files.exists(filePath)) { "Cannot find file $filePath in file system" }
                 Files.newBufferedReader(filePath)
             }
 
             FileLocation.GOOGLE_STORAGE -> {
-                val channel = StorageOptions.getDefaultInstance().service.reader(BlobId.fromGsUtilUri(path))
+                val channel = StorageOptions.getDefaultInstance().service.reader(
+                    BlobId.fromGsUtilUri("gs://" + uri.host + uri.path)
+                )
                 Channels.newReader(channel, StandardCharsets.UTF_8)
+            }
+
+            FileLocation.S3 -> {
+                val params = URLEncodedUtils.parse(uri, StandardCharsets.UTF_8)
+                    .associate { it.name to it.value }
+                val s3Client = S3Client.builder()
+                    .apply {
+                        if (params["forcePathStyle"] == "true") {
+                            forcePathStyle(true)
+                        }
+                        region(Region.of(params["region"]))
+                        params["endpointOverride"]?.let {
+                            endpointOverride(URI(it))
+                        }
+                        credentialsProvider {
+                            AwsBasicCredentials.create(params["accessKeyId"], params["secretKey"])
+                        }
+                    }
+                    .build()
+                s3Client.getObject(
+                    GetObjectRequest.builder()
+                        .bucket(uri.host)
+                        .key(uri.path.drop(1))
+                        .build()
+                )
+                    .reader()
             }
         }
     }
